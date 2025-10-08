@@ -1,0 +1,39 @@
+doctype html
+html
+  head
+    block head
+      meta(charset='UTF-8')
+      meta(name='viewport' content='width=device-width, initial-scale=1.0')
+      link(rel='stylesheet' href='/css/style.css')
+      link(rel='stylesheet' href='/css/tourManagement.css')
+      link(rel='stylesheet' href='/css/userManagement.css')
+      link(rel='stylesheet' href='/css/bookingManagement.css')
+      link(rel='stylesheet' href='/css/bookingDetail.css')
+      link(rel='stylesheet' href='/css/bookingForm.css')
+      link(rel='stylesheet' href='/css/reviewManagement.css')
+      link(rel='stylesheet' href='/css/bookingSuccess.css')
+      link(rel='stylesheet' href='/css/bookingInvoice.css')
+      link(rel='stylesheet' href='/css/reviewModal.css')
+      link(rel='stylesheet' href='/css/myTours.css')
+      link(rel='stylesheet' href='/css/myBilling.css')
+      link(rel='stylesheet' href='/css/myReviews.css')
+      link(rel='stylesheet' href='/css/dashboard.css')
+      link(rel='shortcut icon' type='image/png' href='/img/favicon.png')
+      link(rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap')
+      link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css")
+      title LLK Travel | #{title}
+  body
+    // HEADER
+    include _header
+        
+    // CONTENT
+    block content
+
+    // FOOTER
+    include _footer
+
+    script(src='https://cdn.jsdelivr.net/npm/chart.js')
+    script(src='/dist/index.js')
+    
+    // Block scripts của trang riêng
+    block scripts

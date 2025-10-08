@@ -1,0 +1,261 @@
+.booking-management__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.booking-management__header h3 {
+  font-size: 1.6rem;
+  color: #777;
+}
+
+.booking-management__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.booking-management__item {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  background-color: #f7f7f7;
+  border-radius: 3px;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+  height: 100%;
+  border: 1px solid #eee;
+}
+
+.booking-management__item:hover {
+  transform: translateY(-0.3rem);
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.15);
+}
+
+.booking-management__info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-bottom: 1rem;
+}
+
+.booking-management__tour {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #014d8c;
+  margin-bottom: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.booking-management__user {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.booking-management__user-img {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  margin-right: 1rem;
+  object-fit: cover;
+}
+
+.booking-management__user-name {
+  font-size: 1.4rem;
+  font-weight: 500;
+  font-weight: bold;
+}
+  
+.booking-management__details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.booking-management__price,
+.booking-management__date,
+.booking-management__status {
+  display: flex;
+  align-items: center;
+  font-size: 1.3rem;
+  color: #777;
+}
+
+.booking-management__price svg,
+.booking-management__date svg,
+.booking-management__status svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-right: 0.5rem;
+  fill: #49bcd7;
+}
+
+.booking-management__status--paid {
+  color: #49bcd7;
+  font-weight: bold;
+}
+
+.booking-management__status--unpaid {
+  color: #ff7730;
+  font-weight: bold;
+}
+
+.booking-management__status--unpaid svg {
+  fill: #ff7730;
+}
+
+.booking-management__actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.booking-management__actions .btn {
+  flex: 1;
+  text-align: center;
+  padding: 0.8rem 0.5rem;
+  font-size: 1.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.booking-management__empty {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.6rem;
+  color: #999;
+  grid-column: 1 / -1;
+}
+
+.booking-badge {
+  display: inline-block;
+  padding: 0.3rem 0.6rem;
+  border-radius: 2rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.booking-badge--paid {
+  background-color: #55c57a;
+  color: white;
+}
+
+.booking-badge--unpaid {
+  background-color: #ff7730;
+  color: white;
+}
+
+.table-view {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+}
+
+.table-view th,
+.table-view td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.table-view th {
+  background-color: #f7f7f7;
+  font-weight: 700;
+  color: #777;
+}
+
+.table-view tr:hover {
+  background-color: #f9f9f9;
+}
+
+.table-view .btn {
+  padding: 0.4rem 0.8rem;
+  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.table-view .img-small {
+  width: 3rem;
+  height: 3rem;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.table-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.booking-management__participants {
+  display: flex;
+  align-items: center;
+  font-size: 1.3rem;
+  color: #777;
+}
+
+.booking-management__participants svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-right: 0.5rem;
+  fill: #49bcd7;
+}
+
+/* Thêm CSS cho form chọn số lượng người */
+.booking-card__participants {
+  display: flex;
+  align-items: center;
+}
+
+.booking-card__participants .form__input {
+  width: 8rem;
+  text-align: center;
+  padding: 0.8rem;
+}
+
+.booking-management__id {
+  font-size: 1.1rem;
+  color: #999;
+  margin-top: 0.5rem;
+  display: block;
+}
+
+.table-view th:nth-child(7),
+.table-view td:nth-child(7) {
+  white-space: nowrap;
+}
+
+
+#booking-total {
+  font-weight: 700;
+  color: #55c57a;
+  font-size: 1.6rem;
+}
+
+@media (max-width: 768px) {
+  .booking-management__list {
+    grid-template-columns: 1fr;
+  }
+
+  .table-view {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .booking-management__actions {
+    grid-template-columns: 1fr;
+  }
+}

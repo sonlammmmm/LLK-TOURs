@@ -1,0 +1,85 @@
+extends base
+
+block content
+  section.banner
+    .overlay
+      .heading-container
+        h1.heading-text HƠN 500+ TOUR TRONG NƯỚC KHÁM PHÁ NGAY!
+      .search-container
+        form.search-form(action="/search", method="GET")
+          .form-group.main-search
+            input#searchInput.form-input(
+              type="text", 
+              name="name", 
+              placeholder="Bạn muốn đi đâu?",
+              value=searchParams ? searchParams.name : ''
+            )
+          .form-group-row
+            .form-group
+              input.form-input(
+                type="date", 
+                name="startDates",
+                value=searchParams ? searchParams.startDates : ''
+              )
+            .form-group
+              select.form-input(name="startLocation")
+                option(value="") Khởi hành từ
+                each location in uniqueLocations || []
+                  option(
+                    value=location,
+                    selected=searchParams && searchParams.startLocation === location
+                  )= location
+            button.btn.btn--timkim(type="submit") Tìm kiếm
+
+  main.main
+    if noResults
+      .no-results
+        h2.heading-secondary Không có tour nào phù hợp với mong muốn của bạn
+        p Vui lòng thử lại với các tiêu chí tìm kiếm khác
+    else
+      .card-container
+        each tour in tours
+          .card
+            .card__header
+              .card__picture
+                img.card__picture-img(src=`/img/tours/${tour.imageCover}`, alt=`${tour.name}`)
+              h3.heading-tertirary
+                span= tour.name
+
+            .card__details
+              h4.card__sub-heading= `Tổng thời gian: ${tour.duration}-ngày`
+              p.card__text= tour.summary
+              .card__data
+                svg.card__icon
+                  use(xlink:href='/img/icons.svg#icon-map-pin')
+                span= tour.startLocation.description
+              .card__data
+                svg.card__icon
+                  use(xlink:href='/img/icons.svg#icon-calendar')
+                - const nextDate = tour.startDates.filter(date => new Date(date) > new Date()).sort((a, b) => new Date(a) - new Date(b))[0]
+                - const dateDisplay = nextDate ? new Date(nextDate).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Chưa có lịch khởi hành'
+                span= dateDisplay
+              .card__data
+                svg.card__icon
+                  use(xlink:href='/img/icons.svg#icon-flag')
+                span= `${tour.locations.length} điểm tham quan`
+              .card__data
+                svg.card__icon
+                  use(xlink:href='/img/icons.svg#icon-user')
+                span= `${tour.maxGroupSize} khách`
+
+            .card__footer
+              p
+                span.card__footer-value= `${tour.price.toLocaleString('vi-VN')}`
+                | 
+                span.card__footer-text VNĐ/khách
+              p.card__ratings
+                span.card__footer-value= tour.ratingsAverage
+                | 
+                span.card__footer-text= `đánh giá (${tour.ratingsQuantity})`
+              .card__actions
+                a.btn.btn--blue.btn--small(href=`/tour/${tour.slug}`) CHI TIẾT
+                if !user
+                  a.btn.btn--green.btn--small(href="/login") ĐẶT TOUR
+                else if user.role === 'user'
+                  a.btn.btn--green.btn--small(href=`/book-tour/${tour.id}`) ĐẶT TOUR

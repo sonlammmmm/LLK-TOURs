@@ -1,0 +1,89 @@
+header.header
+  .header__logo
+    a(href='/')
+      img(src='/img/logo-blue.png' alt='LLK logo')
+
+  nav.nav.nav--tours
+    ul.nav__list
+      li
+        a.nav__el(href='/' data-scroll="home") Trang chủ
+      li
+        a.nav__el(href='/') Tours
+      li.nav__item--dropdown
+        a.nav__el.nav__el--dropdown(href='#' data-scroll="footer") Giới thiệu
+          i.dropdown-arrow: i.fa-solid.fa-chevron-down.dropdown-arrow
+        ul.nav__dropdown
+          li
+            a(href='#' data-scroll="footer") Về chúng tôi
+          li
+            a(href='#' data-scroll="footer") Đội ngũ
+          li
+            a(href='#' data-scroll="footer") Lịch sử phát triển 
+      li
+        a.nav__el(href='#' data-scroll="footer") Liên hệ
+
+  .header__right
+    .hotline
+      i.hotline-icon: i.fa-solid.fa-phone.hotline-icon
+      .hotline-content
+        span.hotline-label Hotline 24/7
+        a.hotline__number(href='#') 0123 456 789
+
+    if user
+      if user.role === 'admin' || user.role === 'lead-guide'
+        a.nav__el.nav__el--admin(href='/admin/dashboard') 
+          i: i.fa-solid.fa-gear
+          span Quản lý
+
+      .user-dropdown
+        button.user-dropdown__toggle
+          img.nav__user-img(src=`/img/users/${user.photo}` alt=`${user.name}`)
+          .user-info
+            span.user-name= user.name.split(' ').pop() 
+            span.user-role
+              if user.role === 'admin'
+                | Quản trị viên
+              else if user.role === 'lead-guide'
+                | Trưởng đoàn
+              else if user.role === 'guide'
+                | Hướng dẫn viên
+              else if user.role === 'user'
+                | Khách hàng
+              else
+                = user.role
+          i.dropdown-arrow: i.fa-solid.fa-chevron-down.dropdown-arrow
+
+        ul.user-dropdown__menu
+          li
+            a(href='/me') 
+              i: i.fa-solid.fa-user
+              span Trang cá nhân
+
+          if user.role === 'user'
+            li
+              a(href='/my-tours')
+                i: i.fa-solid.fa-ticket
+                span Tours đã tham gia
+            li
+              a(href='/my-reviews')
+                i: i.fa-solid.fa-star
+                span Đánh giá của tôi
+            li
+              a(href='/my-billing')
+                i: i.fa-solid.fa-star
+                span Lịch sử đặt tour
+
+          li.divider
+          li
+            a.logout-btn(href='/logout') 
+              i: i.fa-solid.fa-lock-open
+              span Đăng xuất
+
+    else
+      .auth-buttons
+        a.nav__el.nav__el--login(href='/login') 
+          i: i.fa-solid.fa-lock
+          span Đăng nhập
+        a.nav__el.nav__el--signup(href='/signup') 
+          i: i.fa-solid.fa-pen-to-square
+          span Đăng ký

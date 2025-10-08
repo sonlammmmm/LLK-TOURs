@@ -1,0 +1,21 @@
+extends base
+
+block content
+  main.main
+    .login-form
+      h2.heading-secondary.ma-bt-lg Đăng nhập
+      form.form.form--login
+        .form__group
+          label.form__label(for='email') Email
+          input#email.form__input(type='email', placeholder='you@example.com', required)
+        .form__group.ma-bt-md
+          label.form__label(for='password') Mật khẩu
+          input#password.form__input(type='password', placeholder='••••••••', required, minlength='8')
+          .form__links
+            a.form__link(href='/forgot-password')
+              i.fa.fa-unlock-alt
+              |  Quên mật khẩu?
+
+        .form__group-btn
+          button.btn.btn--blue Đăng nhập
+          a.btn.btn--small.btn--orange(href='/signup') Đăng ký

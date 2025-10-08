@@ -1,0 +1,165 @@
+extends base
+
+block content
+  main.main
+    .user-view
+      nav.user-view__menu
+        .admin-nav
+          h5.admin-nav__heading Quản lý
+          ul.side-nav
+            li
+              a(href='/admin/dashboard')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-home')
+                | Dashboard
+            li
+              a(href='/admin/tours')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-map')
+                | Quản lý tours
+            li
+              a(href='/admin/users')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-user')
+                | Quản lý User
+            li
+              a(href='/admin/bookings')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-briefcase')
+                | Lịch sử đặt tour
+            li
+              a(href='/admin/reviews')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-star')
+                | Quản lý đánh giá
+
+      .user-view__content
+        .user-view__form-container
+          h2.heading-secondary.ma-bt-md= title
+          
+          form.form.form-tour(enctype='multipart/form-data')
+            input#tour-id(type='hidden', value=`${tour ? tour.id : ''}`)
+            
+            .form__group
+              label.form__label(for='name') Tên tour
+              input#name.form__input(type='text', value=`${tour ? tour.name : ''}`, required, minlength='10', maxlength='80')
+            
+            .form__group
+              label.form__label(for='duration') Thời gian (ngày)
+              input#duration.form__input(type='number', value=`${tour ? tour.duration : ''}`, required, min='1')
+            
+            .form__group
+              label.form__label(for='maxGroupSize') Số người tối đa
+              input#maxGroupSize.form__input(type='number', value=`${tour ? tour.maxGroupSize : ''}`, required, min='1')
+            
+            .form__group
+              label.form__label(for='price') Giá (VND)
+              input#price.form__input(type='number', value=`${tour ? tour.price : ''}`, required, min='0')
+            
+            .form__group
+              label.form__label(for='priceDiscount') Giảm giá (VND)
+              input#priceDiscount.form__input(type='number', value=`${tour ? tour.priceDiscount : ''}`, min='0')
+            
+            .form__group
+              label.form__label(for='summary') Tóm tắt
+              textarea#summary.form__input(required)= tour ? tour.summary : ''
+            
+            .form__group
+              label.form__label(for='description') Mô tả chi tiết
+              textarea#description.form__input(rows='5')= tour ? tour.description : ''
+            
+            .form__group
+              label.form__label(for='startLocation') Địa điểm bắt đầu
+              input#startLocation.form__input(type='text', value=`${tour && tour.startLocation ? tour.startLocation.description : ''}`, required)
+            
+            .form__group
+              label.form__label(for='startLocationAddress') Địa chỉ bắt đầu
+              input#startLocationAddress.form__input(type='text', value=`${tour && tour.startLocation ? tour.startLocation.address : ''}`, required)
+            
+            .form__group
+              label.form__label(for='startLocationCoordinates') Tọa độ bắt đầu (lng, lat)
+              input#startLocationCoordinates.form__input(type='text', value=`${tour && tour.startLocation ? tour.startLocation.coordinates.join(', ') : ''}`, placeholder='106.695249, 10.775400')
+            
+            .form__group
+              label.form__label(for='imageCover') Ảnh bìa
+              if tour && tour.imageCover
+                .form__current-image
+                  img(src=`/img/tours/${tour.imageCover}`, alt='Ảnh bìa hiện tại')
+                  p Ảnh bìa hiện tại
+              input#imageCover.form__upload(type='file', accept='image/*')
+              label(for='imageCover') Chọn ảnh bìa
+            
+            .form__group
+              label.form__label(for='images') Ảnh tour (tối đa 3 ảnh)
+              if tour && tour.images && tour.images.length > 0
+                .form__current-images
+                  each img, i in tour.images
+                    .form__current-image
+                      img(src=`/img/tours/${img}`, alt=`Ảnh tour ${i+1}`)
+                      p Ảnh tour #{i+1}
+              input#images.form__upload(type='file', accept='image/*', multiple)
+              label(for='images') Chọn ảnh tour
+            
+            h3.heading-tertiary.ma-bt-md Địa điểm trong tour
+            
+            .locations-container
+              if tour && tour.locations && tour.locations.length > 0
+                each location, i in tour.locations
+                  .location-item(data-index=i)
+                    button.location-item__remove(type='button') ×
+                    .form__group
+                      label.form__label Địa danh
+                      input.location-description.form__input(type='text', value=location.description, required)
+                    .form__group
+                      label.form__label Địa chỉ
+                      input.location-address.form__input(type='text', value=location.address, )
+                    .form__group
+                      label.form__label Tọa độ (lng, lat)
+                      input.location-coordinates.form__input(type='text', value=location.coordinates.join(', '), placeholder='106.695249, 10.775400')
+                    .form__group
+                      label.form__label Ngày thứ
+                      input.location-day.form__input(type='number', value=location.day, required, min='1')
+              
+              button.btn.btn--small.btn--blue.btn-add-location(type='button') Thêm địa điểm
+            
+            h3.heading-tertiary.ma-bt-md Ngày khởi hành
+            
+            .start-dates-container
+                if tour && tour.startDates && tour.startDates.length > 0
+                    - const parsedStartDates = typeof tour.startDates[0] === 'string' ? JSON.parse(tour.startDates[0]) : tour.startDates
+                    each date, i in parsedStartDates
+                        .start-date-item(data-index=i)
+                            button.start-date-item__remove(type='button') ×
+                            .form__group
+                                label.form__label Ngày khởi hành
+                                - const formattedDate = new Date(date).toISOString().split('T')[0]
+                                input.start-date.form__input(type='date', value=formattedDate, required)
+                    
+                button.btn.btn--small.btn--blue.btn-add-start-date(type='button') Thêm ngày khởi hành
+            
+            h3.heading-tertiary.ma-bt-md Hướng dẫn viên
+            
+            .guides-container
+              if tour && tour.guides && tour.guides.length > 0
+                each guide, i in tour.guides
+                  .guide-item(data-index=i, data-guide-id=guide.id)
+                    button.guide-item__remove(type='button') ×
+                    .form__group
+                      label.form__label Hướng dẫn viên
+                      select.guide-select.form__input(required)
+                        option(value='') Chọn hướng dẫn viên
+                        each guideOption in guides
+                          option(value=guideOption.id, selected=guide.id === guideOption.id)= `${guideOption.name} (${guideOption.role})`
+              else
+                .guide-item(data-index='0')
+                  .form__group
+                    label.form__label Hướng dẫn viên
+                    select.guide-select.form__input(required)
+                      option(value='') Chọn hướng dẫn viên
+                      each guideOption in guides
+                        option(value=guideOption.id)= `${guideOption.name} (${guideOption.role})`
+
+            button.btn.btn--small.btn--blue.btn-add-guide(type='button') Thêm hướng dẫn viên
+            
+            .form__group.right
+              button.btn.btn--small.btn--green.btn-save-tour Lưu

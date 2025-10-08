@@ -1,0 +1,86 @@
+.booking-success-container {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.booking-success-card {
+  background-color: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.15);
+  padding: 3rem;
+  text-align: center;
+}
+
+.booking-success-icon {
+  margin-bottom: 2rem;
+}
+
+.booking-success-icon svg {
+  width: 8rem;
+  height: 8rem;
+  fill: #55c57a;
+}
+
+.booking-success-message {
+  font-size: 1.6rem;
+  color: #777;
+  margin-bottom: 3rem;
+}
+
+.booking-success-details {
+  background-color: #f7f7f7;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  margin-bottom: 3rem;
+}
+
+.booking-success-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.booking-success-item:last-child {
+  border-bottom: none;
+}
+
+.booking-success-label {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #777;
+}
+
+.booking-success-value {
+  font-size: 1.4rem;
+  color: #333;
+}
+
+.booking-success-redirect {
+  font-size: 1.4rem;
+  color: #777;
+  margin-bottom: 2rem;
+}
+
+#countdown {
+  font-weight: 700;
+  color: #55c57a;
+}
+
+.booking-success-actions {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.booking-success-actions .btn {
+  padding: 1.2rem 3rem;
+}
+
+@media only screen and (max-width: 768px) {
+  .booking-success-actions {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}

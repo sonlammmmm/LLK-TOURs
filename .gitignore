@@ -1,0 +1,25 @@
+# --- Node.js ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# --- Environment files ---
+config.env
+.env
+
+# --- Parcel / Webpack / build cache ---
+.parcel-cache/
+public/dist/
+build/
+dist/
+
+# --- IDE / hệ điều hành ---
+.vscode/
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
+logs/

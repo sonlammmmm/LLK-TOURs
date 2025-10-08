@@ -1,0 +1,70 @@
+extends base
+
+block content
+  main.main
+    .user-view
+      nav.user-view__menu
+        ul.side-nav
+          li
+            a(href='/me')
+              svg
+                use(xlink:href='/img/icons.svg#icon-user')
+              | Hồ sơ
+          if user.role == 'user'
+            li
+              a(href='/my-tours')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-briefcase')
+                | Tour của tôi
+            li.side-nav--active
+              a(href='/my-reviews')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-star')
+                | Đánh giá của tôi
+            li
+              a(href='/my-billing')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-credit-card')
+                | Hóa đơn của tôi
+
+      .user-view__content
+        .user-view__form-container
+          h2.heading-secondary.ma-bt-md Thông tin tài khoản
+          //- WITH API
+          form.form.form-user-data
+            .form__group
+              label.form__label(for='name') Tên
+              input#name.form__input(type='text', value=`${user.name}`, required, name='name', style='padding: 0.8rem 1.2rem; height: auto; font-size: 1.4rem; line-height: 1.5;')
+            .form__group.ma-bt-md
+              label.form__label(for='email') Email
+              p.form__input #{user.email}
+              input#email(type='hidden', name='email', value=`${user.email}`)
+            .form__group.form__photo-upload
+              img.form__user-photo(src=`/img/users/${user.photo}`, alt='User photo')
+              input.form__upload(type='file', accept='image/*', id='photo', name='photo')
+              label(for='photo') Chọn ảnh mới
+              
+            .form__group.right
+              button.btn.btn--small.btn--blue Lưu thông tin
+              
+        .line &nbsp;
+        
+        .user-view__form-container
+          h2.heading-secondary.ma-bt-md Đổi mật khẩu
+          form.form.form-user-password
+            .form__group
+              label.form__label(for='password-current') Mật khẩu hiện tại
+              input#password-current.form__input(type='password', placeholder='••••••••', required, minlength='8', style='padding: 0.8rem 1.2rem; height: auto; font-size: 1.4rem; line-height: 1.5;')
+            .form__group
+              label.form__label(for='password') Mật khẩu mới
+              input#password.form__input(type='password', placeholder='••••••••', required, minlength='8', style='padding: 0.8rem 1.2rem; height: auto; font-size: 1.4rem; line-height: 1.5;')
+            .form__group.ma-bt-lg
+              label.form__label(for='password-confirm') Xác nhận mật khẩu mới
+              input#password-confirm.form__input(type='password', placeholder='••••••••', required, minlength='8', style='padding: 0.8rem 1.2rem; height: auto; font-size: 1.4rem; line-height: 1.5;')
+            .form__group.right
+              button.btn.btn--small.btn--blue.btn--save-password Lưu
+        .user-view__form-container    
+          form.form
+            .form__group.right
+              a.btn.btn--small.btn--blue(href='/forgot-password') Quên mật khẩu?
+          

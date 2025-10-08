@@ -1,0 +1,32 @@
+extends base
+
+block content
+  main.main
+    .booking-success-container
+      .booking-success-card
+        .booking-success-icon
+          svg
+            use(xlink:href='/img/icons.svg#icon-check-circle')
+        
+        h2.heading-secondary Thanh toán thành công!
+        
+        p.booking-success-message Cảm ơn bạn đã đặt tour. Chúng tôi đã gửi email xác nhận đến địa chỉ email của bạn.
+        
+        .booking-success-details
+          .booking-success-item
+            span.booking-success-label Tour:
+            span.booking-success-value= booking.tour.name
+          
+          .booking-success-item
+            span.booking-success-label Số lượng người:
+            span.booking-success-value= `${booking.participants} người`
+          
+          .booking-success-item
+            span.booking-success-label Tổng tiền:
+            span.booking-success-value= `${booking.price.toLocaleString('vi-VN')} VND`
+        
+        p.booking-success-redirect Bạn sẽ được chuyển hướng đến trang "Tour của tôi" sau <span id="countdown">10</span> giây.
+        
+        .booking-success-actions
+          a.btn.btn--green(href='/my-tours') Xem tour của tôi
+          a.btn.btn--blue(href='/') Trang chủ

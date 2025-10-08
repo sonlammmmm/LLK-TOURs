@@ -1,0 +1,17 @@
+extends baseEmail
+
+block content
+  p Kính gửi Anh/Chị #{firstName},
+  p Chào mừng bạn đến với cộng đồng của chúng tôi! Để giúp mọi người dễ dàng kết nối và nhận diện bạn hơn, chúng tôi khuyến khích bạn tải lên ảnh đại diện của mình.
+  table.btn.btn-primary(role='presentation', border='0', cellpadding='0', cellspacing='0')
+    tbody
+      tr
+        td(align='left')
+          table(role='presentation', border='0', cellpadding='0', cellspacing='0')
+            tbody
+              tr
+                td
+                  a(href=`${url}`, target='_blank') Hãy cập nhật hồ sơ cá nhân nhé
+  p Nếu bạn cần bất kỳ sự hỗ trợ nào hoặc có bất kỳ câu hỏi nào về các tour du lịch của chúng tôi, đừng ngần ngại liên hệ với đội ngũ hỗ trợ.
+  p Trân trọng,
+  p Đội ngũ LLK Tours

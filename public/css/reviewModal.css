@@ -1,0 +1,77 @@
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal__content {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 5px;
+  width: 50rem;
+  max-width: 90%;
+  position: relative;
+}
+
+.modal__close {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  font-size: 2.5rem;
+  cursor: pointer;
+  color: #777;
+}
+
+.modal__title {
+  margin-bottom: 2rem;
+  color: #014d8c;
+}
+
+.rating-input {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
+.rating-input input {
+  display: none;
+}
+
+.rating-input label {
+  font-size: 3rem;
+  color: #ddd;
+  cursor: pointer;
+  margin-right: 0.5rem;
+}
+
+.rating-input label:hover,
+.rating-input label:hover ~ label,
+.rating-input input:checked ~ label {
+  color: #ffd700;
+}
+
+.btn--gray {
+  background-color: #f7f7f7;
+  color: #777;
+  cursor: not-allowed;
+}
+
+.btn--orange {
+  background-color: #ff7730;
+  color: #fff;
+}
+
+.btn--orange:hover {
+  background-color: #ff5500;
+}

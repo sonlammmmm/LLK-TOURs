@@ -1,0 +1,179 @@
+extends base
+
+block content
+  main.main
+    .user-view
+      // Sidebar (giữ nguyên)
+      nav.user-view__menu
+        .admin-nav
+          h5.admin-nav__heading Quản lý
+          ul.side-nav
+            li
+              a(href='/admin/dashboard')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-home')
+                | Dashboard
+            li
+              a(href='/admin/tours')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-map')
+                | Quản lý tours
+            li
+              a(href='/admin/users')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-user')
+                | Quản lý User
+            li
+              a(href='/admin/bookings')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-briefcase')
+                | Lịch sử đặt tour
+            li
+              a(href='/admin/reviews')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-star')
+                | Quản lý đánh giá
+
+      .user-view__content
+        .user-view__form-container
+          h2.heading-secondary.mb-5 Thống kê tổng quan
+          .stats-dashboard
+            // Section cho reviews
+            .revenue-section.mb-5
+              h3.heading-tertiary.mb-3 Doanh thu
+              .stats-card-grid
+                // Card doanh thu ngày hiện tại
+                .stats-card
+                  .stats-card__icon-wrapper
+                    .stats-card__icon.stats-card__icon--orange
+                      svg
+                        use(xlink:href='/img/icons.svg#icon-dollar-sign')
+                  .stats-card__content
+                    h3.stats-card__title Doanh thu ngày hôm nay - #{formattedDate}
+                    .stats-card__value #{todayRevenue.toLocaleString('vi-VN')} ₫
+                
+                // Card doanh thu tháng hiện tại
+                .stats-card
+                  .stats-card__icon-wrapper
+                    .stats-card__icon.stats-card__icon--blue
+                      svg
+                        use(xlink:href='/img/icons.svg#icon-dollar-sign')
+                  .stats-card__content
+                    h3.stats-card__title Doanh thu tháng hiện tại - #{formattedMonth}
+                    .stats-card__value #{monthRevenue.toLocaleString('vi-VN')} ₫
+                
+                // Card doanh thu năm hiện tại
+                .stats-card
+                  .stats-card__icon-wrapper
+                    .stats-card__icon.stats-card__icon--green
+                      svg
+                        use(xlink:href='/img/icons.svg#icon-dollar-sign')
+                  .stats-card__content
+                    h3.stats-card__title Doanh thu trong năm nay - #{currentYear}
+                    .stats-card__value #{yearRevenue.toLocaleString('vi-VN')} ₫
+              
+            // Section riêng cho booking status
+            .booking-status-section.mb-5
+              h3.heading-tertiary.mb-3 Tổng quan Bookings
+              .stats-card-grid.stats-card-grid--payment   
+                // Thẻ Tổng Đặt Tour
+                a.stats-card(href='/admin/bookings')
+                  .stats-card__icon-wrapper
+                    .stats-card__icon.stats-card__icon--purple
+                      svg
+                        use(xlink:href='/img/icons.svg#icon-briefcase')
+                  .stats-card__content
+                    h3.stats-card__title Tổng số Đặt Tour
+                    .stats-card__value #{stats.totalBookings}
+                    .stats-card__subtitle Tất cả booking
+
+                // Thẻ Booking đã thanh toán
+                a.stats-card.stats-card--success(href='/admin/bookings?status=paid')
+                  .stats-card__icon-wrapper
+                    .stats-card__icon.stats-card__icon--success
+                      svg
+                        use(xlink:href='/img/icons.svg#icon-check-circle')
+                  .stats-card__content
+                    h3.stats-card__title Đã thanh toán
+                    .stats-card__value #{stats.paidBookings}
+                    .stats-card__subtitle Booking hoàn tất
+                    .stats-card__percentage
+                      - var paidPercentage = stats.totalBookings > 0 ? Math.round((stats.paidBookings / stats.totalBookings) * 100) : 0
+                      span.percentage--success #{paidPercentage}%
+                
+                // Thẻ Booking chưa thanh toán
+                a.stats-card.stats-card--warning(href='/admin/bookings?status=unpaid')
+                  .stats-card__icon-wrapper
+                    .stats-card__icon.stats-card__icon--warning
+                      svg
+                        use(xlink:href='/img/icons.svg#icon-clock')
+                  .stats-card__content
+                    h3.stats-card__title Chưa thanh toán
+                    .stats-card__value #{stats.unpaidBookings}
+                    .stats-card__subtitle Cần xử lý
+                    .stats-card__percentage
+                      - var unpaidPercentage = stats.totalBookings > 0 ? Math.round((stats.unpaidBookings / stats.totalBookings) * 100) : 0
+                      span.percentage--warning #{unpaidPercentage}%
+
+            // Các card thống kê chung
+            .stats-card-grid.mb-5
+              // Thẻ Tours
+              a.stats-card(href='/admin/tours')
+                .stats-card__icon-wrapper
+                  .stats-card__icon.stats-card__icon--blue
+                    svg
+                      use(xlink:href='/img/icons.svg#icon-map')
+                .stats-card__content
+                  h3.stats-card__title Tổng số Tour
+                  .stats-card__value #{stats.totalTours}
+              
+              // Thẻ Người Dùng
+              a.stats-card(href='/admin/users')
+                .stats-card__icon-wrapper
+                  .stats-card__icon.stats-card__icon--indigo
+                    svg
+                      use(xlink:href='/img/icons.svg#icon-user')
+                .stats-card__content
+                  h3.stats-card__title Tổng số Người Dùng
+                  .stats-card__value #{stats.totalUsers}
+              
+              // Thẻ Đánh Giá
+              a.stats-card(href='/admin/reviews')
+                  .stats-card__icon-wrapper
+                    .stats-card__icon.stats-card__icon--orange
+                      svg
+                        use(xlink:href='/img/icons.svg#icon-star')
+                  .stats-card__content
+                    h3.stats-card__title Tổng số Đánh Giá
+                    .stats-card__value #{stats.totalReviews}
+                
+          // --- Biểu đồ doanh thu theo tháng ---
+          .chart-container.mb-5
+            .chart-header
+              h2.heading-secondary Biểu đồ doanh thu theo tháng
+              .chart-filter
+                label.chart-filter__label(for="selectYear") Chọn năm:
+                select#selectYear.chart-filter__select(name="year")
+                  each year in availableYears
+                    option(value=year, selected= selectedYear === year ? "selected" : undefined)= year
+            // Nhúng dữ liệu doanh thu theo tháng từ API
+            pre#dashboardRevenueData(style="display: none") !{JSON.stringify(revenueData)}
+            .chart-wrapper
+              canvas#monthlyChart
+
+          // --- Biểu đồ doanh thu theo ngày ---
+          .chart-container
+            .chart-header
+              h2.heading-secondary Biểu đồ doanh thu theo ngày
+              .chart-filter
+                label.chart-filter__label(for="selectMonth") Chọn tháng:
+                select#selectMonth.chart-filter__select
+                  each month, index in dailyRevenueByMonth
+                    option(value=index, selected= index === 0 ? "selected" : undefined)= month.month
+            // Nhúng dữ liệu doanh thu theo ngày từ API
+            pre#dashboardDailyRevenueData(style="display: none") !{JSON.stringify(dailyRevenueByMonth)}
+            .chart-wrapper
+              canvas#dailyChart
+
+block scripts
+  script(src="/js/dashboard.js")
