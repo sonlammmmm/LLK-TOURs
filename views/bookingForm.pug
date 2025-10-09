@@ -5,7 +5,8 @@ block content
     .booking-form-container
       .booking-form-card
         h2.heading-secondary Đặt tour
-        
+
+        // ==== THÔNG TIN TOUR COMPACT ====
         .booking-form-details
           .booking-form-image
             img(src=`/img/tours/${tour.imageCover}`, alt=`${tour.name}`)
@@ -17,162 +18,103 @@ block content
                 svg.booking-form-icon
                   use(xlink:href='/img/icons.svg#icon-clock')
                 span= `${tour.duration} ngày`
-              
               .booking-form-meta-item
                 svg.booking-form-icon
                   use(xlink:href='/img/icons.svg#icon-map-pin')
                 span= tour.startLocation.description
-              
               .booking-form-meta-item
                 svg.booking-form-icon
                   use(xlink:href='/img/icons.svg#icon-calendar')
                 span Nhiều ngày khởi hành
-              
               .booking-form-meta-item
                 svg.booking-form-icon
                   use(xlink:href='/img/icons.svg#icon-user')
                 span= `Tối đa ${tour.maxGroupSize} người`
-        
-        .booking-form-divider
-        
+
+        // ==== FORM ĐẶT TOUR - LAYOUT 2 CỘT ====
         form.booking-form
-          input(type="hidden", name="tourId", value=`${tour.id}`)
-          
-          //- Selectbox chọn ngày khởi hành
-          .booking-form-group
-            label.booking-form-label(for="startDate") Ngày khởi hành:
-            select#startDate.booking-form-select(name="startDate", required)
-              option(value="") -- Chọn ngày khởi hành --
-              //- Hiển thị trực tiếp các ngày khởi hành từ dữ liệu tour
+          input(type="hidden", name="tourId", value=`${tour._id}`)
+          input#selectedDate(type="hidden", name="startDate", value="")
+
+          // CỘT TRÁI: CHỌN NGÀY & SỐ NGƯỜI
+          .booking-form-left
+            
+            // --- CHỌN NGÀY KHỞI HÀNH ---
+            .booking-form-group
+              label.booking-form-label
+                span.step-number 1
+                span Chọn ngày khởi hành:
+              
               if tour.startDates && tour.startDates.length > 0
-                each date in tour.startDates
-                  - const dateObj = new Date(date)
-                  - const today = new Date()
-                  - today.setHours(0, 0, 0, 0)
-                  if dateObj >= today
-                    - const formattedDate = dateObj.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-                    option(value=dateObj.toISOString())= formattedDate
-          
-          .booking-form-group
-            label.booking-form-label(for="participants") Số lượng người tham gia:
-            .booking-form-input-group
-              button.booking-form-btn.booking-form-btn--decrease(type="button") -
-              input#participants.booking-form-input(type="number", min="1", max=`${tour.maxGroupSize}`, value="1", name="participants")
-              button.booking-form-btn.booking-form-btn--increase(type="button") +
-          
-          .booking-form-group
-            label.booking-form-label Giá tour:
-            .booking-form-price= `${tour.price.toLocaleString('vi-VN')} VND / người`
-          
-          .booking-form-group
-            label.booking-form-label Tổng tiền:
-            .booking-form-total#total-price= `${tour.price.toLocaleString('vi-VN')} VND`
-          
-          .booking-form-actions
-            a.btn.btn--gray(href=`/tour/${tour.slug}`) Quay lại
-            button.btn.btn--green#book-tour(data-tour-id=`${tour.id}`, data-max-size=`${tour.maxGroupSize}`) Thanh toán ngay
+                - var today = new Date();
+                - today.setHours(0, 0, 0, 0);
+                - var availableDates = tour.startDates.filter(sd => new Date(sd.date) >= today && sd.availableSlots > 0);
+                
+                if availableDates.length > 0
+                  .date-buttons-grid
+                    each startObj in availableDates
+                      - var dateObj = new Date(startObj.date);
+                      - var day = dateObj.getDate();
+                      - var month = dateObj.toLocaleDateString('vi-VN', { month: 'short' });
+                      - var year = dateObj.getFullYear();
+                      - var weekday = dateObj.toLocaleDateString('vi-VN', { weekday: 'short' });
+                      - var lowSlots = startObj.availableSlots <= 3;
+                      
+                      .date-button(
+                        class=lowSlots ? 'low-slots' : '',
+                        data-date=dateObj.toISOString(),
+                        data-slots=startObj.availableSlots
+                      )
+                        .date-day= day
+                        .date-month-year= `${month} ${year}`
+                        .date-weekday= weekday
+                        .date-slots= `${startObj.availableSlots} chỗ`
+                else
+                  .no-dates-message Không có ngày khởi hành khả dụng
+              else
+                .no-dates-message Không có ngày khởi hành khả dụng
+
+            // --- SỐ LƯỢNG NGƯỜI ---
+            .booking-form-group
+              label.booking-form-label
+                span.step-number 2
+                span Số lượng người tham gia:
+              
+              .participants-control
+                button.participants-btn.participants-btn-decrease(type="button") −
+                .participants-display
+                  .participants-number#participants-number 1
+                  .participants-text người
+                button.participants-btn.participants-btn-increase(type="button") +
+              
+              input#participants-input(type="hidden", name="participants", value="1")
+
+          // CỘT PHẢI: THANH TOÁN
+          .booking-form-right
+            .payment-card
+              h3.payment-title Chi tiết thanh toán
+              
+              .payment-row
+                .payment-label Giá tour:
+                .payment-value#price-per-person= `${tour.price.toLocaleString('vi-VN')} ₫`
+              
+              .payment-row
+                .payment-label Số người:
+                .payment-value#participants-display 1
+              
+              .payment-row.payment-total
+                .payment-label Tổng cộng:
+                .payment-value#total-price= `${tour.price.toLocaleString('vi-VN')} ₫`
+              
+              .booking-form-actions
+                a.btn.btn--gray(href=`/tour/${tour.slug}`) Quay lại
+                button.btn.btn--green#book-tour(
+                  type="button",
+                  data-tour-id=`${tour._id}`,
+                  data-max-size=`${tour.maxGroupSize}`,
+                  data-price=`${tour.price}`,
+                  disabled
+                ) Thanh toán ngay
 
 block scripts
-  script.
-    document.addEventListener('DOMContentLoaded', function() {
-      // Lấy các phần tử DOM
-      const startDateSelect = document.getElementById('startDate');
-      const participantsInput = document.getElementById('participants');
-      const decreaseBtn = document.querySelector('.booking-form-btn--decrease');
-      const increaseBtn = document.querySelector('.booking-form-btn--increase');
-      const totalPriceEl = document.getElementById('total-price');
-      const bookTourBtn = document.getElementById('book-tour');
-      
-      // Lấy giá tour và chuyển đổi thành số
-      const tourPrice = parseInt('#{tour.price}'.replace(/[^\d]/g, ''));
-      
-      // Kiểm tra xem có ngày khởi hành nào không
-      if (startDateSelect.options.length <= 1) {
-        console.log('Không có ngày khởi hành nào trong tương lai');
-        
-        // Thêm thông báo không có ngày khởi hành
-        const option = document.createElement('option');
-        option.value = '';
-        option.textContent = 'Không có ngày khởi hành nào sắp tới';
-        option.disabled = true;
-        startDateSelect.appendChild(option);
-        
-        // Vô hiệu hóa nút đặt tour
-        if (bookTourBtn) {
-          bookTourBtn.disabled = true;
-          bookTourBtn.textContent = 'Không có ngày khởi hành';
-        }
-      }
-      
-      // Cập nhật tổng tiền khi thay đổi số người
-      function updateTotalPrice() {
-        const participants = parseInt(participantsInput.value) || 1;
-        const totalPrice = tourPrice * participants;
-        totalPriceEl.textContent = `${totalPrice.toLocaleString('vi-VN')} VND`;
-      }
-      
-      // Xử lý sự kiện khi nhấn nút giảm số người
-      if (decreaseBtn) {
-        decreaseBtn.addEventListener('click', function() {
-          const currentValue = parseInt(participantsInput.value) || 1;
-          if (currentValue > 1) {
-            participantsInput.value = currentValue - 1;
-            updateTotalPrice();
-          }
-        });
-      }
-      
-      // Xử lý sự kiện khi nhấn nút tăng số người
-      if (increaseBtn) {
-        increaseBtn.addEventListener('click', function() {
-          const currentValue = parseInt(participantsInput.value) || 1;
-          const maxSize = parseInt(bookTourBtn.dataset.maxSize) || 10;
-          if (currentValue < maxSize) {
-            participantsInput.value = currentValue + 1;
-            updateTotalPrice();
-          }
-        });
-      }
-      
-      // Xử lý sự kiện khi thay đổi số người trực tiếp
-      if (participantsInput) {
-        participantsInput.addEventListener('change', function() {
-          const maxSize = parseInt(bookTourBtn.dataset.maxSize) || 10;
-          let value = parseInt(this.value) || 1;
-          
-          // Đảm bảo giá trị nằm trong khoảng hợp lệ
-          if (value < 1) value = 1;
-          if (value > maxSize) value = maxSize;
-          
-          this.value = value;
-          updateTotalPrice();
-        });
-      }
-      
-      // Xử lý sự kiện khi nhấn nút đặt tour
-      if (bookTourBtn) {
-        bookTourBtn.addEventListener('click', function(e) {
-          e.preventDefault();
-          
-          // Kiểm tra xem đã chọn ngày khởi hành chưa
-          if (!startDateSelect.value) {
-            alert('Vui lòng chọn ngày khởi hành!');
-            startDateSelect.focus();
-            return;
-          }
-          
-          // Lấy thông tin cần thiết
-          const tourId = this.dataset.tourId;
-          const startDate = startDateSelect.value;
-          const participants = participantsInput.value;
-          
-          // Gọi hàm bookTour từ file stripe.js
-          if (window.bookTour) {
-            window.bookTour(tourId, startDate, participants);
-          } else {
-            console.error('Hàm bookTour không tồn tại!');
-            alert('Có lỗi xảy ra khi đặt tour. Vui lòng thử lại sau!');
-          }
-        });
-      }
-    });
+  script(src="/js/bookingForm.js", type="module")

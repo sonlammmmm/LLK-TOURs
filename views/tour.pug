@@ -33,7 +33,7 @@ block content
 
   if user && user.role === 'user'
     .floating-button
-      a.btn.btn--blue.btn--circle(href=`/book-tour/${tour.id}`)
+      a.btn.btn--blue.btn--circle(href=`/book-tour/${tour._id}`)
         span ĐẶT TOUR
   else if !user
     .floating-button
@@ -119,6 +119,6 @@ block content
           p.cta__text= `Chỉ với ${tour.price.toLocaleString('vi-VN')}đ bạn sẽ có ${tour.duration} ngày cho một hành trình tuyệt vời cùng với Tour "${tour.name}". Hãy biến nó thành của bạn`
       .form_group.right
         if user && user.role === 'user'
-          a.btn.btn--blue.span-all-rows(href=`/book-tour/${tour.id}`) Đăng ký ngay!
+          a.btn.btn--blue.span-all-rows(href=`/book-tour/${tour._id}`) Đăng ký ngay!
         else if !user
           a.btn.btn--blue.span-all-rows(href='/login', onclick='showLoginAlert(event)') Đăng nhập để đặt tour

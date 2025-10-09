@@ -22,8 +22,8 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
 
   // Kiểm tra xem ngày khởi hành có hợp lệ không
   const isValidStartDate = tour.startDates.some(
-    date =>
-      new Date(date).toISOString().split('T')[0] ===
+    obj =>
+      new Date(obj.date).toISOString().split('T')[0] ===
       startDate.toISOString().split('T')[0]
   );
 

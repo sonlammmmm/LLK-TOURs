@@ -56,8 +56,8 @@ block content
               .card__data
                 svg.card__icon
                   use(xlink:href='/img/icons.svg#icon-calendar')
-                - const nextDate = tour.startDates.filter(date => new Date(date) > new Date()).sort((a, b) => new Date(a) - new Date(b))[0]
-                - const dateDisplay = nextDate ? new Date(nextDate).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Chưa có lịch khởi hành'
+                - const nextDateObj = tour.startDates.filter(d => new Date(d.date || d) > new Date() && (d.availableSlots > 0 || d.availableSlots === undefined)).sort((a, b) => new Date(a.date || a) - new Date(b.date || b))[0]
+                - const dateDisplay = nextDateObj ? new Date(nextDateObj.date || nextDateObj).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Chưa có lịch khởi hành'
                 span= dateDisplay
               .card__data
                 svg.card__icon
@@ -66,7 +66,9 @@ block content
               .card__data
                 svg.card__icon
                   use(xlink:href='/img/icons.svg#icon-user')
-                span= `${tour.maxGroupSize} khách`
+                - const availableSlots = nextDateObj ? (nextDateObj.availableSlots !== undefined ? nextDateObj.availableSlots : tour.maxGroupSize) : 0
+                - const slotsText = `Còn ${availableSlots}/${tour.maxGroupSize} vé`
+                span= slotsText
 
             .card__footer
               p
@@ -76,10 +78,14 @@ block content
               p.card__ratings
                 span.card__footer-value= tour.ratingsAverage
                 | 
-                span.card__footer-text= `đánh giá (${tour.ratingsQuantity})`
+                span.card__footer-text= `/5⭐(${tour.ratingsQuantity})`
               .card__actions
                 a.btn.btn--blue.btn--small(href=`/tour/${tour.slug}`) CHI TIẾT
                 if !user
-                  a.btn.btn--green.btn--small(href="/login") ĐẶT TOUR
+                  a.btn.btn--green.btn--small(href=`/book-tour/${tour._id}`) ĐẶT TOUR
                 else if user.role === 'user'
-                  a.btn.btn--green.btn--small(href=`/book-tour/${tour.id}`) ĐẶT TOUR
+                  - const canBook = availableSlots > 0
+                  if canBook
+                    a.btn.btn--green.btn--small(href=`/book-tour/${tour._id}`) ĐẶT TOUR
+                  else
+                    a.btn.btn--grey.btn--small.btn--disabled(style="cursor: not-allowed; opacity: 0.6;") HẾT CHỖ

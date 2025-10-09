@@ -37,7 +37,8 @@ app.use(
         "'self'",
         'https://js.stripe.com',
         'https://cdn.jsdelivr.net/npm/chart.js',
-        'https://api.mapbox.com'
+        'https://api.mapbox.com',
+        'https://cdn.socket.io'
       ],
       workerSrc: ["'self'", 'blob:', 'https://api.mapbox.com'],
       styleSrc: [

@@ -1,0 +1,29 @@
+extends base
+
+block content
+  main.main
+    .user-view
+      nav.user-view__menu
+        ul.side-nav
+          li
+            a(href='/me')
+              svg
+                use(xlink:href='/img/icons.svg#icon-user')
+              | Hồ sơ
+          li
+            a.active(href='/chat')
+              svg
+                use(xlink:href='/img/icons.svg#icon-message-square')
+              | Chat với Admin
+
+      .user-view__content
+        h2.heading-secondary.mt-3 Chat với Admin
+        #chat-box.chat-box
+        form#chat-user-form.chat-form
+          input#chat-user-input(type='text', placeholder='Nhập tin nhắn...')
+          button.btn.btn--blue(type='submit') Gửi
+  script(src="https://cdn.socket.io/4.7.2/socket.io.min.js")
+  script(src="/js/chatUser.js")
+  script.
+    window.userId = "#{user._id}";
+    window.userName = "#{user.name}";

@@ -1,0 +1,199 @@
+/* =========================
+   CHAT NỔI CỦA USER
+========================= */
+#chat-float {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 55px;
+  height: 55px;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  transition: transform 0.2s;
+  z-index: 999;
+}
+#chat-float:hover { transform: scale(1.1); }
+
+#chat-popup {
+  position: fixed;
+  bottom: 95px;
+  right: 25px;
+  width: 320px;
+  max-height: 450px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1000;
+}
+.hidden { display: none; }
+
+.chat-header {
+  background: #3b82f6;
+  color: #fff;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.chat-header h4 { margin: 0; font-size: 16px; }
+.close-btn {
+  background: transparent;
+  color: #fff;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+#chat-body {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  background: #f9fafb;
+}
+
+.chat-message {
+  background: #e5e7eb;
+  margin: 4px 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  max-width: 80%;
+  word-wrap: break-word;
+}
+
+.chat-message.mine {
+  background: #d1fae5;
+  color: #065f46;
+  align-self: flex-end;
+}
+
+.chat-message.admin {
+  background: #d1fae5;
+  color: #065f46;
+  align-self: flex-end;
+}
+
+.chat-message.user {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+#chat-user-form {
+  display: flex;
+  border-top: 1px solid #ddd;
+}
+#chat-user-input {
+  flex: 1;
+  border: none;
+  padding: 10px;
+  font-size: 14px;
+}
+#chat-user-input:focus { outline: none; }
+#chat-user-form button {
+  border: none;
+  background: #3b82f6;
+  color: #fff;
+  padding: 0 15px;
+  cursor: pointer;
+}
+
+/* =========================
+   CHAT ADMIN PAGE (/admin/chat)
+========================= */
+.admin-chat-page {
+  display: flex;
+  height: 80vh;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.chat-sidebar {
+  width: 250px;
+  border-right: 1px solid #ddd;
+  background: #f9fafb;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.user-item {
+  padding: 8px 10px;
+  cursor: pointer;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  transition: background 0.2s;
+}
+.user-item:hover, .user-item.active {
+  background: #e0f2fe;
+  color: #1d4ed8;
+}
+
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+#chat-box {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #eee;
+  overflow-y: auto;
+  background: #f9fafb;
+  border-radius: 6px;
+}
+
+.chat-message {
+  margin: 5px 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  max-width: 80%;
+  background: #e5e7eb;
+}
+.chat-message.mine {
+  background: #d1fae5;
+  color: #065f46;
+  align-self: flex-end;
+}
+
+.chat-form {
+  display: flex;
+  margin-top: 10px;
+}
+#chat-input {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 6px 0 0 6px;
+  padding: 8px;
+}
+#chat-form button {
+  border: none;
+  background: #3b82f6;
+  color: white;
+  border-radius: 0 6px 6px 0;
+  padding: 0 15px;
+  cursor: pointer;
+}
+#chat-input:focus { outline: none; border-color: #3b82f6; }
+
+/* =========================
+   THÔNG BÁO TIN MỚI (BLINK)
+========================= */
+.notify {
+  animation: blink 0.8s ease-in-out 4;
+}
+@keyframes blink {
+  50% {
+    background: #ef4444;
+    transform: scale(1.2);
+  }
+}

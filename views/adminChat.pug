@@ -1,0 +1,34 @@
+extends base
+
+block content
+  main.main
+    .admin-chat-page
+      // Sidebar người dùng
+      aside.chat-sidebar
+        h2.heading-secondary.mb-3
+          i(class="fa-solid fa-users")
+          |  Người dùng
+        ul#user-list
+          each u in users
+            li.user-item(data-userid=u._id data-username=u.name)
+              i(class="fa-solid fa-user-circle") 
+              |  #{u.name}
+
+      // Khu vực chat chính
+      section.chat-main
+        h2.heading-secondary.mb-3
+          i(class="fa-solid fa-comments")
+          |  Chat khách hàng
+        #chat-box.chat-box
+        form#chat-form.chat-form
+          input#chat-input(type='text', placeholder='Nhập tin nhắn...')
+          button.btn.btn--blue(type='submit')
+            i(class="fa-solid fa-paper-plane")
+            |  Gửi
+
+block scripts
+  script(src="https://cdn.socket.io/4.7.2/socket.io.min.js")
+  script(src="/js/chatAdmin.js")
+  script.
+    window.userId = "#{user._id}";
+    window.userName = "#{user.name}";

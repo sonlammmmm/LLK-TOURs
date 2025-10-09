@@ -1,116 +1,165 @@
 /* eslint-disable */
-import axios from "axios"
-import { showAlert } from "./alerts"
-import { loadStripe } from '@stripe/stripe-js';
+document.addEventListener("DOMContentLoaded", function () {
+  // ==== ELEMENTS ====
+  const dateButtons = document.querySelectorAll(".date-button");
+  const selectedDateInput = document.getElementById("selectedDate");
+  const participantsInput = document.getElementById("participants-input");
+  const participantsNumber = document.getElementById("participants-number");
+  const participantsDisplay = document.getElementById("participants-display");
+  const decreaseBtn = document.querySelector(".participants-btn-decrease");
+  const increaseBtn = document.querySelector(".participants-btn-increase");
+  const totalPriceEl = document.getElementById("total-price");
+  const bookTourBtn = document.getElementById("book-tour");
 
-// Đảm bảo cung cấp API key Stripe một cách chính xác
-const stripePromise = loadStripe(
-  "pk_test_51ROK1zPQRbfkcMyySxeH7DJx96qGXiuqvM1wzDle8ZUt00OlrjxqHoQQsxvqF6aq2jPQCXkQqPaAlL593dJilC3c00rXElE12Q",
-)
+  // Kiểm tra các phần tử chính
+  if (!bookTourBtn || !participantsInput) return;
 
-export const initBookingForm = () => {
-  const participantsInput = document.getElementById("participants")
-  const totalPriceElement = document.getElementById("total-price")
-  const decreaseBtn = document.querySelector(".booking-form-btn--decrease")
-  const increaseBtn = document.querySelector(".booking-form-btn--increase")
-  const bookTourBtn = document.getElementById("book-tour")
-  const startDateInput = document.getElementById("startDate") // Thêm lấy input startDate
+  // ==== CONSTANTS ====
+  const tourPrice = parseInt(bookTourBtn.dataset.price || "0", 10);
+  const maxSize = parseInt(bookTourBtn.dataset.maxSize || "10", 10);
 
-  if (!participantsInput || !totalPriceElement) return
+  // ==== STATE ====
+  let currentParticipants = 1;
+  let selectedDate = null;
+  let maxSlotsForSelectedDate = maxSize;
 
-  // Lấy giá gốc từ text và chuyển đổi thành số
-  const priceText = document.querySelector(".booking-form-price").textContent
-  const tourPrice = Number.parseInt(priceText.replace(/[^\d]/g, ""), 10)
+  // ==== FUNCTIONS ====
 
-  // Hàm cập nhật tổng tiền
-  const updateTotalPrice = () => {
-    const participants = Number.parseInt(participantsInput.value, 10) || 1
-    const totalPrice = tourPrice * participants
-    totalPriceElement.textContent = `${totalPrice.toLocaleString("vi-VN")} VND`
+  // Cập nhật tổng tiền
+  function updateTotalPrice() {
+    const totalPrice = tourPrice * currentParticipants;
+    if (totalPriceEl) {
+      totalPriceEl.textContent = `${totalPrice.toLocaleString("vi-VN")} ₫`;
+    }
+    if (participantsDisplay) {
+      participantsDisplay.textContent = currentParticipants;
+    }
   }
 
-  // Cập nhật tính toán khi thay đổi số lượng người
-  participantsInput.addEventListener("input", updateTotalPrice)
+  // Cập nhật trạng thái nút tăng/giảm
+  function updateButtonStates() {
+    if (decreaseBtn) {
+      decreaseBtn.disabled = currentParticipants <= 1;
+    }
+    if (increaseBtn) {
+      const effectiveMax = Math.min(maxSize, maxSlotsForSelectedDate);
+      increaseBtn.disabled = currentParticipants >= effectiveMax;
+    }
+  }
 
-  // Xử lý nút giảm số lượng
+  // Cập nhật trạng thái nút thanh toán
+  function updateBookButtonState() {
+    if (bookTourBtn) {
+      bookTourBtn.disabled = !selectedDate;
+    }
+  }
+
+  // ==== CHỌN NGÀY ====
+  dateButtons.forEach((button) => {
+    button.addEventListener("click", function () {
+      // Bỏ chọn ngày cũ
+      dateButtons.forEach((btn) => btn.classList.remove("selected"));
+
+      // Chọn ngày mới
+      this.classList.add("selected");
+      selectedDate = this.dataset.date;
+      maxSlotsForSelectedDate = parseInt(this.dataset.slots || maxSize, 10);
+
+      // Cập nhật hidden input
+      if (selectedDateInput) {
+        selectedDateInput.value = selectedDate;
+      }
+
+      // Điều chỉnh số người nếu vượt quá số chỗ
+      if (currentParticipants > maxSlotsForSelectedDate) {
+        currentParticipants = maxSlotsForSelectedDate;
+        participantsInput.value = currentParticipants;
+        if (participantsNumber) {
+          participantsNumber.textContent = currentParticipants;
+        }
+        updateTotalPrice();
+      }
+
+      // Cập nhật trạng thái các nút
+      updateButtonStates();
+      updateBookButtonState();
+    });
+  });
+
+  // ==== TĂNG/GIẢM SỐ NGƯỜI ====
   if (decreaseBtn) {
-    decreaseBtn.addEventListener("click", () => {
-      const currentValue = Number.parseInt(participantsInput.value, 10) || 1
-      if (currentValue > 1) {
-        participantsInput.value = currentValue - 1
-        updateTotalPrice()
+    decreaseBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      if (currentParticipants > 1) {
+        currentParticipants--;
+        participantsInput.value = currentParticipants;
+        if (participantsNumber) {
+          participantsNumber.textContent = currentParticipants;
+        }
+        updateTotalPrice();
+        updateButtonStates();
       }
-    })
+    });
   }
 
-  // Xử lý nút tăng số lượng
   if (increaseBtn) {
-    increaseBtn.addEventListener("click", () => {
-      const currentValue = Number.parseInt(participantsInput.value, 10) || 1
-      const maxSize = bookTourBtn.dataset.maxSize
-      if (currentValue < maxSize) {
-        participantsInput.value = currentValue + 1
-        updateTotalPrice()
+    increaseBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      const effectiveMax = Math.min(maxSize, maxSlotsForSelectedDate);
+      
+      if (currentParticipants < effectiveMax) {
+        currentParticipants++;
+        participantsInput.value = currentParticipants;
+        if (participantsNumber) {
+          participantsNumber.textContent = currentParticipants;
+        }
+        updateTotalPrice();
+        updateButtonStates();
+      } else {
+        // Hiển thị thông báo giới hạn
+        const limitMessage = selectedDate
+          ? `Ngày này chỉ còn ${maxSlotsForSelectedDate} chỗ trống`
+          : `Số lượng tối đa là ${maxSize} người`;
+        alert(limitMessage);
       }
-    })
+    });
   }
 
-  // Xử lý nút đặt tour
+  // ==== XỬ LÝ THANH TOÁN ====
   if (bookTourBtn) {
-    bookTourBtn.addEventListener("click", async (e) => {
-      e.preventDefault()
-      bookTourBtn.textContent = "Đang xử lý..."
+    bookTourBtn.addEventListener("click", function (e) {
+      e.preventDefault();
 
-      try {
-        const tourId = bookTourBtn.dataset.tourId
-        const participants = Number.parseInt(participantsInput.value, 10) || 1
-        const maxSize = bookTourBtn.dataset.maxSize
-        
-        // Kiểm tra ngày khởi hành đã được chọn chưa
-        if (!startDateInput || !startDateInput.value) {
-          bookTourBtn.textContent = "Thanh toán ngay"
-          return showAlert("error", "Vui lòng chọn ngày khởi hành")
+      // Kiểm tra đã chọn ngày chưa
+      if (!selectedDate) {
+        alert("Vui lòng chọn ngày khởi hành!");
+        // Scroll đến phần chọn ngày
+        const dateSection = document.querySelector(".date-buttons-grid");
+        if (dateSection) {
+          dateSection.scrollIntoView({ behavior: "smooth", block: "center" });
         }
-        
-        const startDate = startDateInput.value
-
-        // Kiểm tra ràng buộc số lượng người
-        if (participants > maxSize) {
-          bookTourBtn.textContent = "Thanh toán ngay"
-          return showAlert("error", `Số lượng người tham gia tối đa là ${maxSize} người`)
-        }
-
-        if (participants < 1) {
-          bookTourBtn.textContent = "Thanh toán ngay"
-          return showAlert("error", "Số lượng người tham gia tối thiểu là 1 người")
-        }
-
-        // Lấy phiên checkout từ API của server
-        const sessionResponse = await axios.get(
-          `/api/v1/bookings/checkout-session/${tourId}?startDate=${startDate}&participants=${participants}`,
-        )
-
-        // Chờ đợi Stripe được tải xong
-        const stripe = await stripePromise
-        if (!stripe) {
-          throw new Error("Stripe không khởi tạo được!")
-        }
-
-        // Redirect đến trang checkout
-        const result = await stripe.redirectToCheckout({
-          sessionId: sessionResponse.data.session.id,
-        })
-
-        if (result.error) {
-          console.error(result.error)
-          showAlert("error", result.error.message)
-          bookTourBtn.textContent = "Thanh toán ngay"
-        }
-      } catch (err) {
-        console.error(err)
-        showAlert("error", err.response ? err.response.data.message : "Đã xảy ra lỗi khi đặt tour")
-        bookTourBtn.textContent = "Thanh toán ngay"
+        return;
       }
-    })
+
+      const tourId = this.dataset.tourId;
+
+      // Gọi hàm đặt tour (Stripe, VNPay, etc.)
+      if (window.bookTour) {
+        window.bookTour(tourId, selectedDate, currentParticipants);
+      } else {
+        console.error("Không tìm thấy hàm xử lý thanh toán");
+        alert("Không tìm thấy hàm xử lý thanh toán. Vui lòng thử lại sau!");
+      }
+    });
   }
-}
+
+  // ==== KHỞI TẠO ====
+  updateTotalPrice();
+  updateButtonStates();
+  updateBookButtonState();
+
+  // Nếu chỉ có 1 ngày, tự động chọn
+  if (dateButtons.length === 1) {
+    dateButtons[0].click();
+  }
+});

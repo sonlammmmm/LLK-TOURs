@@ -2,19 +2,30 @@ const express = require('express');
 const viewsController = require('../controllers/viewsController');
 const authController = require('../controllers/authController');
 const bookingController = require('../controllers/bookingController');
+const messageController = require('../controllers/messageController'); // 👈 thêm controller chat
 
 const router = express.Router();
 
+// Middleware kiểm tra đăng nhập
 router.use(authController.isLoggedIn);
 
+// -------------------- TRANG NGƯỜI DÙNG --------------------
 router.get('/', viewsController.getOverview);
 router.get('/search', authController.isLoggedIn, viewsController.searchTours);
-
 router.get('/tour/:slug', authController.isLoggedIn, viewsController.getTour);
 router.get('/login', viewsController.getLoginForm);
 router.get('/signup', viewsController.getSignupForm);
 router.get('/me', authController.protect, viewsController.getAccount);
 
+// Route hiển thị chat của user (có thể dùng riêng hoặc qua nút chat nổi)
+router.get(
+  '/chat',
+  authController.protect,
+  authController.restrictTo('user'),
+  messageController.getUserChatView
+);
+
+// -------------------- TRANG ADMIN --------------------
 router.get(
   '/admin/dashboard',
   authController.protect,
@@ -22,18 +33,23 @@ router.get(
   viewsController.getDashboard
 );
 
-// Thêm các route cho quên mật khẩu và đặt lại mật khẩu
+router.get(
+  '/admin/chat',
+  authController.protect,
+  authController.restrictTo('admin'),
+  messageController.getAdminChatView
+);
+
+// -------------------- CÁC TRANG CHỨC NĂNG KHÁC --------------------
 router.get('/forgot-password', viewsController.getForgotPasswordForm);
 router.get('/reset-password/:token', viewsController.getResetPasswordForm);
 
-// Thêm route mới cho trang thông báo thanh toán thành công
 router.get(
   '/booking-success',
   authController.protect,
   viewsController.getBookingSuccess
 );
 
-// Thêm route mới cho trang xem hóa đơn
 router.get(
   '/booking-invoice/:id',
   authController.protect,
@@ -53,7 +69,7 @@ router.post(
   viewsController.updateUserData
 );
 
-// Các route quản lý tour
+// -------------------- QUẢN LÝ TOUR --------------------
 router.get(
   '/admin/tours',
   authController.protect,
@@ -75,7 +91,7 @@ router.get(
   viewsController.getEditTourForm
 );
 
-// Các route quản lý người dùng
+// -------------------- QUẢN LÝ USER --------------------
 router.get(
   '/admin/users',
   authController.protect,
@@ -97,7 +113,7 @@ router.get(
   viewsController.getEditUserForm
 );
 
-// Các route quản lý đặt chỗ
+// -------------------- QUẢN LÝ BOOKING --------------------
 router.get(
   '/admin/bookings',
   authController.protect,
@@ -112,14 +128,7 @@ router.get(
   viewsController.getBookingDetail
 );
 
-// Thêm route mới cho form đặt tour
-router.get(
-  '/book-tour/:tourId',
-  authController.protect,
-  viewsController.getBookingForm
-);
-
-// Thêm route mới cho quản lý đánh giá
+// -------------------- QUẢN LÝ REVIEW --------------------
 router.get(
   '/admin/reviews',
   authController.protect,
@@ -127,10 +136,14 @@ router.get(
   viewsController.getManageReviews
 );
 
-// Thêm route mới cho trang hóa đơn của tôi
+// -------------------- CÁ NHÂN --------------------
 router.get('/my-billing', authController.protect, viewsController.getMyBilling);
-
-// Thêm route mới cho trang đánh giá của tôi
 router.get('/my-reviews', authController.protect, viewsController.getMyReviews);
+
+router.get(
+  '/book-tour/:tourId',
+  authController.protect,
+  viewsController.getBookingForm
+);
 
 module.exports = router;
