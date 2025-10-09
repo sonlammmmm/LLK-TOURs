@@ -72,26 +72,26 @@ exports.getOne = (Model, popOptions) =>
     });
   });
 
-exports.getAll = Model =>
+exports.getAll = (Model, popOptions) =>
   catchAsync(async (req, res, next) => {
-    // Cho phép lấy dữ liệu lồng nhau (ví dụ: lấy đánh giá theo tour)
     let filter = {};
     if (req.params.tourId) filter = { tour: req.params.tourId };
 
-    const features = new APIFeatures(Model.find(filter), req.query)
+    let query = Model.find(filter);
+    if (popOptions) query = query.populate(popOptions); // ✅ thêm dòng này
+
+    const features = new APIFeatures(query, req.query)
       .filter()
       .sort()
       .limitFields()
       .paginate();
-    // const doc = await features.query.explain();
+
     const doc = await features.query;
 
-    // Gửi phản hồi
     res.status(200).json({
       status: 'success',
       results: doc.length,
-      data: {
-        data: doc
-      }
+      // eslint-disable-next-line prettier/prettier
+      data: { data: doc },
     });
   });

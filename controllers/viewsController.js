@@ -5,6 +5,28 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const Review = require('../models/reviewModel');
 
+const formatStartDatesWithSlots = tour => {
+  if (!tour.startDates) return [];
+
+  const now = new Date();
+  return tour.startDates
+    .filter(dateObj => new Date(dateObj.date) > now) // Chỉ lấy ngày tương lai
+    .map(dateObj => ({
+      date: dateObj.date,
+      dateFormatted: new Date(dateObj.date).toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      }),
+      availableSlots: dateObj.availableSlots,
+      isFull: dateObj.availableSlots === 0,
+      isAlmostFull:
+        dateObj.availableSlots > 0 &&
+        dateObj.availableSlots <= tour.maxGroupSize * 0.2
+    }))
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+};
+
 exports.alerts = (req, res, next) => {
   const { alert } = req.query;
   if (alert === 'booking')
@@ -14,13 +36,14 @@ exports.alerts = (req, res, next) => {
 };
 
 exports.getOverview = catchAsync(async (req, res, next) => {
-  const tours = await Tour.find();
+  const tours = await Tour.find().lean();
   const uniqueLocations = await Tour.distinct('startLocation.description');
 
   res.status(200).render('overview', {
     title: 'Tất cả chuyến đi',
     tours,
-    uniqueLocations
+    uniqueLocations,
+    noResults: tours.length === 0
   });
 });
 
@@ -64,8 +87,8 @@ exports.searchTours = catchAsync(async (req, res, next) => {
   });
 });
 
+// ✅ CẬP NHẬT: Thêm thông tin slot
 exports.getTour = catchAsync(async (req, res, next) => {
-  // 1) Lấy dữ liệu cho tour được yêu cầu
   const tour = await Tour.findOne({ slug: req.params.slug }).populate({
     path: 'reviews',
     fields: 'review rating user'
@@ -75,11 +98,13 @@ exports.getTour = catchAsync(async (req, res, next) => {
     return next(new AppError('Không tìm thấy dữ liệu nào', 404));
   }
 
-  // 2) Xây dựng template
-  // 3) Render template sử dụng dữ liệu từ 1)
+  // Format ngày khởi hành với thông tin slot
+  const startDatesWithSlots = formatStartDatesWithSlots(tour);
+
   res.status(200).render('tour', {
     title: `${tour.name}`,
-    tour
+    tour,
+    startDatesWithSlots // ✅ Truyền biến này vào view
   });
 });
 
@@ -102,14 +127,9 @@ exports.getAccount = (req, res) => {
 };
 
 exports.getMyTours = catchAsync(async (req, res, next) => {
-  // 1) Tìm tất cả các đặt tour
   const bookings = await Booking.find({ user: req.user.id });
-
-  // 2) Tìm các tour với các ID đã trả về
   const tourIDs = bookings.map(el => el.tour);
   const tours = await Tour.find({ _id: { $in: tourIDs } });
-
-  // 3) Tìm tất cả các đánh giá của người dùng
   const reviews = await Review.find({ user: req.user.id }).populate({
     path: 'tour',
     select: 'name'
@@ -142,9 +162,7 @@ exports.updateUserData = catchAsync(async (req, res, next) => {
   });
 });
 
-// Quản lý tour
 exports.getManageTours = catchAsync(async (req, res, next) => {
-  // Lấy tất cả các tour
   const tours = await Tour.find();
 
   res.status(200).render('manageTours', {
@@ -154,7 +172,6 @@ exports.getManageTours = catchAsync(async (req, res, next) => {
 });
 
 exports.getNewTourForm = catchAsync(async (req, res, next) => {
-  // Lấy tất cả hướng dẫn viên cho biểu mẫu, bao gồm cả những người không hoạt động
   const guides = await User.find({
     role: { $in: ['guide', 'lead-guide'] }
   }).select('+active');
@@ -166,14 +183,12 @@ exports.getNewTourForm = catchAsync(async (req, res, next) => {
 });
 
 exports.getEditTourForm = catchAsync(async (req, res, next) => {
-  // Lấy tour
   const tour = await Tour.findById(req.params.id).populate('guides');
 
   if (!tour) {
     return next(new AppError('Không tìm thấy tour với ID này', 404));
   }
 
-  // Lấy tất cả hướng dẫn viên cho biểu mẫu, bao gồm cả những người không hoạt động
   const guides = await User.find({
     role: { $in: ['guide', 'lead-guide'] }
   }).select('+active');
@@ -185,10 +200,7 @@ exports.getEditTourForm = catchAsync(async (req, res, next) => {
   });
 });
 
-// Thêm các hàm xử lý cho quản lý người dùng
 exports.getManageUsers = catchAsync(async (req, res, next) => {
-  // Lấy tất cả người dùng bao gồm cả những người không hoạt động (quản trị viên có thể xem tất cả)
-  // Đánh dấu đây là route quản lý để không lọc người dùng không hoạt động
   const query = User.find().select('+active');
   query._adminRoute = true;
   const users = await query;
@@ -202,12 +214,11 @@ exports.getManageUsers = catchAsync(async (req, res, next) => {
 exports.getNewUserForm = catchAsync(async (req, res, next) => {
   res.status(200).render('userForm', {
     title: 'Tạo người dùng mới',
-    user: null // Đảm bảo người dùng là null khi tạo mới
+    user: null
   });
 });
 
 exports.getEditUserForm = catchAsync(async (req, res, next) => {
-  // Lấy người dùng
   const user = await User.findById(req.params.id).select('+active');
 
   if (!user) {
@@ -220,9 +231,7 @@ exports.getEditUserForm = catchAsync(async (req, res, next) => {
   });
 });
 
-// Thêm các hàm xử lý cho quản lý đặt chỗ
 exports.getManageBookings = catchAsync(async (req, res, next) => {
-  // Lấy tất cả các đặt chỗ
   const bookings = await Booking.find();
 
   res.status(200).render('manageBookings', {
@@ -232,7 +241,6 @@ exports.getManageBookings = catchAsync(async (req, res, next) => {
 });
 
 exports.getBookingDetail = catchAsync(async (req, res, next) => {
-  // Lấy đặt chỗ
   const booking = await Booking.findById(req.params.id);
 
   if (!booking) {
@@ -245,24 +253,25 @@ exports.getBookingDetail = catchAsync(async (req, res, next) => {
   });
 });
 
-// Thêm hàm mới để hiển thị biểu mẫu đặt tour
+// ✅ CẬP NHẬT: Thêm thông tin slot
 exports.getBookingForm = catchAsync(async (req, res, next) => {
-  // Lấy thông tin tour từ ID
   const tour = await Tour.findById(req.params.tourId);
 
   if (!tour) {
     return next(new AppError('Không tìm thấy tour với ID này', 404));
   }
 
+  // Format ngày khởi hành với thông tin slot
+  const startDatesWithSlots = formatStartDatesWithSlots(tour);
+
   res.status(200).render('bookingForm', {
     title: `Đặt tour: ${tour.name}`,
-    tour
+    tour,
+    startDatesWithSlots // ✅ Truyền biến này vào view
   });
 });
 
-// Thêm hàm mới để hiển thị trang thông báo thanh toán thành công
 exports.getBookingSuccess = catchAsync(async (req, res, next) => {
-  // Lấy thông tin đặt chỗ từ query params
   const {
     booking: bookingId,
     tour,
@@ -275,14 +284,12 @@ exports.getBookingSuccess = catchAsync(async (req, res, next) => {
   let booking;
 
   if (bookingId) {
-    // Nếu có bookingId, lấy thông tin đặt chỗ từ cơ sở dữ liệu
     booking = await Booking.findById(bookingId);
 
     if (!booking) {
       return next(new AppError('Không tìm thấy thông tin đặt tour', 404));
     }
   } else if (tour && user && price) {
-    // Nếu không có bookingId nhưng có đủ thông tin để tạo đặt chỗ mới
     booking = await Booking.create({
       tour,
       user,
@@ -294,7 +301,6 @@ exports.getBookingSuccess = catchAsync(async (req, res, next) => {
     return next(new AppError('Không tìm thấy thông tin đặt tour', 404));
   }
 
-  // Điền thông tin tour và người dùng
   await booking.populate([
     { path: 'tour', select: 'name startDates duration' },
     { path: 'user', select: 'name email' }
@@ -306,9 +312,7 @@ exports.getBookingSuccess = catchAsync(async (req, res, next) => {
   });
 });
 
-// Thêm hàm mới để hiển thị trang quản lý đánh giá
 exports.getManageReviews = catchAsync(async (req, res, next) => {
-  // Lấy tất cả đánh giá với tour và người dùng đã được điền
   const reviews = await Review.find()
     .populate({
       path: 'user',
@@ -325,21 +329,17 @@ exports.getManageReviews = catchAsync(async (req, res, next) => {
   });
 });
 
-// Thêm hàm mới để hiển thị hóa đơn
 exports.getBookingInvoice = catchAsync(async (req, res, next) => {
-  // Lấy thông tin đặt chỗ từ ID
   const booking = await Booking.findById(req.params.id);
 
   if (!booking) {
     return next(new AppError('Không tìm thấy đặt tour với ID này', 404));
   }
 
-  // Kiểm tra xem người dùng có quyền xem hóa đơn này không
   if (booking.user.id !== req.user.id && req.user.role !== 'admin') {
     return next(new AppError('Bạn không có quyền xem hóa đơn này', 403));
   }
 
-  // Điền thông tin tour và người dùng
   await booking.populate([
     { path: 'tour', select: 'name startDates duration' },
     { path: 'user', select: 'name email' }
@@ -351,9 +351,7 @@ exports.getBookingInvoice = catchAsync(async (req, res, next) => {
   });
 });
 
-// Thêm hàm mới để hiển thị trang hóa đơn của tôi
 exports.getMyBilling = catchAsync(async (req, res, next) => {
-  // Lấy tất cả đặt chỗ của người dùng
   const bookings = await Booking.find({ user: req.user.id }).populate({
     path: 'tour',
     select: 'name'
@@ -365,9 +363,7 @@ exports.getMyBilling = catchAsync(async (req, res, next) => {
   });
 });
 
-// Thêm hàm mới để hiển thị trang đánh giá của tôi
 exports.getMyReviews = catchAsync(async (req, res, next) => {
-  // Lấy tất cả đánh giá của người dùng
   const reviews = await Review.find({ user: req.user.id }).populate({
     path: 'tour',
     select: 'name imageCover slug'
@@ -379,7 +375,6 @@ exports.getMyReviews = catchAsync(async (req, res, next) => {
   });
 });
 
-// Thêm các bộ điều khiển cho quên mật khẩu và đặt lại mật khẩu
 exports.getForgotPasswordForm = (req, res) => {
   res.status(200).render('forgotPassword', {
     title: 'Quên mật khẩu'
@@ -394,7 +389,6 @@ exports.getResetPasswordForm = (req, res) => {
 };
 
 exports.getDashboard = catchAsync(async (req, res, next) => {
-  // Lấy thống kê tổng quan
   const [
     totalTours,
     totalBookings,
@@ -411,7 +405,6 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
     Booking.countDocuments({ paid: false })
   ]);
 
-  // --- Lấy danh sách các năm có dữ liệu từ Booking ---
   const availableYearsAggregation = await Booking.aggregate([
     {
       $group: {
@@ -423,21 +416,17 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
 
   let availableYears = availableYearsAggregation.map(item => item._id);
   if (availableYears.length === 0) {
-    // Nếu không có dữ liệu, lấy năm hiện tại
     availableYears = [new Date().getFullYear()];
   }
 
-  // Lấy năm được chọn từ truy vấn, nếu không hợp lệ thì chọn năm mới nhất (hoặc bạn có thể chọn năm đầu tiên)
   let selectedYear = parseInt(req.query.year, 10);
   if (!selectedYear || !availableYears.includes(selectedYear)) {
     selectedYear = availableYears[availableYears.length - 1];
   }
 
-  // Xác định khoảng thời gian của năm được chọn
-  const startDate = new Date(selectedYear, 0, 1); // Ngày 1 tháng 1 của năm được chọn
-  const endDate = new Date(selectedYear + 1, 0, 1); // Ngày 1 tháng 1 của năm tiếp theo
+  const startDate = new Date(selectedYear, 0, 1);
+  const endDate = new Date(selectedYear + 1, 0, 1);
 
-  // --- Lấy doanh thu ngày hiện tại ---
   const today = new Date();
   const todayStart = new Date(
     today.getFullYear(),
@@ -465,11 +454,9 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
     }
   ]);
 
-  // Định dạng ngày hiện tại
   const formattedDate = `${today.getDate()}/${today.getMonth() +
     1}/${today.getFullYear()}`;
 
-  // --- Lấy doanh thu tháng hiện tại ---
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
   const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
@@ -491,10 +478,8 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
     }
   ]);
 
-  // Định dạng tháng hiện tại
   const formattedMonth = `${today.getMonth() + 1}/${today.getFullYear()}`;
 
-  // --- Lấy doanh thu năm hiện tại ---
   const yearStart = new Date(today.getFullYear(), 0, 1);
   const yearEnd = new Date(today.getFullYear() + 1, 0, 1);
 
@@ -513,7 +498,6 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
     }
   ]);
 
-  // --- Tổng hợp doanh thu theo tháng cho năm được chọn ---
   const revenueAggregation = await Booking.aggregate([
     {
       $match: {
@@ -545,14 +529,12 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
     'Tháng 12'
   ];
 
-  // Định dạng dữ liệu doanh thu theo tháng
   const formattedRevenueData = months.map(month => ({ month, revenue: 0 }));
   revenueAggregation.forEach(item => {
     const monthIndex = item._id - 1;
     formattedRevenueData[monthIndex].revenue = item.totalRevenue;
   });
 
-  // --- Tổng hợp doanh thu theo ngày, phân theo tháng cho năm được chọn ---
   const dailyRevenueByMonth = months.map((monthName, monthIndex) => {
     const daysInMonth = new Date(selectedYear, monthIndex + 1, 0).getDate();
     const days = Array.from({ length: daysInMonth }, (_, dayIndex) => ({
@@ -593,7 +575,6 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
     }
   });
 
-  // Render view và truyền các dữ liệu cần thiết, đặc biệt là availableYears và selectedYear
   res.status(200).render('dashboard', {
     title: 'Bảng điều khiển quản lý',
     stats: {

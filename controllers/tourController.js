@@ -75,11 +75,143 @@ exports.aliasTopTours = (req, res, next) => {
   next();
 };
 
+exports.normalizeMultipartJSON = (req, res, next) => {
+  // 1) Parse các field JSON gửi qua multipart
+  const parseJSON = key => {
+    if (typeof req.body[key] === 'string') {
+      try {
+        req.body[key] = JSON.parse(req.body[key]);
+      } catch (e) {
+        // Giữ nguyên nếu không parse được
+      }
+    }
+  };
+
+  parseJSON('startDates');
+  parseJSON('startLocation');
+  parseJSON('locations');
+
+  // 2) Chuẩn hoá startDates về dạng [{ date, availableSlots }]
+  if (Array.isArray(req.body.startDates)) {
+    req.body.startDates = req.body.startDates.map(d => {
+      if (typeof d === 'string') {
+        return {
+          date: new Date(d),
+          availableSlots: Number(req.body.maxGroupSize) || 0
+        };
+      }
+      return {
+        date: new Date(d.date || d),
+        availableSlots:
+          Number(
+            d.availableSlots != null ? d.availableSlots : req.body.maxGroupSize
+          ) || 0
+      };
+    });
+  } else if (typeof req.body.startDates === 'string') {
+    // Trường hợp đặc biệt: vẫn còn là chuỗi JSON
+    try {
+      const arr = JSON.parse(req.body.startDates);
+      req.body.startDates = arr.map(d => ({
+        date: new Date(d.date || d),
+        availableSlots:
+          Number(
+            d.availableSlots != null ? d.availableSlots : req.body.maxGroupSize
+          ) || 0
+      }));
+    } catch {
+      // để Mongoose báo lỗi nếu dữ liệu sai
+    }
+  }
+
+  next();
+};
+
 exports.getAllTours = factory.getAll(Tour);
 exports.getTour = factory.getOne(Tour, { path: 'reviews' });
-exports.createTour = factory.createOne(Tour);
 exports.updateTour = factory.updateOne(Tour);
 exports.deleteTour = factory.deleteOne(Tour);
+exports.createTour = catchAsync(async (req, res, next) => {
+  // ====== 1️⃣ Xử lý các field JSON được gửi từ FormData ======
+
+  // START DATES
+  if (typeof req.body.startDates === 'string') {
+    try {
+      const arr = JSON.parse(req.body.startDates);
+      if (Array.isArray(arr)) {
+        req.body.startDates = arr.map(d => ({
+          date: new Date(d.date || d),
+          availableSlots:
+            Number(
+              d.availableSlots != null
+                ? d.availableSlots
+                : req.body.maxGroupSize
+            ) || 0
+        }));
+      }
+    } catch (err) {
+      console.warn('⚠️ Không parse được startDates:', req.body.startDates);
+      req.body.startDates = [];
+    }
+  }
+
+  // START LOCATION
+  if (typeof req.body.startLocation === 'string') {
+    try {
+      req.body.startLocation = JSON.parse(req.body.startLocation);
+    } catch (err) {
+      console.warn(
+        '⚠️ Không parse được startLocation:',
+        req.body.startLocation
+      );
+      req.body.startLocation = undefined;
+    }
+  }
+
+  // LOCATIONS
+  if (typeof req.body.locations === 'string') {
+    try {
+      req.body.locations = JSON.parse(req.body.locations);
+    } catch (err) {
+      console.warn('⚠️ Không parse được locations:', req.body.locations);
+      req.body.locations = [];
+    }
+  }
+
+  // GUIDES (nếu gửi nhiều ID)
+  if (typeof req.body.guides === 'string') {
+    req.body.guides = [req.body.guides];
+  }
+
+  // ====== 2️⃣ Kiểm tra và ép kiểu bổ sung ======
+
+  // Đảm bảo maxGroupSize là số
+  if (req.body.maxGroupSize) {
+    req.body.maxGroupSize = Number(req.body.maxGroupSize);
+  }
+
+  // Đảm bảo duration, price, priceDiscount là số
+  ['duration', 'price', 'priceDiscount'].forEach(f => {
+    if (req.body[f]) req.body[f] = Number(req.body[f]);
+  });
+
+  // ====== 3️⃣ Ghi log để debug (nếu cần) ======
+  console.log('✅ Dữ liệu tạo tour sau khi xử lý:', {
+    name: req.body.name,
+    startDates: req.body.startDates,
+    startLocation: req.body.startLocation,
+    locations: req.body.locations,
+    guides: req.body.guides
+  });
+
+  // ====== 4️⃣ Tạo tour ======
+  const newTour = await Tour.create(req.body);
+
+  res.status(201).json({
+    status: 'success',
+    data: { tour: newTour }
+  });
+});
 
 exports.getToursWithin = catchAsync(async (req, res, next) => {
   const { distance, latlng, unit } = req.params;

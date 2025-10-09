@@ -9,7 +9,7 @@ const tourSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       maxlength: [40, 'Tên tour phải có ít hơn hoặc bằng 40 ký tự'],
-      minlength: [10, 'Tên tour phải có nhiều hơn hoặc bằng 40 ký tự']
+      minlength: [10, 'Tên tour phải có nhiều hơn hoặc bằng 10 ký tự']
     },
     slug: String,
     duration: {
@@ -25,7 +25,7 @@ const tourSchema = new mongoose.Schema(
       default: 4.5,
       min: [1, 'Đánh giá phải trên 1.0'],
       max: [5, 'Đánh giá phải dưới 5.0'],
-      set: val => Math.round(val * 10) / 10 // 4.666666, 46.6666, 47, 4.7
+      set: val => Math.round(val * 10) / 10
     },
     ratingsQuantity: {
       type: Number,
@@ -39,8 +39,6 @@ const tourSchema = new mongoose.Schema(
       type: Number,
       validate: {
         validator: function(val) {
-          // this only points to current doc on NEW document creation
-          // Sửa lại validator để không kiểm tra khi giá trị là null hoặc undefined
           if (!val) return true;
           return val < this.price;
         },
@@ -66,13 +64,76 @@ const tourSchema = new mongoose.Schema(
       default: Date.now(),
       select: false
     },
-    startDates: [Date],
+    // CẤU TRÚC MỚI: startDates với availableSlots
+    startDates: {
+      type: [
+        {
+          date: {
+            type: Date,
+            required: [true, 'Ngày khởi hành là bắt buộc']
+          },
+          availableSlots: {
+            type: Number,
+            required: [true, 'Số slot khả dụng là bắt buộc'],
+            min: [0, 'Số slot không thể âm']
+          },
+          _id: false
+        }
+      ],
+      set: function(v) {
+        // ✅ Nếu nhận chuỗi JSON
+        if (typeof v === 'string') {
+          try {
+            const parsed = JSON.parse(v);
+            if (Array.isArray(parsed)) {
+              return parsed.map(d => ({
+                date: new Date(d.date || d),
+                availableSlots:
+                  Number(
+                    d.availableSlots != null
+                      ? d.availableSlots
+                      : this.maxGroupSize
+                  ) || 0
+              }));
+            }
+            // Nếu chỉ có 1 object đơn
+            if (parsed && parsed.date) {
+              return [
+                {
+                  date: new Date(parsed.date),
+                  availableSlots:
+                    Number(
+                      parsed.availableSlots != null
+                        ? parsed.availableSlots
+                        : this.maxGroupSize
+                    ) || 0
+                }
+              ];
+            }
+          } catch {
+            // Nếu parse thất bại -> giữ nguyên
+            return v;
+          }
+        }
+
+        // ✅ Nếu nhận mảng string ISO dates
+        if (Array.isArray(v) && typeof v[0] === 'string') {
+          return v.map(d => ({
+            date: new Date(d),
+            availableSlots: this.maxGroupSize || 0
+          }));
+        }
+
+        // ✅ Nếu đã là mảng object hợp lệ
+        return v;
+      }
+    },
+
     secretTour: {
       type: Boolean,
       default: false
     },
     startLocation: {
-      // GeoJSON
       type: {
         type: String,
         default: 'Point',
@@ -108,7 +169,6 @@ const tourSchema = new mongoose.Schema(
   }
 );
 
-// tourSchema.index({ price: 1 });
 tourSchema.index({ price: 1, ratingsAverage: -1 });
 tourSchema.index({ slug: 1 });
 tourSchema.index({ startLocation: '2dsphere' });
@@ -117,27 +177,45 @@ tourSchema.virtual('durationWeeks').get(function() {
   return this.duration / 7;
 });
 
-// Virtual populate
 tourSchema.virtual('reviews', {
   ref: 'Review',
   foreignField: 'tour',
   localField: '_id'
 });
 
-// DOCUMENT MIDDLEWARE: runs before .save() and .create()
+// MIDDLEWARE: Tự động tạo slug
 tourSchema.pre('save', function(next) {
   this.slug = slugify(this.name, { lower: true });
   next();
 });
 
+// MIDDLEWARE: Xử lý startDates khi tạo/cập nhật
 tourSchema.pre('save', function(next) {
-  if (this.startDates) {
-    // Chuyển đổi các chuỗi thành đối tượng Date
-    this.startDates = this.startDates.map(date => {
-      if (typeof date === 'string') {
-        return new Date(date);
+  if (this.startDates && this.startDates.length > 0) {
+    this.startDates = this.startDates.map(dateObj => {
+      // Nếu là object cũ (chỉ có Date), chuyển sang format mới
+      if (dateObj instanceof Date) {
+        return {
+          date: dateObj,
+          availableSlots: this.maxGroupSize
+        };
       }
-      return date;
+      // Nếu là object mới nhưng chưa có availableSlots
+      if (dateObj.date && dateObj.availableSlots === undefined) {
+        return {
+          date:
+            dateObj.date instanceof Date
+              ? dateObj.date
+              : new Date(dateObj.date),
+          availableSlots: this.maxGroupSize
+        };
+      }
+      // Nếu đã có đầy đủ, đảm bảo date là Date object
+      return {
+        date:
+          dateObj.date instanceof Date ? dateObj.date : new Date(dateObj.date),
+        availableSlots: dateObj.availableSlots
+      };
     });
   }
   next();
@@ -145,7 +223,6 @@ tourSchema.pre('save', function(next) {
 
 tourSchema.pre(/^find/, function(next) {
   this.find({ secretTour: { $ne: true } });
-
   this.start = Date.now();
   next();
 });
@@ -155,7 +232,6 @@ tourSchema.pre(/^find/, function(next) {
     path: 'guides',
     select: '-__v -passwordChangedAt'
   });
-
   next();
 });
 
@@ -164,22 +240,68 @@ tourSchema.post(/^find/, function(docs, next) {
   next();
 });
 
-// AGGREGATION MIDDLEWARE
 tourSchema.pre('aggregate', function(next) {
   console.log(this.pipeline());
   next();
 });
 
+// Virtual: Lấy ngày khởi hành tiếp theo có slot
 tourSchema.virtual('nextStartDate').get(function() {
   if (!this.startDates || this.startDates.length === 0) return null;
 
   const now = new Date();
-  const futureDates = this.startDates.filter(date => new Date(date) > now);
+  const availableDates = this.startDates.filter(
+    dateObj => new Date(dateObj.date) > now && dateObj.availableSlots > 0
+  );
 
-  if (futureDates.length === 0) return null;
+  if (availableDates.length === 0) return null;
 
-  return futureDates.sort((a, b) => new Date(a) - new Date(b))[0];
+  return availableDates.sort(
+    (a, b) => new Date(a.date) - new Date(b.date)
+  )[0].date;
 });
+
+// METHOD: Giảm slot cho ngày cụ thể
+tourSchema.methods.decreaseSlots = async function(startDate, participants) {
+  const dateStr = new Date(startDate).toISOString().split('T')[0];
+
+  const dateIndex = this.startDates.findIndex(
+    d => new Date(d.date).toISOString().split('T')[0] === dateStr
+  );
+
+  if (dateIndex === -1) {
+    throw new Error('Không tìm thấy ngày khởi hành');
+  }
+
+  if (this.startDates[dateIndex].availableSlots < participants) {
+    throw new Error('Không đủ slot cho số lượng người tham gia');
+  }
+
+  this.startDates[dateIndex].availableSlots -= participants;
+  await this.save({ validateBeforeSave: false });
+};
+
+// METHOD: Tăng slot cho ngày cụ thể (khi hủy booking)
+tourSchema.methods.increaseSlots = async function(startDate, participants) {
+  const dateStr = new Date(startDate).toISOString().split('T')[0];
+
+  const dateIndex = this.startDates.findIndex(
+    d => new Date(d.date).toISOString().split('T')[0] === dateStr
+  );
+
+  if (dateIndex === -1) {
+    throw new Error('Không tìm thấy ngày khởi hành');
+  }
+
+  // Không cho phép vượt quá maxGroupSize
+  const newSlots = this.startDates[dateIndex].availableSlots + participants;
+  this.startDates[dateIndex].availableSlots = Math.min(
+    newSlots,
+    this.maxGroupSize
+  );
+
+  await this.save({ validateBeforeSave: false });
+};
 
 const Tour = mongoose.model('Tour', tourSchema);
 

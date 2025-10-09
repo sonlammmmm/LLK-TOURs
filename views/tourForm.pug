@@ -112,31 +112,35 @@ block content
                       input.location-description.form__input(type='text', value=location.description, required)
                     .form__group
                       label.form__label Địa chỉ
-                      input.location-address.form__input(type='text', value=location.address, )
+                      input.location-address.form__input(type='text', value=location.address)
                     .form__group
                       label.form__label Tọa độ (lng, lat)
                       input.location-coordinates.form__input(type='text', value=location.coordinates.join(', '), placeholder='106.695249, 10.775400')
                     .form__group
                       label.form__label Ngày thứ
                       input.location-day.form__input(type='number', value=location.day, required, min='1')
-              
               button.btn.btn--small.btn--blue.btn-add-location(type='button') Thêm địa điểm
             
+            // ✅ Phần Ngày khởi hành (đã sửa chính xác)
             h3.heading-tertiary.ma-bt-md Ngày khởi hành
-            
+
             .start-dates-container
-                if tour && tour.startDates && tour.startDates.length > 0
-                    - const parsedStartDates = typeof tour.startDates[0] === 'string' ? JSON.parse(tour.startDates[0]) : tour.startDates
-                    each date, i in parsedStartDates
-                        .start-date-item(data-index=i)
-                            button.start-date-item__remove(type='button') ×
-                            .form__group
-                                label.form__label Ngày khởi hành
-                                - const formattedDate = new Date(date).toISOString().split('T')[0]
-                                input.start-date.form__input(type='date', value=formattedDate, required)
-                    
-                button.btn.btn--small.btn--blue.btn-add-start-date(type='button') Thêm ngày khởi hành
-            
+              if tour && tour.startDates && tour.startDates.length > 0
+                each dateObj, i in tour.startDates
+                  .start-date-item(data-index=i)
+                    button.start-date-item__remove(type='button') ×
+                    .form__group
+                      label.form__label Ngày khởi hành
+                      - const formattedDate = new Date(dateObj.date).toISOString().split('T')[0]
+                      input.start-date.form__input(type='date', value=formattedDate, required)
+              else
+                .start-date-item(data-index='0')
+                  .form__group
+                    label.form__label Ngày khởi hành
+                    input.start-date.form__input(type='date', required)
+
+              button.btn.btn--small.btn--blue.btn-add-start-date(type='button') Thêm ngày khởi hành
+
             h3.heading-tertiary.ma-bt-md Hướng dẫn viên
             
             .guides-container

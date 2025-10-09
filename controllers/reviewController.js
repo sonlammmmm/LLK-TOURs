@@ -79,7 +79,10 @@ exports.checkReviewOwnership = catchAsync(async (req, res, next) => {
   next();
 });
 
-exports.getAllReviews = factory.getAll(Review);
+exports.getAllReviews = factory.getAll(Review, [
+  { path: 'user', select: 'name photo' },
+  { path: 'tour', select: 'name' }
+]);
 exports.getReview = factory.getOne(Review);
 
 exports.createReview = catchAsync(async (req, res, next) => {
