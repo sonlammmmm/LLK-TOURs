@@ -5,33 +5,33 @@ const chatBox = document.getElementById('chat-box');
 const chatForm = document.getElementById('chat-form');
 const chatInput = document.getElementById('chat-input');
 const userList = document.getElementById('user-list');
-
-let currentUserId = null;
-let currentUserName = null;
+const searchInput = document.getElementById('user-search');
 
 // Pagination state
 let currentPage = 1;
 let isLoading = false;
 let hasMore = true;
 
-// Chống render trùng tin nhắn
-const renderedMsgKeys = new Set();
-const makeMsgKey = (m) =>
-  `${m.senderId}|${m.receiverId}|${m.message || m.content}|${new Date(m.createdAt || Date.now()).getTime()}`;
+// LocalStorage keys
+const LS_KEY = 'LLK_ADMINCHAT_CURRENT_USER';
+const HISTORY_KEY = 'LLK_ADMINCHAT_HISTORY';
 
-function safeDisplayMessage(msg) {
-  const k = makeMsgKey(msg);
-  if (renderedMsgKeys.has(k)) return;
-  renderedMsgKeys.add(k);
-  displayMessage(msg);
-}
+// Maps lưu trạng thái
+const usersMap = new Map();
+const unreadCount = new Map();
+const renderedMsgKeys = new Set();
+
+const makeMsgKey = (m) =>
+  `${m.senderId}|${m.receiverId}|${m.message || m.content}|${new Date(
+    m.createdAt || Date.now()
+  ).getTime()}`;
 
 // Đăng ký admin vào socket
 if (window.userId) {
   socket.emit('register', { userId: window.userId, role: 'admin' });
 }
 
-// Hiển thị bong bóng chat
+// ========== HIỂN THỊ TIN NHẮN ==========
 function displayMessage(msg) {
   const div = document.createElement('div');
   div.classList.add('llk-chat-message');
@@ -54,17 +54,20 @@ function displayMessage(msg) {
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// ===== Quản lý danh sách room và unread count =====
-const usersMap = new Map();
-const unreadCount = new Map();
+function safeDisplayMessage(msg) {
+  const k = makeMsgKey(msg);
+  if (renderedMsgKeys.has(k)) return;
+  renderedMsgKeys.add(k);
+  displayMessage(msg);
+}
 
+// ========== QUẢN LÝ USER LIST ==========
 function updateUnreadBadge(userId) {
   const count = unreadCount.get(userId) || 0;
   const li = usersMap.get(userId);
   if (!li) return;
 
   let badge = li.querySelector('.llk-unread-badge');
-  
   if (count > 0) {
     if (!badge) {
       badge = document.createElement('span');
@@ -72,22 +75,16 @@ function updateUnreadBadge(userId) {
       li.appendChild(badge);
     }
     badge.textContent = count > 99 ? '99+' : count;
-  } else {
-    if (badge) badge.remove();
+  } else if (badge) {
+    badge.remove();
   }
 }
 
 function appendUserToList(user, prepend = false) {
-  // Nếu đã tồn tại → update thông tin
   if (usersMap.has(user._id)) {
     const existingLi = usersMap.get(user._id);
-    const nameEl = existingLi.querySelector('.llk-user-name');
     const lastEl = existingLi.querySelector('.llk-user-last');
-    
-    if (nameEl) nameEl.textContent = user.name;
     if (lastEl) lastEl.textContent = user.lastMessage || 'Tin nhắn mới';
-    
-    // Nếu có tin mới → đẩy lên đầu
     if (prepend && userList.firstChild !== existingLi) {
       userList.prepend(existingLi);
     }
@@ -107,135 +104,103 @@ function appendUserToList(user, prepend = false) {
       </div>
     </div>
   `;
+  if (prepend) userList.prepend(li);
+  else userList.appendChild(li);
 
-  if (prepend) {
-    userList.prepend(li);
-  } else {
-    // Xóa loading indicator nếu có
-    const loading = userList.querySelector('.llk-user-loading');
-    if (loading) {
-      userList.insertBefore(li, loading);
-    } else {
-      userList.appendChild(li);
-    }
-  }
-  
   usersMap.set(user._id, li);
   updateUnreadBadge(user._id);
 }
 
-// Load user list với pagination
+// ========== LOAD DANH SÁCH USER ==========
 async function loadUserList(page = 1) {
   if (isLoading || (!hasMore && page > 1)) return;
-  
   isLoading = true;
-  
-  // Hiển thị loading indicator nếu load thêm
+
   if (page > 1) {
-    let loading = userList.querySelector('.llk-user-loading');
-    if (!loading) {
-      loading = document.createElement('li');
-      loading.className = 'llk-user-loading';
-      loading.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải...';
-      userList.appendChild(loading);
-    }
+    const loading = document.createElement('li');
+    loading.className = 'llk-user-loading';
+    loading.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải...';
+    userList.appendChild(loading);
   }
 
   try {
     const res = await fetch(`/api/v1/messages/users-with-messages?page=${page}&limit=8`);
     const data = await res.json();
-    
-    // Xóa loading indicator
-    const loading = userList.querySelector('.llk-user-loading');
-    if (loading) loading.remove();
-    
-    if (page === 1) {
-      // Clear list chỉ khi load trang đầu
-      const emptyMsg = userList.querySelector('.llk-user-empty');
-      if (emptyMsg) emptyMsg.remove();
-    }
-    
+
+    document.querySelectorAll('.llk-user-loading').forEach((n) => n.remove());
     if (!data.data || data.data.users.length === 0) {
-      if (page === 1) {
+      if (page === 1)
         userList.innerHTML = '<li class="llk-user-empty">Chưa có cuộc trò chuyện nào</li>';
-        hasMore = false;
-      }
+      hasMore = false;
       return;
     }
-    
-    // Append users
-    data.data.users.forEach(user => appendUserToList(user, false));
-    
-    // Update pagination state
+
+    const limited = data.data.users.slice(0, 6);
+    limited.forEach((user) => appendUserToList(user, false));
+
     hasMore = data.data.pagination.hasMore;
     currentPage = page;
-    
   } catch (e) {
-    console.error('Không thể tải danh sách chat:', e);
-    const loading = userList.querySelector('.llk-user-loading');
-    if (loading) loading.remove();
+    console.error('Không thể tải danh sách:', e);
   } finally {
     isLoading = false;
   }
 }
 
-// Infinite scroll cho user list
-userList.addEventListener('scroll', () => {
-  if (isLoading || !hasMore) return;
-  
-  const scrollTop = userList.scrollTop;
-  const scrollHeight = userList.scrollHeight;
-  const clientHeight = userList.clientHeight;
-  
-  // Khi scroll gần đến cuối (còn 50px)
-  if (scrollTop + clientHeight >= scrollHeight - 50) {
-    loadUserList(currentPage + 1);
-  }
-});
-
-// ===== LocalStorage để nhớ phòng đang mở =====
-const LS_KEY = 'LLK_ADMINCHAT_CURRENT_USER';
-
+// ========== LƯU & KHÔI PHỤC LỊCH SỬ ==========
 async function bootstrap() {
-  await loadUserList(1);
+  const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
 
-  // Ưu tiên mở lại phòng cũ
-  const lastUserId = localStorage.getItem(LS_KEY);
-  let targetLi = lastUserId && usersMap.get(lastUserId);
-  
-  // Nếu không có phòng cũ hoặc không tìm thấy → mở phòng đầu
-  if (!targetLi) {
-    targetLi = userList.querySelector('.llk-user-item');
+  if (history.length > 0) {
+    try {
+      const res = await fetch(`/api/v1/messages/search-users?q=${history.join(',')}`);
+      const data = await res.json();
+
+      const ordered = history
+        .map((id) => data.data.users.find((u) => u._id === id))
+        .filter(Boolean);
+      ordered.forEach((u) => appendUserToList(u, false));
+    } catch (err) {
+      console.error('Không thể khôi phục danh sách lịch sử:', err);
+    }
+  } else {
+    await loadUserList(1);
   }
 
+  const lastUserId = localStorage.getItem(LS_KEY);
+  const targetLi = lastUserId && usersMap.get(lastUserId);
   if (targetLi) openUserRoom(targetLi);
 }
 bootstrap();
 
-// Mở 1 phòng chat
+// ========== MỞ PHÒNG CHAT ==========
 async function openUserRoom(li) {
   document.querySelectorAll('.llk-user-item').forEach((el) => el.classList.remove('active'));
   li.classList.add('active');
 
-  currentUserId = li.dataset.userid;
-  currentUserName = li.dataset.username;
-  localStorage.setItem(LS_KEY, currentUserId);
+  const userId = li.dataset.userid;
+  const userName = li.dataset.username;
 
-  // Reset unread count khi mở room
-  unreadCount.set(currentUserId, 0);
-  updateUnreadBadge(currentUserId);
+  localStorage.setItem(LS_KEY, userId);
+
+  // Lưu vào lịch sử localStorage
+  let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+  history = [userId, ...history.filter((id) => id !== userId)].slice(0, 6);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+
+  unreadCount.set(userId, 0);
+  updateUnreadBadge(userId);
 
   chatBox.innerHTML = '<div class="llk-chat-loading">Đang tải lịch sử chat...</div>';
-
-  socket.emit('joinUserRoom', { userId: currentUserId });
+  socket.emit('joinUserRoom', { userId });
 
   try {
-    const res = await fetch(`/api/v1/messages/history/${currentUserId}`);
+    const res = await fetch(`/api/v1/messages/history/${userId}`);
     const data = await res.json();
 
     chatBox.innerHTML = '';
     renderedMsgKeys.clear();
-    
+
     if (!data.data || data.data.messages.length === 0) {
       chatBox.innerHTML = '<div class="llk-chat-empty">Chưa có tin nhắn nào</div>';
       return;
@@ -256,54 +221,57 @@ async function openUserRoom(li) {
   }
 }
 
-// Click chọn user trong danh sách
+// ========== SỰ KIỆN ==========
 userList.addEventListener('click', (e) => {
   const li = e.target.closest('.llk-user-item');
   if (!li) return;
   openUserRoom(li);
 });
 
-// Gửi tin nhắn
 chatForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  if (!currentUserId) return alert('Vui lòng chọn người dùng để chat!');
-
   const message = chatInput.value.trim();
   if (!message) return;
+  const active = document.querySelector('.llk-user-item.active');
+  if (!active) return alert('Vui lòng chọn người dùng để chat!');
+
+  const receiverId = active.dataset.userid;
+  const receiverName = active.dataset.username;
 
   socket.emit('chatMessage', {
     senderId: window.userId,
     senderName: window.userName,
-    receiverId: currentUserId,
-    receiverName: currentUserName,
+    receiverId,
+    receiverName,
     message,
     role: 'admin'
   });
-
   chatInput.value = '';
 });
 
-// Nhận tin nhắn realtime
+// ========== SOCKET REALTIME ==========
 socket.on('newMessage', (msg) => {
-  // Nếu tin gửi đến admin từ user → thêm/update vào list & đẩy lên đầu
   if (msg.receiverId === window.userId && msg.role === 'user') {
-    appendUserToList({
-      _id: msg.senderId,
-      name: msg.senderName,
-      lastMessage: msg.message
-    }, true); // prepend = true
-    
-    // Tăng unread count nếu không phải room hiện tại
-    if (msg.senderId !== currentUserId) {
+    appendUserToList(
+      { _id: msg.senderId, name: msg.senderName, lastMessage: msg.message },
+      true
+    );
+
+    // Lưu lịch sử
+    let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    history = [msg.senderId, ...history.filter((id) => id !== msg.senderId)].slice(0, 6);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+
+    if (msg.senderId !== localStorage.getItem(LS_KEY)) {
       const count = unreadCount.get(msg.senderId) || 0;
       unreadCount.set(msg.senderId, count + 1);
       updateUnreadBadge(msg.senderId);
     }
   }
 
-  // Nếu đang ở đúng phòng → hiển thị
-  const inCurrent = msg.senderId === currentUserId || msg.receiverId === currentUserId;
-
+  const inCurrent =
+    msg.senderId === localStorage.getItem(LS_KEY) ||
+    msg.receiverId === localStorage.getItem(LS_KEY);
   if (inCurrent) {
     const empty = chatBox.querySelector('.llk-chat-empty');
     if (empty) empty.remove();
@@ -311,6 +279,44 @@ socket.on('newMessage', (msg) => {
   }
 });
 
-// Lỗi socket
 socket.on('messageError', (d) => alert(d.error || 'Có lỗi khi gửi tin nhắn'));
 socket.on('connect_error', (err) => console.error('Socket error:', err));
+
+// ========== TÌM KIẾM NGƯỜI DÙNG ==========
+let searchTimeout = null;
+searchInput.addEventListener('input', () => {
+  clearTimeout(searchTimeout);
+  const keyword = searchInput.value.trim();
+
+  if (!keyword) {
+    userList.innerHTML = '';
+    loadUserList(1);
+    return;
+  }
+
+  searchTimeout = setTimeout(async () => {
+    userList.innerHTML =
+      '<li class="llk-user-loading"><i class="fa-solid fa-spinner fa-spin"></i> Đang tìm...</li>';
+    try {
+      const res = await fetch(`/api/v1/messages/search-users?q=${keyword}`);
+      const data = await res.json();
+      userList.innerHTML = '';
+      if (data.data.users.length === 0) {
+        userList.innerHTML = '<li class="llk-user-empty">Không tìm thấy người dùng</li>';
+        return;
+      }
+      data.data.users.forEach((u) => appendUserToList(u, false));
+    } catch {
+      userList.innerHTML = '<li class="llk-user-empty">Lỗi tìm kiếm</li>';
+    }
+  }, 400);
+});
+
+// ========== INFINITE SCROLL ==========
+userList.addEventListener('scroll', () => {
+  if (isLoading || !hasMore) return;
+  const scrollBottom = userList.scrollTop + userList.clientHeight;
+  if (scrollBottom >= userList.scrollHeight - 50) {
+    loadUserList(currentPage + 1);
+  }
+});

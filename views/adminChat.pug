@@ -39,8 +39,14 @@ block content
           .llk-chat-wrapper
             aside.llk-chat-sidebar
               h3 Danh sách Chat
+
+              // Ô tìm kiếm người dùng
+              .llk-search-box
+                input#user-search(type='text', placeholder='Tìm kiếm người dùng...')
+
               ul#user-list
                 li.llk-user-empty Chưa có cuộc trò chuyện nào
+
             section.llk-chat-main
               #chat-box.llk-chat-box
                 .llk-chat-empty Chọn người dùng để bắt đầu chat

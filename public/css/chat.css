@@ -352,6 +352,33 @@
   background: #28b485;
 }
 
+/* ===== Ô tìm kiếm user ===== */
+.llk-search-box {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #e8f5e9;
+  z-index: 10;
+}
+
+.llk-search-box input {
+  width: 100%;
+  border: 2px solid #e1e8ed;
+  border-radius: 10px;
+  padding: 1rem 1.4rem;
+  font-size: 1.5rem;
+  outline: none;
+  transition: all 0.25s ease;
+}
+
+.llk-search-box input:focus {
+  border-color: #55c57a;
+  box-shadow: 0 0 0 4px rgba(85, 197, 122, 0.15);
+}
+
+
 /* ===== Responsive ===== */
 @media (max-width: 900px) {
   .llk-chat-wrapper {

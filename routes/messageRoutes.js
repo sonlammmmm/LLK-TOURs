@@ -4,17 +4,24 @@ const authController = require('../controllers/authController');
 
 const router = express.Router();
 
-// Tất cả routes đều cần đăng nhập
+// Tất cả routes yêu cầu đăng nhập
 router.use(authController.protect);
 
-// API lấy lịch sử chat giữa admin và 1 user
+// API: Lấy lịch sử chat giữa admin và user
 router.get('/history/:userId', messageController.getChatHistory);
 
-// API lấy danh sách users có tin nhắn (cho admin)
+// API: Lấy danh sách user có tin nhắn (cho admin, có phân trang)
 router.get(
-  '/users',
+  '/users-with-messages',
   authController.restrictTo('admin'),
   messageController.getUsersWithMessages
+);
+
+// API: Tìm kiếm user để admin có thể nhắn tin trước hoặc khôi phục localStorage
+router.get(
+  '/search-users',
+  authController.restrictTo('admin'),
+  messageController.searchUsers
 );
 
 module.exports = router;
