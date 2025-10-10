@@ -75,6 +75,8 @@ exports.logout = (req, res) => {
 };
 
 exports.protect = catchAsync(async (req, res, next) => {
+  console.log('🔍 COOKIE JWT:', req.cookies.jwt);
+  console.log('🔍 AUTH HEADER:', req.headers.authorization);
   // 1) Lấy token và kiểm tra xem nó có tồn tại không
   let token;
   if (
@@ -145,6 +147,7 @@ exports.isLoggedIn = async (req, res, next) => {
 
       // Có người dùng đã đăng nhập
       res.locals.user = currentUser;
+      req.user = currentUser;
       return next();
     } catch (err) {
       return next();

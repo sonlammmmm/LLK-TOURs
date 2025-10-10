@@ -34,36 +34,24 @@ html
     // FOOTER
     include _footer
 
-    // ========== CHAT NỔI USER ==========
+    // ========== NÚT CHAT NỔI CHO USER ==========
     if user && user.role === 'user'
-      button#chat-float.chat-floating-btn
+      a#chat-float.chat-floating-btn(href='/chat' title='Chat với Admin')
         i.fas.fa-comments
-      .chat-popup.hidden#chat-popup
-        .chat-header
-          h4 Chat với Admin
-          button.close-btn &times;
-        #chat-body
-        form#chat-user-form
-          input#chat-user-input(type='text', placeholder='Nhập tin nhắn...')
-          button(type='submit') Gửi
-
-      // Socket và script chat cho user
-      script(src="https://cdn.socket.io/4.7.2/socket.io.min.js")
-      script(src="/js/chatUser.js")
-      script.
-        window.userId = "#{user._id}";
-        window.userName = "#{user.name}";
-
-    // ========== CHAT ADMIN (NẾU CẦN THÊM SAU) ==========
-    if user && user.role === 'admin'
-      script(src="https://cdn.socket.io/4.7.2/socket.io.min.js")
-      script(src="/js/chatAdmin.js")
-      script.
-        window.userId = "#{user._id}";
-        window.userName = "#{user.name}";
 
     // ========== SCRIPT CHUNG ==========
     script(src='https://cdn.jsdelivr.net/npm/chart.js')
     script(src='/dist/index.js')
+    
+    // ========== SOCKET.IO & CHAT SCRIPTS ==========
+    if user
+      //- Đặt biến global TRƯỚC khi load bất kỳ script nào
+      script.
+        window.userId = '#{user._id.toString()}';
+        window.userName = '#{user.name}';
+        window.userRole = '#{user.role}';
+      
+      //- Load Socket.IO (chỉ khi cần - sẽ được check trong page-specific scripts)
+      script(src="https://cdn.socket.io/4.7.2/socket.io.min.js")
     
     block scripts

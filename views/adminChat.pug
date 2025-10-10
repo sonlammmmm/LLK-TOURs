@@ -20,15 +20,13 @@ block content
           i(class="fa-solid fa-comments")
           |  Chat khách hàng
         #chat-box.chat-box
+          .chat-empty Chọn người dùng để bắt đầu chat
         form#chat-form.chat-form
-          input#chat-input(type='text', placeholder='Nhập tin nhắn...')
+          input#chat-input(type='text', placeholder='Nhập tin nhắn...' autocomplete='off')
           button.btn.btn--blue(type='submit')
             i(class="fa-solid fa-paper-plane")
             |  Gửi
 
 block scripts
-  script(src="https://cdn.socket.io/4.7.2/socket.io.min.js")
+  //- Socket.io đã được load ở base.pug, chỉ cần load script
   script(src="/js/chatAdmin.js")
-  script.
-    window.userId = "#{user._id}";
-    window.userName = "#{user.name}";

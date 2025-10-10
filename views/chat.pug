@@ -17,13 +17,20 @@ block content
               | Chat với Admin
 
       .user-view__content
-        h2.heading-secondary.mt-3 Chat với Admin
-        #chat-box.chat-box
-        form#chat-user-form.chat-form
-          input#chat-user-input(type='text', placeholder='Nhập tin nhắn...')
-          button.btn.btn--blue(type='submit') Gửi
-  script(src="https://cdn.socket.io/4.7.2/socket.io.min.js")
-  script(src="/js/chatUser.js")
+        .user-view__form-container
+          h2.heading-secondary.ma-bt-md Chat với Admin
+          #chat-box.chat-box
+          form#chat-user-form.chat-form
+            input#chat-user-input(type='text', placeholder='Nhập tin nhắn...' autocomplete='off')
+            button.btn.btn--blue(type='submit') 
+              svg
+                use(xlink:href='/img/icons.svg#icon-send')
+              | Gửi
+
+append scripts
   script.
-    window.userId = "#{user._id}";
-    window.userName = "#{user.name}";
+    window.adminId = '#{admin._id}';
+    window.adminName = '#{admin.name}';
+    window.chatMessages = !{JSON.stringify(messages)};
+  script(defer src="/js/chatUser.js")
+

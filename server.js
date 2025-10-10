@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const http = require('http');
 const { Server } = require('socket.io');
-const Message = require('./models/messageModel'); // để lưu chat
+const Message = require('./models/messageModel');
 
 // -------------------- XỬ LÝ LỖI NGOẠI LỆ ĐỒNG BỘ --------------------
 process.on('uncaughtException', err => {
@@ -42,14 +42,29 @@ const io = new Server(server, {
   }
 });
 
+// Map để theo dõi socket của từng user
+const userSockets = new Map();
+
 // -------------------- SOCKET.IO LOGIC --------------------
 io.on('connection', socket => {
   console.log(`🟢 Client connected: ${socket.id}`);
 
-  // User join room riêng
-  socket.on('joinRoom', ({ room }) => {
-    socket.join(room);
-    console.log(`✅ Joined room: ${room}`);
+  // User register với userId của họ
+  socket.on('register', ({ userId, role }) => {
+    console.log('🧾 REGISTER payload:', { userId, role }); // <— thêm dòng này
+    userSockets.set(userId, socket.id);
+    socket.userId = userId;
+    socket.userRole = role;
+    socket.join(userId); // Join room = chính userId của họ
+    console.log(
+      `✅ User ${userId} (${role}) registered with socket ${socket.id}`
+    );
+  });
+
+  // Admin join room của user để xem chat
+  socket.on('joinUserRoom', ({ userId }) => {
+    socket.join(userId);
+    console.log(`✅ Admin joined room: ${userId}`);
   });
 
   // Nhận và phát tin nhắn
@@ -62,10 +77,29 @@ io.on('connection', socket => {
       message,
       role
     } = data;
-    const room = receiverId;
+
+    // Validation
+    if (!senderId || !receiverId) {
+      console.error('❌ Missing senderId or receiverId:', data);
+      socket.emit('messageError', { error: 'Thiếu thông tin người gửi/nhận' });
+      return;
+    }
+
+    if (!message || !message.trim()) {
+      console.error('❌ Empty message');
+      socket.emit('messageError', { error: 'Tin nhắn không được để trống' });
+      return;
+    }
+
+    console.log('📨 Processing message:', {
+      from: `${senderName} (${senderId})`,
+      to: `${receiverName} (${receiverId})`,
+      role: role
+    });
 
     try {
-      await Message.create({
+      // Lưu vào database
+      const savedMessage = await Message.create({
         sender: senderId,
         receiver: receiverId,
         senderName,
@@ -73,16 +107,38 @@ io.on('connection', socket => {
         content: message,
         role
       });
-      io.to(room).emit('newMessage', data);
-      io.to(senderId).emit('newMessage', data);
+
+      const messageData = {
+        senderId,
+        senderName,
+        receiverId,
+        receiverName,
+        message,
+        role,
+        createdAt: savedMessage.createdAt
+      };
+
+      // Gửi cho người nhận (vào room của receiverId)
+      io.to(receiverId).emit('newMessage', messageData);
+
+      // Gửi cho người gửi (vào room của senderId)
+      io.to(senderId).emit('newMessage', messageData);
+
+      console.log(`✅ Message saved and sent successfully`);
     } catch (err) {
       console.error('❌ Lỗi khi lưu tin nhắn:', err.message);
+      console.error('Data received:', data);
+      socket.emit('messageError', { error: 'Không thể gửi tin nhắn' });
     }
   });
 
-  socket.on('disconnect', () =>
-    console.log(`🔴 Client disconnected: ${socket.id}`)
-  );
+  socket.on('disconnect', () => {
+    if (socket.userId) {
+      userSockets.delete(socket.userId);
+      console.log(`🔴 User ${socket.userId} disconnected`);
+    }
+    console.log(`🔴 Client disconnected: ${socket.id}`);
+  });
 });
 
 // -------------------- KHỞI CHẠY SERVER --------------------

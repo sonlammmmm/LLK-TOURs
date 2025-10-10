@@ -15,6 +15,7 @@ const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 const viewRouter = require('./routes/viewRoutes');
 const bookingRouter = require('./routes/bookingRoutes');
+const messageRouter = require('./routes/messageRoutes');
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use(
       defaultSrc: ["'self'"],
       scriptSrc: [
         "'self'",
+        "'unsafe-inline'",
         'https://js.stripe.com',
         'https://cdn.jsdelivr.net/npm/chart.js',
         'https://api.mapbox.com',
@@ -62,7 +64,8 @@ app.use(
       ],
       connectSrc: [
         "'self'",
-        'ws://localhost:1234',
+        'ws://localhost:3000', // 👈 Sửa port cho Socket.IO
+        'wss://localhost:3000', // 👈 Thêm WSS cho production
         'https://api.mapbox.com',
         'https://js.stripe.com'
       ],
@@ -112,17 +115,16 @@ app.use(
 // Middleware kiểm tra
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
-  // console.log(req.cookies);
   next();
 });
 
 // 3) ROUTES
-// Routes
 app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
 app.use('/api/v1/bookings', bookingRouter);
+app.use('/api/v1/messages', messageRouter); // 👈 Thêm message API routes
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
