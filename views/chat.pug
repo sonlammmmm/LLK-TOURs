@@ -19,13 +19,12 @@ block content
       .user-view__content
         .user-view__form-container
           h2.heading-secondary.ma-bt-md Chat với Admin
-          #chat-box.chat-box
-          form#chat-user-form.chat-form
+          #chat-box.llk-chat-box
+          form#chat-user-form.llk-chat-form
             input#chat-user-input(type='text', placeholder='Nhập tin nhắn...' autocomplete='off')
-            button.btn.btn--blue(type='submit') 
-              svg
-                use(xlink:href='/img/icons.svg#icon-send')
-              | Gửi
+            button.llk-send-btn(type='submit')
+              i(class="fa-solid fa-paper-plane")
+              |  Gửi
 
 append scripts
   script.
@@ -33,4 +32,3 @@ append scripts
     window.adminName = '#{admin.name}';
     window.chatMessages = !{JSON.stringify(messages)};
   script(defer src="/js/chatUser.js")
-

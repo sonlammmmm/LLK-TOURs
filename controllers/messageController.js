@@ -14,7 +14,6 @@ exports.getAdminChatView = catchAsync(async (req, res, next) => {
 // Trang user chat (/chat)
 exports.getUserChatView = catchAsync(async (req, res, next) => {
   console.log('🔍 req.user:', req.user);
-  // Tìm admin đầu tiên trong hệ thống
   const admin = await User.findOne({ role: 'admin' }).select('_id name');
 
   if (!admin) {
@@ -70,37 +69,103 @@ exports.getChatHistory = catchAsync(async (req, res, next) => {
   });
 });
 
-// API: Lấy danh sách users có tin nhắn với admin
+// API: Lấy danh sách users có tin nhắn với admin (WITH PAGINATION)
 exports.getUsersWithMessages = catchAsync(async (req, res, next) => {
-  const messages = await Message.find({
-    $or: [{ sender: req.user._id }, { receiver: req.user._id }]
-  })
-    .populate('sender', 'name email')
-    .populate('receiver', 'name email')
-    .sort({ createdAt: -1 });
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 8;
+  const skip = (page - 1) * limit;
 
-  // Lọc ra các user unique (không phải admin)
-  const userMap = new Map();
-  messages.forEach(msg => {
-    const otherUser =
-      msg.sender._id.toString() === req.user._id.toString()
-        ? msg.receiver
-        : msg.sender;
-
-    if (otherUser.role !== 'admin' && !userMap.has(otherUser._id.toString())) {
-      userMap.set(otherUser._id.toString(), {
-        _id: otherUser._id,
-        name: otherUser.name,
-        email: otherUser.email,
-        lastMessage: msg.content,
-        lastMessageTime: msg.createdAt
-      });
+  // Aggregation để tìm users có tin nhắn với admin, sort theo tin nhắn mới nhất
+  const usersWithLastMessage = await Message.aggregate([
+    {
+      $match: {
+        $or: [{ sender: req.user._id }, { receiver: req.user._id }]
+      }
+    },
+    {
+      $sort: { createdAt: -1 }
+    },
+    {
+      $group: {
+        _id: {
+          $cond: [{ $eq: ['$sender', req.user._id] }, '$receiver', '$sender']
+        },
+        lastMessage: { $first: '$content' },
+        lastMessageTime: { $first: '$createdAt' },
+        senderId: { $first: '$sender' }
+      }
+    },
+    {
+      $sort: { lastMessageTime: -1 }
+    },
+    {
+      $skip: skip
+    },
+    {
+      $limit: limit
     }
-  });
+  ]);
+
+  // Populate user info
+  const userIds = usersWithLastMessage.map(u => u._id);
+  const users = await User.find({
+    _id: { $in: userIds },
+    role: 'user'
+  }).select('name email role');
+
+  // Map users với last message
+  const usersMap = new Map(users.map(u => [u._id.toString(), u]));
+
+  const result = usersWithLastMessage
+    .map(item => {
+      const user = usersMap.get(item._id.toString());
+      if (!user) return null;
+
+      return {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        lastMessage: item.lastMessage,
+        lastMessageTime: item.lastMessageTime
+      };
+    })
+    .filter(u => u !== null);
+
+  // Đếm tổng số users có tin nhắn
+  const totalUsers = await Message.aggregate([
+    {
+      $match: {
+        $or: [{ sender: req.user._id }, { receiver: req.user._id }]
+      }
+    },
+    {
+      $group: {
+        _id: {
+          $cond: [{ $eq: ['$sender', req.user._id] }, '$receiver', '$sender']
+        }
+      }
+    },
+    {
+      $count: 'total'
+    }
+  ]);
+
+  const total = totalUsers.length > 0 ? totalUsers[0].total : 0;
+  const totalPages = Math.ceil(total / limit);
+  const hasMore = page < totalPages;
 
   res.status(200).json({
     status: 'success',
-    results: userMap.size,
-    data: { users: Array.from(userMap.values()) }
+    results: result.length,
+    data: {
+      users: result,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasMore
+      }
+    }
   });
 });

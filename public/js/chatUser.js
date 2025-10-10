@@ -1,17 +1,4 @@
 /* eslint-disable */
-
-// Debug: Log để kiểm tra TRƯỚC KHI init socket
-console.log('=== CHAT USER DEBUG ===');
-console.log('User ID:', window.userId);
-console.log('User Name:', window.userName);
-console.log('Admin ID:', window.adminId);
-console.log('Admin Name:', window.adminName);
-
-if (!window.userId || !window.adminId) {
-  alert('Lỗi: Không tìm thấy thông tin user hoặc admin. Vui lòng đăng nhập lại.');
-  console.error('Missing required data!');
-}
-
 const socket = io();
 const chatBox = document.getElementById('chat-box');
 const chatForm = document.getElementById('chat-user-form');
@@ -20,84 +7,57 @@ const chatInput = document.getElementById('chat-user-input');
 const adminId = window.adminId;
 const adminName = window.adminName || 'Admin';
 
-// Đăng ký user KHI SOCKET CONNECT THÀNH CÔNG
+// Đăng ký user vào socket
 socket.on('connect', () => {
-  console.log('✅ Socket connected:', socket.id);
-  console.log('📝 Registering user:', window.userId);
-  
-  socket.emit('register', { 
-    userId: window.userId, 
-    role: 'user' 
-  });
+  socket.emit('register', { userId: window.userId, role: 'user' });
 });
 
-// Hàm hiển thị tin nhắn
+// Hiển thị bong bóng chat
 function displayMessage(msg) {
   const div = document.createElement('div');
-  div.classList.add('chat-message');
-  
-  // Tin nhắn của user hiện tại sẽ có class 'mine'
+  div.className = 'llk-chat-message';
   if (msg.role === 'user' && msg.senderId === window.userId) {
     div.classList.add('mine');
   }
-  
+
   const time = new Date(msg.createdAt || Date.now()).toLocaleTimeString('vi-VN', {
     hour: '2-digit',
     minute: '2-digit'
   });
   
   div.innerHTML = `
-    <div class="chat-message__header">
+    <div class="llk-chat-message__header">
       <strong>${msg.senderName}</strong>
-      <span class="chat-message__time">${time}</span>
+      <span class="llk-chat-message__time">${time}</span>
     </div>
-    <div class="chat-message__content">${msg.message || msg.content}</div>
+    <div class="llk-chat-message__content">${msg.message || msg.content}</div>
   `;
-  
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// Load lịch sử chat khi trang load
+// Load lịch sử có sẵn server render
 window.addEventListener('DOMContentLoaded', () => {
-  // Nếu có messages được pass từ server (từ getUserChatView)
   if (window.chatMessages && window.chatMessages.length > 0) {
-    window.chatMessages.forEach(msg => {
+    window.chatMessages.forEach((m) =>
       displayMessage({
-        senderId: msg.sender,
-        senderName: msg.senderName,
-        message: msg.content,
-        role: msg.role,
-        createdAt: msg.createdAt
-      });
-    });
+        senderId: m.sender,
+        senderName: m.senderName,
+        message: m.content,
+        role: m.role,
+        createdAt: m.createdAt
+      })
+    );
   } else {
-    chatBox.innerHTML = '<div class="chat-empty">Bắt đầu cuộc trò chuyện với Admin</div>';
+    chatBox.innerHTML = '<div class="llk-chat-empty">Bắt đầu cuộc trò chuyện với Admin</div>';
   }
 });
 
-// Gửi tin nhắn
-chatForm.addEventListener('submit', e => {
+// Gửi tin
+chatForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  
   const message = chatInput.value.trim();
   if (!message) return;
-
-  // Validation trước khi gửi
-  if (!window.userId || !adminId) {
-    alert('Lỗi: Thiếu thông tin user. Vui lòng tải lại trang.');
-    console.error('Cannot send message - missing IDs', {
-      userId: window.userId,
-      adminId: adminId
-    });
-    return;
-  }
-
-  console.log('📤 Sending message:', {
-    senderId: window.userId,
-    receiverId: adminId,
-    message: message
-  });
 
   socket.emit('chatMessage', {
     senderId: window.userId,
@@ -107,27 +67,24 @@ chatForm.addEventListener('submit', e => {
     message,
     role: 'user'
   });
-  
+
   chatInput.value = '';
 });
 
-// Nhận tin nhắn realtime
-socket.on('newMessage', msg => {
-  // Chỉ hiển thị tin nhắn liên quan đến user này
+// Nhận tin realtime (lọc theo user hiện tại)
+socket.on('newMessage', (msg) => {
   if (msg.senderId === window.userId || msg.receiverId === window.userId) {
-    // Xóa message "chưa có tin nhắn" nếu có
-    const emptyMsg = chatBox.querySelector('.chat-empty');
-    if (emptyMsg) emptyMsg.remove();
-    
+    const empty = chatBox.querySelector('.llk-chat-empty');
+    if (empty) empty.remove();
     displayMessage(msg);
   }
 });
 
 // Xử lý lỗi
-socket.on('messageError', data => {
-  alert(data.error || 'Có lỗi xảy ra khi gửi tin nhắn');
+socket.on('messageError', (d) => {
+  alert(d.error || 'Có lỗi khi gửi tin nhắn');
 });
 
-socket.on('connect_error', (error) => {
-  console.error('Socket connection error:', error);
+socket.on('connect_error', (err) => {
+  console.error('Socket connection error:', err);
 });

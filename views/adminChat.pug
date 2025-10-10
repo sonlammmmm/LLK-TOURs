@@ -2,31 +2,53 @@ extends base
 
 block content
   main.main
-    .admin-chat-page
-      // Sidebar người dùng
-      aside.chat-sidebar
-        h2.heading-secondary.mb-3
-          i(class="fa-solid fa-users")
-          |  Người dùng
-        ul#user-list
-          each u in users
-            li.user-item(data-userid=u._id data-username=u.name)
-              i(class="fa-solid fa-user-circle") 
-              |  #{u.name}
+    .user-view
+      nav.user-view__menu
+        .admin-nav
+          h5.admin-nav__heading Quản lý
+          ul.side-nav
+            li
+              a(href='/admin/dashboard')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-home')
+                | Dashboard
+            li
+              a.active(href='/admin/chat')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-message-square')
+                | Chat khách hàng
+            li
+              a(href='/admin/tours')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-map')
+                | Quản lý tours
+            li
+              a(href='/admin/users')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-user')
+                | Quản lý User
+            li
+              a(href='/admin/bookings')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-briefcase')
+                | Lịch sử đặt tour
 
-      // Khu vực chat chính
-      section.chat-main
-        h2.heading-secondary.mb-3
-          i(class="fa-solid fa-comments")
-          |  Chat khách hàng
-        #chat-box.chat-box
-          .chat-empty Chọn người dùng để bắt đầu chat
-        form#chat-form.chat-form
-          input#chat-input(type='text', placeholder='Nhập tin nhắn...' autocomplete='off')
-          button.btn.btn--blue(type='submit')
-            i(class="fa-solid fa-paper-plane")
-            |  Gửi
+      .user-view__content
+        .user-view__form-container
+          h2.heading-secondary.mb-3 CHAT KHÁCH HÀNG
+          .llk-chat-wrapper
+            aside.llk-chat-sidebar
+              h3 Danh sách Chat
+              ul#user-list
+                li.llk-user-empty Chưa có cuộc trò chuyện nào
+            section.llk-chat-main
+              #chat-box.llk-chat-box
+                .llk-chat-empty Chọn người dùng để bắt đầu chat
+              form#chat-form.llk-chat-form
+                input#chat-input(type='text', placeholder='Nhập tin nhắn...' autocomplete='off')
+                button.llk-send-btn(type='submit')
+                  i(class="fa-solid fa-paper-plane")
+                  |  Gửi
 
 block scripts
-  //- Socket.io đã được load ở base.pug, chỉ cần load script
   script(src="/js/chatAdmin.js")
