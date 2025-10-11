@@ -33,6 +33,11 @@ const bookingSchema = new mongoose.Schema({
   startDate: {
     type: Date,
     required: [true, 'Booking phải có ngày bắt đầu!']
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['stripe', 'vnpay'],
+    default: 'stripe'
   }
 });
 

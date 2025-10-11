@@ -105,7 +105,19 @@ block content
               .booking-payment-row.total-row
                 .booking-payment-label Tổng cộng:
                 .booking-payment-value#total-price= `${tour.price.toLocaleString('vi-VN')} ₫`
-              
+
+              .booking-section
+                label.booking-section-label
+                  span.booking-step-number 3
+                  span Chọn hình thức thanh toán:
+                .payment-methods
+                  label.payment-option
+                    input(type="radio", name="paymentMethod", value="stripe", checked)
+                    span 💳 Thanh toán qua Stripe
+                  label.payment-option
+                    input(type="radio", name="paymentMethod", value="vnpay")
+                    span 🇻🇳 Thanh toán qua VNPAY
+                    
               .booking-actions
                 a.btn.btn--gray(href=`/tour/${tour.slug}`) Quay lại
                 button.btn.btn--green#book-tour(

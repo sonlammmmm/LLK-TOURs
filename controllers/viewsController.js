@@ -10,7 +10,7 @@ const formatStartDatesWithSlots = tour => {
 
   const now = new Date();
   return tour.startDates
-    .filter(dateObj => new Date(dateObj.date) > now) // Chỉ lấy ngày tương lai
+    .filter(dateObj => new Date(dateObj.date) > now)
     .map(dateObj => ({
       date: dateObj.date,
       dateFormatted: new Date(dateObj.date).toLocaleDateString('vi-VN', {
@@ -253,7 +253,6 @@ exports.getBookingDetail = catchAsync(async (req, res, next) => {
   });
 });
 
-// ✅ CẬP NHẬT: Thêm thông tin slot
 exports.getBookingForm = catchAsync(async (req, res, next) => {
   const tour = await Tour.findById(req.params.tourId);
 
@@ -267,7 +266,7 @@ exports.getBookingForm = catchAsync(async (req, res, next) => {
   res.status(200).render('bookingForm', {
     title: `Đặt tour: ${tour.name}`,
     tour,
-    startDatesWithSlots // ✅ Truyền biến này vào view
+    startDatesWithSlots
   });
 });
 
@@ -306,9 +305,11 @@ exports.getBookingSuccess = catchAsync(async (req, res, next) => {
     { path: 'user', select: 'name email' }
   ]);
 
+  // ✅ CẬP NHẬT: Hiển thị phương thức thanh toán
   res.status(200).render('bookingSuccess', {
     title: 'Thanh toán thành công',
-    booking
+    booking,
+    paymentMethod: booking?.paymentMethod || 'stripe'
   });
 });
 

@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Tour = require('../models/tourModel');
 const Booking = require('../models/bookingModel');
@@ -24,10 +23,15 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
     );
     if (availableDate) {
       startDate = new Date(availableDate.date);
-      console.log("⚠️ Không có startDate từ client — tự động chọn ngày:", startDate);
+      console.log(
+        '⚠️ Không có startDate từ client — tự động chọn ngày:',
+        startDate
+      );
     } else {
       // Nếu không còn ngày nào khả dụng
-      return next(new AppError('Hiện tour này không còn ngày khởi hành trống.', 400));
+      return next(
+        new AppError('Hiện tour này không còn ngày khởi hành trống.', 400)
+      );
     }
   } else {
     startDate = new Date(startDateStr);
@@ -95,7 +99,9 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
             name: `Tour ${tour.name}`,
             description: tour.summary,
             images: [
-              `${req.protocol}://${req.get('host')}/img/tours/${tour.imageCover}`
+              `${req.protocol}://${req.get('host')}/img/tours/${
+                tour.imageCover
+              }`
             ]
           },
           unit_amount: tour.price
