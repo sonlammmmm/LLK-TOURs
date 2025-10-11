@@ -3,7 +3,6 @@ extends base
 block content
   main.main
     .user-view
-      // Sidebar (giữ nguyên)
       nav.user-view__menu
         .admin-nav
           h5.admin-nav__heading Quản lý
@@ -13,6 +12,11 @@ block content
                 svg
                   use(xlink:href='/img/icons.svg#icon-home')
                 | Dashboard
+            li
+              a.active(href='/admin/chat')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-message-square')
+                | Chat khách hàng
             li
               a(href='/admin/tours')
                 svg

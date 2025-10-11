@@ -1,57 +1,89 @@
 /* eslint-disable */
-import axios from "axios"
-import { showAlert } from "./alerts"
+import axios from "axios";
 import { loadStripe } from "@stripe/stripe-js";
 
-// Đảm bảo cung cấp API key Stripe một cách chính xác
 export const bookTour = async (tourId, startDate, participants) => {
   try {
-    // Hiển thị thông báo đang xử lý
-    const bookBtn = document.getElementById("book-tour")
-    if (bookBtn) bookBtn.textContent = "Đang xử lý..."
+    const bookBtn = document.getElementById("book-tour");
+    if (bookBtn) bookBtn.textContent = "Đang xử lý...";
 
-    // 1) Kiểm tra tham số
+    // Lấy startDate nếu chưa có (từ hidden/input)
     if (!startDate) {
-      const startDateInput = document.getElementById("startDate")
-      startDate = startDateInput ? startDateInput.value : null
-
-      if (!startDate) {
-        if (bookBtn) bookBtn.textContent = "Thanh toán ngay"
-        return showAlert("error", "Vui lòng chọn ngày khởi hành")
-      }
+      const startDateInput =
+        document.getElementById("selectedDate") ||
+        document.getElementById("startDate");
+      startDate = startDateInput ? startDateInput.value : null;
     }
 
+    // Lấy participants nếu chưa có (từ hidden/input)
     if (!participants) {
-      const participantsInput = document.getElementById("participants")
-      participants = participantsInput ? Number.parseInt(participantsInput.value, 10) : 1
+      const participantsInput =
+        document.getElementById("participants-input") ||
+        document.getElementById("participants");
+      participants = participantsInput
+        ? Number.parseInt(participantsInput.value, 10)
+        : 1;
     }
 
-    // 2) Lấy phiên checkout từ API
-    const session = await axios.get(
-      `/api/v1/bookings/checkout-session/${tourId}?startDate=${startDate}&participants=${participants}`,
-    )
+    // Nếu chưa có ngày → KHÔNG alert, chỉ khóa nút & dừng lại
+    if (!startDate || startDate === "null" || startDate === "undefined") {
+      if (bookBtn) {
+        bookBtn.textContent = "Thanh toán ngay";
+        bookBtn.disabled = true;
+      }
+      console.warn("[Stripe] startDate is missing -> stop silently");
+      return;
+    }
 
-    // 3) Tạo phiên thanh toán + chuyển hướng đến trang thanh toán
+    // Tạo session
+    const sessionRes = await axios.get(
+      `/api/v1/bookings/checkout-session/${tourId}?startDate=${encodeURIComponent(
+        startDate
+      )}&participants=${participants}`
+    );
+
+    const session = sessionRes?.data?.session;
+    if (!session) {
+      // Không alert – chỉ log
+      console.error("[Stripe] No valid session received");
+      if (bookBtn) {
+        bookBtn.textContent = "Thanh toán ngay";
+        bookBtn.disabled = false;
+      }
+      return;
+    }
+
+    // Khởi tạo Stripe và redirect
     const stripe = await loadStripe(
       "pk_test_51ROK1zPQRbfkcMyySxeH7DJx96qGXiuqvM1wzDle8ZUt00OlrjxqHoQQsxvqF6aq2jPQCXkQqPaAlL593dJilC3c00rXElE12Q"
-    )
-    
+    );
     if (!stripe) {
-      throw new Error("Không thể khởi tạo Stripe")
+      console.error("[Stripe] Cannot init Stripe");
+      if (bookBtn) {
+        bookBtn.textContent = "Thanh toán ngay";
+        bookBtn.disabled = false;
+      }
+      return;
     }
-    
-    await stripe.redirectToCheckout({
-      sessionId: session.data.session.id,
-    })
+
+    // Đặt cờ để bỏ qua mọi xử lý lỗi phát sinh trong lúc chuyển trang
+    window.redirectingToStripe = true;
+
+    await stripe.redirectToCheckout({ sessionId: session.id });
   } catch (err) {
-    console.error(err)
-    showAlert("error", err.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại.")
+    // Nếu đang redirect, bỏ qua hết
+    if (window.redirectingToStripe) return;
 
-    // Khôi phục nút thanh toán
-    const bookBtn = document.getElementById("book-tour")
-    if (bookBtn) bookBtn.textContent = "Thanh toán ngay"
+    // Không hiển thị alert – chỉ log & khôi phục nút nếu có
+    console.error("[Stripe] Checkout error:", err);
+
+    const bookBtn = document.getElementById("book-tour");
+    if (bookBtn) {
+      bookBtn.textContent = "Thanh toán ngay";
+      bookBtn.disabled = false;
+    }
   }
-}
+};
 
-// Đặt hàm bookTour vào window object để có thể gọi từ inline script
-window.bookTour = bookTour
+// Gắn vào window để bookingForm.js gọi
+window.bookTour = bookTour;

@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Tour = require('../models/tourModel');
 const Booking = require('../models/bookingModel');
@@ -14,11 +15,23 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
 
   // 2) Lấy thông tin ngày khởi hành và số người tham gia
   const startDateStr = req.query.startDate;
-  if (!startDateStr) {
-    return next(new AppError('Vui lòng chọn ngày khởi hành.', 400));
-  }
 
-  const startDate = new Date(startDateStr);
+  // ⚙️ Nếu không có startDate, thay vì báo lỗi thì chọn ngày sớm nhất có slot
+  let startDate = null;
+  if (!startDateStr) {
+    const availableDate = (tour.startDates || []).find(
+      d => d.availableSlots > 0
+    );
+    if (availableDate) {
+      startDate = new Date(availableDate.date);
+      console.log("⚠️ Không có startDate từ client — tự động chọn ngày:", startDate);
+    } else {
+      // Nếu không còn ngày nào khả dụng
+      return next(new AppError('Hiện tour này không còn ngày khởi hành trống.', 400));
+    }
+  } else {
+    startDate = new Date(startDateStr);
+  }
 
   // Kiểm tra xem ngày khởi hành có hợp lệ không
   const isValidStartDate = tour.startDates.some(
@@ -76,16 +89,13 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
     client_reference_id: req.params.tourId,
     line_items: [
       {
-        // Sử dụng price_data để định nghĩa thông tin sản phẩm và giá
         price_data: {
           currency: 'vnd',
           product_data: {
             name: `Tour ${tour.name}`,
             description: tour.summary,
             images: [
-              `${req.protocol}://${req.get('host')}/img/tours/${
-                tour.imageCover
-              }`
+              `${req.protocol}://${req.get('host')}/img/tours/${tour.imageCover}`
             ]
           },
           unit_amount: tour.price
@@ -106,10 +116,8 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
 exports.createBookingCheckout = catchAsync(async (req, res, next) => {
   const { tour, user, price, participants, startDate } = req.query;
 
-  // Nếu không có đủ thông tin, chuyển sang middleware tiếp theo
   if (!tour || !user || !price || !startDate) return next();
 
-  // Tạo booking mới
   const newBooking = await Booking.create({
     tour,
     user,
@@ -118,7 +126,6 @@ exports.createBookingCheckout = catchAsync(async (req, res, next) => {
     startDate: new Date(startDate)
   });
 
-  // Chuyển hướng đến trang thành công với ID booking
   return res.redirect(`/booking-success?booking=${newBooking._id}`);
 });
 
@@ -128,20 +135,15 @@ exports.getAllBookings = factory.getAll(Booking);
 exports.updateBooking = factory.updateOne(Booking);
 exports.deleteBooking = factory.deleteOne(Booking);
 
-// Thêm hàm để kiểm tra xem người dùng đã đặt tour cho ngày cụ thể chưa
+// Kiểm tra xem người dùng đã đặt tour cho ngày cụ thể chưa
 exports.checkBookingExists = catchAsync(async (req, res, next) => {
-  // Lấy tourId từ params và startDate từ query
   const { tourId } = req.params;
   const startDateStr = req.query.startDate;
 
-  // Kiểm tra xem có đầy đủ thông tin không
-  if (!tourId || !startDateStr) {
-    return next(); // Tiếp tục nếu thiếu thông tin, để các middleware khác xử lý
-  }
+  if (!tourId || !startDateStr) return next();
 
   const startDateObj = new Date(startDateStr);
 
-  // Kiểm tra xem người dùng đã đặt tour này cho ngày này chưa
   const existingBooking = await Booking.findOne({
     tour: tourId,
     user: req.user.id,

@@ -1,13 +1,13 @@
 /* eslint-disable */
 document.addEventListener("DOMContentLoaded", function () {
   // ==== ELEMENTS ====
-  const dateButtons = document.querySelectorAll(".date-button");
+  const dateButtons = document.querySelectorAll(".booking-date-btn");
   const selectedDateInput = document.getElementById("selectedDate");
   const participantsInput = document.getElementById("participants-input");
   const participantsNumber = document.getElementById("participants-number");
   const participantsDisplay = document.getElementById("participants-display");
-  const decreaseBtn = document.querySelector(".participants-btn-decrease");
-  const increaseBtn = document.querySelector(".participants-btn-increase");
+  const decreaseBtn = document.querySelector(".decrease-btn");
+  const increaseBtn = document.querySelector(".increase-btn");
   const totalPriceEl = document.getElementById("total-price");
   const bookTourBtn = document.getElementById("book-tour");
 
@@ -64,6 +64,8 @@ document.addEventListener("DOMContentLoaded", function () {
       this.classList.add("selected");
       selectedDate = this.dataset.date;
       maxSlotsForSelectedDate = parseInt(this.dataset.slots || maxSize, 10);
+
+      console.log("✅ Đã chọn ngày:", selectedDate, "- Slots:", maxSlotsForSelectedDate);
 
       // Cập nhật hidden input
       if (selectedDateInput) {
@@ -127,28 +129,44 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // ==== XỬ LÝ THANH TOÁN ====
   if (bookTourBtn) {
-    bookTourBtn.addEventListener("click", function (e) {
+    bookTourBtn.addEventListener("click", async function (e) {
       e.preventDefault();
+      e.stopPropagation();
 
-      // Kiểm tra đã chọn ngày chưa
+      console.log("🔍 Checking validation - selectedDate:", selectedDate);
+
+      // Nếu chưa chọn ngày thì nút đã bị disable, không cần kiểm tra
+      // Chỉ log để debug
       if (!selectedDate) {
-        alert("Vui lòng chọn ngày khởi hành!");
-        // Scroll đến phần chọn ngày
-        const dateSection = document.querySelector(".date-buttons-grid");
-        if (dateSection) {
-          dateSection.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
+        console.error("❌ Error: No date selected but button was clicked");
         return;
       }
 
+      console.log("✅ Validation passed - proceeding with booking");
+
       const tourId = this.dataset.tourId;
 
-      // Gọi hàm đặt tour (Stripe, VNPay, etc.)
-      if (window.bookTour) {
-        window.bookTour(tourId, selectedDate, currentParticipants);
-      } else {
-        console.error("Không tìm thấy hàm xử lý thanh toán");
-        alert("Không tìm thấy hàm xử lý thanh toán. Vui lòng thử lại sau!");
+      // Vô hiệu hóa nút để tránh click nhiều lần
+      bookTourBtn.disabled = true;
+      const originalText = bookTourBtn.textContent;
+      bookTourBtn.textContent = "Đang xử lý...";
+
+      try {
+        // Gọi hàm đặt tour (Stripe, VNPay, etc.)
+        if (window.bookTour) {
+          console.log("📞 Calling bookTour with:", { tourId, selectedDate, currentParticipants });
+          await window.bookTour(tourId, selectedDate, currentParticipants);
+        } else {
+          console.error("❌ Không tìm thấy hàm xử lý thanh toán");
+          // Khôi phục nút
+          bookTourBtn.disabled = false;
+          bookTourBtn.textContent = originalText;
+        }
+      } catch (error) {
+        console.error("❌ Lỗi khi xử lý thanh toán:", error);
+        // Khôi phục nút nếu có lỗi
+        bookTourBtn.disabled = false;
+        bookTourBtn.textContent = originalText;
       }
     });
   }
@@ -158,8 +176,14 @@ document.addEventListener("DOMContentLoaded", function () {
   updateButtonStates();
   updateBookButtonState();
 
+  console.log("📋 Booking form initialized");
+  console.log("   - Tour price:", tourPrice);
+  console.log("   - Max size:", maxSize);
+  console.log("   - Available dates:", dateButtons.length);
+
   // Nếu chỉ có 1 ngày, tự động chọn
   if (dateButtons.length === 1) {
+    console.log("ℹ️ Chỉ có 1 ngày, tự động chọn");
     dateButtons[0].click();
   }
 });

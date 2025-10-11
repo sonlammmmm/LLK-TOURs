@@ -92,12 +92,15 @@ if (userPasswordForm)
   })
 
 
-if (bookBtn)
+if (bookBtn && !document.querySelector(".booking-main-form")) {
   bookBtn.addEventListener("click", (e) => {
-    e.target.textContent = "Đang xử lý..."
-    const { tourId } = e.target.dataset
-    bookTour(tourId)
-  })
+    e.preventDefault();
+    const { tourId } = e.target.dataset;
+    if (tourId) {
+      window.location.href = `/book-tour/${tourId}`;
+    }
+  });
+}
 
 // Xử lý nút đặt tour trực tiếp từ trang overview
 if (bookTourBtns) {

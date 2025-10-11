@@ -2,47 +2,47 @@ extends base
 
 block content
   main.main
-    .booking-form-container
-      .booking-form-card
-        h2.heading-secondary Đặt tour
+    .booking-container
+      .booking-card
+        h2.hd-secondary Đặt tour
 
         // ==== THÔNG TIN TOUR COMPACT ====
-        .booking-form-details
-          .booking-form-image
+        .booking-details
+          .booking-image
             img(src=`/img/tours/${tour.imageCover}`, alt=`${tour.name}`)
           
-          .booking-form-info
-            h3.booking-form-title= tour.name
-            .booking-form-meta
-              .booking-form-meta-item
-                svg.booking-form-icon
+          .booking-info
+            h3.booking-title= tour.name
+            .booking-meta
+              .booking-meta-item
+                svg.booking-icon
                   use(xlink:href='/img/icons.svg#icon-clock')
                 span= `${tour.duration} ngày`
-              .booking-form-meta-item
-                svg.booking-form-icon
+              .booking-meta-item
+                svg.booking-icon
                   use(xlink:href='/img/icons.svg#icon-map-pin')
                 span= tour.startLocation.description
-              .booking-form-meta-item
-                svg.booking-form-icon
+              .booking-meta-item
+                svg.booking-icon
                   use(xlink:href='/img/icons.svg#icon-calendar')
                 span Nhiều ngày khởi hành
-              .booking-form-meta-item
-                svg.booking-form-icon
+              .booking-meta-item
+                svg.booking-icon
                   use(xlink:href='/img/icons.svg#icon-user')
                 span= `Tối đa ${tour.maxGroupSize} người`
 
         // ==== FORM ĐẶT TOUR - LAYOUT 2 CỘT ====
-        form.booking-form
+        form.booking-main-form
           input(type="hidden", name="tourId", value=`${tour._id}`)
           input#selectedDate(type="hidden", name="startDate", value="")
 
           // CỘT TRÁI: CHỌN NGÀY & SỐ NGƯỜI
-          .booking-form-left
+          .booking-left-col
             
             // --- CHỌN NGÀY KHỞI HÀNH ---
-            .booking-form-group
-              label.booking-form-label
-                span.step-number 1
+            .booking-section
+              label.booking-section-label
+                span.booking-step-number 1
                 span Chọn ngày khởi hành:
               
               if tour.startDates && tour.startDates.length > 0
@@ -51,7 +51,7 @@ block content
                 - var availableDates = tour.startDates.filter(sd => new Date(sd.date) >= today && sd.availableSlots > 0);
                 
                 if availableDates.length > 0
-                  .date-buttons-grid
+                  .booking-date-grid
                     each startObj in availableDates
                       - var dateObj = new Date(startObj.date);
                       - var day = dateObj.getDate();
@@ -60,53 +60,53 @@ block content
                       - var weekday = dateObj.toLocaleDateString('vi-VN', { weekday: 'short' });
                       - var lowSlots = startObj.availableSlots <= 3;
                       
-                      .date-button(
+                      .booking-date-btn(
                         class=lowSlots ? 'low-slots' : '',
                         data-date=dateObj.toISOString(),
                         data-slots=startObj.availableSlots
                       )
-                        .date-day= day
-                        .date-month-year= `${month} ${year}`
-                        .date-weekday= weekday
-                        .date-slots= `${startObj.availableSlots} chỗ`
+                        .booking-date-day= day
+                        .booking-date-month= `${month} ${year}`
+                        .booking-date-weekday= weekday
+                        .booking-date-slots= `${startObj.availableSlots} chỗ`
                 else
-                  .no-dates-message Không có ngày khởi hành khả dụng
+                  .booking-no-dates Không có ngày khởi hành khả dụng
               else
-                .no-dates-message Không có ngày khởi hành khả dụng
+                .booking-no-dates Không có ngày khởi hành khả dụng
 
             // --- SỐ LƯỢNG NGƯỜI ---
-            .booking-form-group
-              label.booking-form-label
-                span.step-number 2
+            .booking-section
+              label.booking-section-label
+                span.booking-step-number 2
                 span Số lượng người tham gia:
               
-              .participants-control
-                button.participants-btn.participants-btn-decrease(type="button") −
-                .participants-display
-                  .participants-number#participants-number 1
-                  .participants-text người
-                button.participants-btn.participants-btn-increase(type="button") +
+              .booking-participants-ctrl
+                button.booking-participants-btn.decrease-btn(type="button") −
+                .booking-participants-display
+                  .booking-participants-num#participants-number 1
+                  .booking-participants-text người
+                button.booking-participants-btn.increase-btn(type="button") +
               
               input#participants-input(type="hidden", name="participants", value="1")
 
           // CỘT PHẢI: THANH TOÁN
-          .booking-form-right
-            .payment-card
-              h3.payment-title Chi tiết thanh toán
+          .booking-right-col
+            .booking-payment-card
+              h3.booking-payment-title Chi tiết thanh toán
               
-              .payment-row
-                .payment-label Giá tour:
-                .payment-value#price-per-person= `${tour.price.toLocaleString('vi-VN')} ₫`
+              .booking-payment-row
+                .booking-payment-label Giá tour:
+                .booking-payment-value#price-per-person= `${tour.price.toLocaleString('vi-VN')} ₫`
               
-              .payment-row
-                .payment-label Số người:
-                .payment-value#participants-display 1
+              .booking-payment-row
+                .booking-payment-label Số người:
+                .booking-payment-value#participants-display 1
               
-              .payment-row.payment-total
-                .payment-label Tổng cộng:
-                .payment-value#total-price= `${tour.price.toLocaleString('vi-VN')} ₫`
+              .booking-payment-row.total-row
+                .booking-payment-label Tổng cộng:
+                .booking-payment-value#total-price= `${tour.price.toLocaleString('vi-VN')} ₫`
               
-              .booking-form-actions
+              .booking-actions
                 a.btn.btn--gray(href=`/tour/${tour.slug}`) Quay lại
                 button.btn.btn--green#book-tour(
                   type="button",
