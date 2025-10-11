@@ -1,6 +1,7 @@
 extends base
 
 block content
+  - var hideFooter = true
   main.main
     .user-view
       nav.user-view__menu
@@ -50,7 +51,6 @@ block content
                 input#user-search(type='text', placeholder='Tìm kiếm người dùng...')
 
               ul#user-list
-                li.llk-user-empty Chưa có cuộc trò chuyện nào
 
             section.llk-chat-main
               #chat-box.llk-chat-box

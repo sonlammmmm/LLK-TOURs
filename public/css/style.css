@@ -45,11 +45,15 @@ body {
 
 .main {
   background-color: #fff;
-  padding: 8rem 6rem;
+  padding: 8rem 2rem; 
   -webkit-box-flex: 1;
   -ms-flex: 1;
   flex: 1;
   position: relative;
+  height: auto;
+  min-height: calc(100vh - 140px); /* giảm chiều cao hợp lý */
+  overflow: hidden;
+  border-radius: 8px;
 }
 
 .flex {
@@ -1242,28 +1246,25 @@ body {
 
 .user-view {
   display: flex;
-  min-height: 100vh;
   background-color: #fff;
-  border-radius: 3px;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.08);
+  align-items: stretch;
+  min-height: calc(100vh - 245px); /* Giảm chiều cao vừa phải */
+  margin-top: 2rem;                /* Tạo khoảng cách với header */
 }
+
 
 .user-view__menu {
-  -ms-flex: 32rem 0 0px;
   flex: 0 0 250px;
-  background-image: -webkit-gradient(linear,
-      left top,
-      right bottom,
-      from(#cceef8),
-      to(#014d8c));
   background-image: linear-gradient(to right bottom, #cceef8, #014d8c);
   padding: 3rem 0;
+  color: #fff;
+  overflow-y: auto;
 }
 
-.user-view__content {
-  padding: 3rem 4rem;
-}
+.user-view__content { flex: 1; padding: 2.5rem; background-color: #FAFAFA; height: fit-content; min-height: 350px; }
 
 .user-view__form-container {
   margin-bottom: 3rem;

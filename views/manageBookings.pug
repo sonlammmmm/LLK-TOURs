@@ -1,6 +1,7 @@
 extends base
 
 block content
+  - var hideFooter = true
   main.main
     .user-view
       nav.user-view__menu
@@ -13,7 +14,7 @@ block content
                   use(xlink:href='/img/icons.svg#icon-home')
                 | Dashboard
             li
-              a.active(href='/admin/chat')
+              a(href='/admin/chat')
                 svg
                   use(xlink:href='/img/icons.svg#icon-message-square')
                 | Chat khách hàng
@@ -28,7 +29,7 @@ block content
                   use(xlink:href='/img/icons.svg#icon-user')
                 | Quản lý User
             li
-              a(href='/admin/bookings')
+              a.active(href='/admin/bookings')
                 svg
                   use(xlink:href='/img/icons.svg#icon-briefcase')
                 | Lịch sử đặt tour

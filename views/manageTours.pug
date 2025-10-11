@@ -1,6 +1,7 @@
 extends base
 
 block content
+  - var hideFooter = true
   main.main
     .user-view
       nav.user-view__menu
@@ -13,12 +14,12 @@ block content
                   use(xlink:href='/img/icons.svg#icon-home')
                 | Dashboard
             li
-              a.active(href='/admin/chat')
+              a(href='/admin/chat')
                 svg
                   use(xlink:href='/img/icons.svg#icon-message-square')
                 | Chat khách hàng
             li
-              a(href='/admin/tours')
+              a.active(href='/admin/tours')
                 svg
                   use(xlink:href='/img/icons.svg#icon-map')
                 | Quản lý tours

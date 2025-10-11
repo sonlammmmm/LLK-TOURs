@@ -135,6 +135,8 @@ async function loadUserList(page = 1) {
       return;
     }
 
+    userList.querySelectorAll('.llk-user-empty').forEach(el => el.remove());
+
     const limited = data.data.users.slice(0, 6);
     limited.forEach((user) => appendUserToList(user, false));
 

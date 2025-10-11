@@ -46,12 +46,6 @@
   fill: currentColor;
 }
 
-.user-view__content {
-  flex: 1;
-  padding: 2.5rem;
-  background-color: #FAFAFA;
-}
-
 .user-view__form-container {
   max-width: 1200px;
   margin: 0 auto;

@@ -32,7 +32,8 @@ html
     block content
 
     // FOOTER
-    include _footer
+    if !hideFooter
+      include _footer
 
     // ========== NÚT CHAT NỔI CHO USER ==========
     if user && user.role === 'user'

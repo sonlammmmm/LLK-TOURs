@@ -1,6 +1,7 @@
 extends base
 
 block content
+  - var hideFooter = true
   main.main
     .user-view
       nav.user-view__menu
@@ -8,12 +9,12 @@ block content
           h5.admin-nav__heading Quản lý
           ul.side-nav
             li
-              a(href='/admin/dashboard')
+              a.active(href='/admin/dashboard')
                 svg
                   use(xlink:href='/img/icons.svg#icon-home')
                 | Dashboard
             li
-              a.active(href='/admin/chat')
+              a(href='/admin/chat')
                 svg
                   use(xlink:href='/img/icons.svg#icon-message-square')
                 | Chat khách hàng
