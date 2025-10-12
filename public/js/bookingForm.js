@@ -60,7 +60,7 @@ export const initBookingForm = () => {
         btn.classList.add("selected");
         selectedDate = btn.dataset.date;
         bookTourBtn.disabled = false;
-        showAlert("success", "Đã chọn ngày khởi hành!");
+        showAlert("success", "Đã chọn ngày khởi hành");
       });
     });
   }
@@ -76,7 +76,7 @@ export const initBookingForm = () => {
         updateParticipantsUI();
         updateTotal();
       } else {
-        showAlert("error", "Tối thiểu 1 người tham gia!");
+        showAlert("error", "Tối thiểu 1 người tham gia");
       }
     });
   }

@@ -90,34 +90,71 @@ body {
   background-color: #e0e0e0;
 }
 
-.alert {
+/* ================= ALERT TOAST FIX ================= */
+.alert-container {
   position: fixed;
-  top: 0;
-  left: 50%;
-  -webkit-transform: translateX(-50%);
-  transform: translateX(-50%);
-  z-index: 9999;
+  top: 10rem;              /* nằm dưới header */
+  right: 2rem;
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+  pointer-events: none;
+}
+
+.alert {
+  pointer-events: auto;
+  background-color: #333;
+  color: #fff;
+  border-radius: 8px;
+  padding: 1.6rem 2.4rem;
+  min-width: 30rem;
+  max-width: 40rem;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  font-size: 1.6rem;
+  font-weight: 500;
+  box-shadow: 0 0.8rem 2.4rem rgba(0, 0, 0, 0.15);
+  animation: slideInRight 0.4s ease-out;
+  transition: all 0.3s ease;
+}
+
+.alert.hide {
+  animation: slideOutRight 0.4s ease-in forwards;
+}
+
+.alert--success { background-color: #20bf6b; }
+.alert--info { background-color: #49bcd7; }
+.alert--error { background-color: #eb4d4b; }
+
+.alert__icon i {
   color: #fff;
   font-size: 1.8rem;
-  font-weight: 400;
-  text-align: center;
-  border-bottom-left-radius: 5px;
-  border-bottom-right-radius: 5px;
-  padding: 1.6rem 15rem;
-  -webkit-box-shadow: 0 0 4rem rgba(0, 0, 0, 0.25);
-  box-shadow: 0 0 4rem rgba(0, 0, 0, 0.25);
 }
 
-.alert--success {
-  background-color: #20bf6b;
+/* Hiệu ứng */
+@keyframes slideInRight {
+  from {
+    transform: translateX(40rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
-.alert--info {
-  background-color: #49bcd7;
-}
-
-.alert--error {
-  background-color: #eb4d4b;
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(40rem);
+    opacity: 0;
+  }
 }
 
 .heading-secondary {
