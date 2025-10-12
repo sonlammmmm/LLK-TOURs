@@ -1,11 +1,9 @@
 const express = require('express');
 const bookingController = require('../controllers/bookingController');
 const authController = require('../controllers/authController');
-const vnpayController = require('../controllers/vnpayController'); // 👈 thêm dòng này
+const vnpayController = require('../controllers/vnpayController');
 
 const router = express.Router();
-
-router.use(authController.protect);
 
 // === STRIPE ===
 router.get(
@@ -20,12 +18,13 @@ router.get(
   bookingController.checkBookingExists,
   vnpayController.createPaymentUrl
 );
-router.get(
-  '/vnpay-return',
-  authController.protect,
-  vnpayController.vnpayReturn
-);
 
+router.get('/vnpay-return', vnpayController.vnpayReturn);
+
+router.get('/vnpay-ipn', vnpayController.vnpayIpn);
+
+// === ADMIN ===
+router.use(authController.protect);
 router.use(authController.restrictTo('admin', 'lead-guide'));
 
 router

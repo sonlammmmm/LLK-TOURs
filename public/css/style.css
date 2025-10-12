@@ -1257,11 +1257,12 @@ body {
 
 
 .user-view__menu {
-  flex: 0 0 250px;
+  flex: 0 0 260px;
   background-image: linear-gradient(to right bottom, #cceef8, #014d8c);
   padding: 3rem 0;
   color: #fff;
   overflow-y: auto;
+  overflow-x: hidden
 }
 
 .user-view__content { flex: 1; padding: 2.5rem; background-color: #FAFAFA; height: fit-content; min-height: 350px; }

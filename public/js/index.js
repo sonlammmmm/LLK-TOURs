@@ -224,10 +224,6 @@ if (document.querySelector(".booking-detail")) {
 // Initialize view toggle and search functionality
 initViewToggle()
 
-// Thêm vào phần cuối file
-// Initialize booking form
-initBookingForm()
-
 // Initialize booking success page
 initBookingSuccess()
 

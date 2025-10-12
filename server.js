@@ -51,7 +51,7 @@ io.on('connection', socket => {
 
   // User register với userId của họ
   socket.on('register', ({ userId, role }) => {
-    console.log('🧾 REGISTER payload:', { userId, role }); // <— thêm dòng này
+    console.log('🧾 REGISTER payload:', { userId, role });
     userSockets.set(userId, socket.id);
     socket.userId = userId;
     socket.userRole = role;

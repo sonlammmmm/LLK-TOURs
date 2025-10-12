@@ -283,7 +283,7 @@ export const handleTourForm = () => {
       })
 
       // Xử lý ngày khởi hành
-      document.querySelectorAll(".start-date-item").forEach((item, index) => {
+      ocument.querySelectorAll(".start-date-item").forEach((item, index) => {
         const date = item.querySelector(".start-date").value
         if (date) {
           formData.append(`startDates[${index}]`, new Date(date).toISOString())

@@ -64,8 +64,8 @@ app.use(
       ],
       connectSrc: [
         "'self'",
-        'ws://localhost:3000', // 👈 Sửa port cho Socket.IO
-        'wss://localhost:3000', // 👈 Thêm WSS cho production
+        'ws://localhost:3000',
+        'wss://localhost:3000',
         'https://api.mapbox.com',
         'https://js.stripe.com'
       ],
@@ -84,7 +84,8 @@ if (process.env.NODE_ENV === 'development') {
 const limiter = rateLimit({
   max: 100,
   windowMs: 60 * 60 * 1000,
-  message: 'Too many requests from this IP, please try again in an hour!'
+  message: 'Too many requests from this IP, please try again in an hour!',
+  skip: req => req.ip === '::1' || req.ip === '127.0.0.1'
 });
 app.use('/api', limiter);
 

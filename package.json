@@ -6,8 +6,8 @@
     "start": "nodemon server.js",
     "start:prod": "cross-env NODE_ENV=production node server.js",
     "debug": "ndb server.js",
-    "watch:js": "npx parcel watch",
-    "build:js": "npx parcel build"
+    "watch:js": "set TEMP=E:\\Temp&& set TMP=E:\\Temp&& npx parcel watch",
+    "build:js": "set TEMP=E:\\Temp&& set TMP=E:\\Temp&& npx parcel build"
   },
   "repository": {
     "type": "git",

@@ -129,12 +129,55 @@ exports.normalizeMultipartJSON = (req, res, next) => {
 
 exports.getAllTours = factory.getAll(Tour);
 exports.getTour = factory.getOne(Tour, { path: 'reviews' });
-exports.updateTour = factory.updateOne(Tour);
+exports.updateTour = catchAsync(async (req, res, next) => {
+  // === FIX: Xử lý startDates để thêm availableSlots ===
+  if (req.body.startDates && Array.isArray(req.body.startDates)) {
+    req.body.startDates = req.body.startDates.map(d => {
+      const dateValue = d.date || d; // d có thể là object hoặc string
+      const slotsValue =
+        d.availableSlots != null
+          ? Number(d.availableSlots)
+          : Number(req.body.maxGroupSize) || 0;
+
+      return {
+        date: new Date(dateValue),
+        availableSlots: slotsValue
+      };
+    });
+  } else if (typeof req.body.startDates === 'string') {
+    try {
+      const arr = JSON.parse(req.body.startDates);
+      req.body.startDates = arr.map(d => ({
+        date: new Date(d.date || d),
+        availableSlots:
+          Number(
+            d.availableSlots != null ? d.availableSlots : req.body.maxGroupSize
+          ) || 0
+      }));
+    } catch {
+      console.warn(
+        'Không parse được startDates khi update:',
+        req.body.startDates
+      );
+      req.body.startDates = [];
+    }
+  }
+
+  // === Tiến hành cập nhật ===
+  const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  if (!tour) return next(new AppError('Không tìm thấy tour', 404));
+
+  res.status(200).json({
+    status: 'success',
+    data: { tour }
+  });
+});
 exports.deleteTour = factory.deleteOne(Tour);
 exports.createTour = catchAsync(async (req, res, next) => {
-  // ====== 1️⃣ Xử lý các field JSON được gửi từ FormData ======
-
-  // START DATES
   if (typeof req.body.startDates === 'string') {
     try {
       const arr = JSON.parse(req.body.startDates);
@@ -183,8 +226,6 @@ exports.createTour = catchAsync(async (req, res, next) => {
     req.body.guides = [req.body.guides];
   }
 
-  // ====== 2️⃣ Kiểm tra và ép kiểu bổ sung ======
-
   // Đảm bảo maxGroupSize là số
   if (req.body.maxGroupSize) {
     req.body.maxGroupSize = Number(req.body.maxGroupSize);
@@ -195,7 +236,6 @@ exports.createTour = catchAsync(async (req, res, next) => {
     if (req.body[f]) req.body[f] = Number(req.body[f]);
   });
 
-  // ====== 3️⃣ Ghi log để debug (nếu cần) ======
   console.log('✅ Dữ liệu tạo tour sau khi xử lý:', {
     name: req.body.name,
     startDates: req.body.startDates,
@@ -204,7 +244,6 @@ exports.createTour = catchAsync(async (req, res, next) => {
     guides: req.body.guides
   });
 
-  // ====== 4️⃣ Tạo tour ======
   const newTour = await Tour.create(req.body);
 
   res.status(201).json({
