@@ -6,6 +6,7 @@
     "dev": "nodemon server.js",
     "start": "node server.js",
     "start:prod": "cross-env NODE_ENV=production node server.js",
+    "build": "npm run build:js",
     "debug": "ndb server.js",
     "watch:js": "set TEMP=E:\\Temp&& set TMP=E:\\Temp&& npx parcel watch",
     "build:js": "set TEMP=E:\\Temp&& set TMP=E:\\Temp&& npx parcel build"
