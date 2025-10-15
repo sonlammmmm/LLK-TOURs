@@ -191,16 +191,13 @@ tourSchema.pre('save', function(next) {
 
 // MIDDLEWARE: Xử lý startDates khi tạo/cập nhật
 tourSchema.pre('save', function(next) {
-  if (this.startDates && this.startDates.length > 0) {
+  if (this.isNew && this.startDates && this.startDates.length > 0) {
     this.startDates = this.startDates.map(dateObj => {
-      // Nếu là object cũ (chỉ có Date), chuyển sang format mới
+      // Date thuần
       if (dateObj instanceof Date) {
-        return {
-          date: dateObj,
-          availableSlots: this.maxGroupSize
-        };
+        return { date: dateObj, availableSlots: this.maxGroupSize };
       }
-      // Nếu là object mới nhưng chưa có availableSlots
+      // Object có date nhưng không có availableSlots
       if (dateObj.date && dateObj.availableSlots === undefined) {
         return {
           date:
@@ -210,7 +207,7 @@ tourSchema.pre('save', function(next) {
           availableSlots: this.maxGroupSize
         };
       }
-      // Nếu đã có đầy đủ, đảm bảo date là Date object
+      // Object đầy đủ
       return {
         date:
           dateObj.date instanceof Date ? dateObj.date : new Date(dateObj.date),

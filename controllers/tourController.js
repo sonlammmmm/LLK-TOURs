@@ -23,6 +23,20 @@ const upload = multer({
   fileFilter: multerFilter
 });
 
+const tryParseJSON = (str, fieldName = 'payload') => {
+  try {
+    return JSON.parse(str);
+  } catch (err) {
+    console.warn(
+      `⚠️ Invalid JSON for "${fieldName}":`,
+      str,
+      '| error:',
+      err.message
+    );
+    return undefined;
+  }
+};
+
 exports.uploadTourImages = upload.fields([
   { name: 'imageCover', maxCount: 1 },
   { name: 'images', maxCount: 3 }
@@ -94,33 +108,29 @@ exports.normalizeMultipartJSON = (req, res, next) => {
   // 2) Chuẩn hoá startDates về dạng [{ date, availableSlots }]
   if (Array.isArray(req.body.startDates)) {
     req.body.startDates = req.body.startDates.map(d => {
-      if (typeof d === 'string') {
-        return {
-          date: new Date(d),
-          availableSlots: Number(req.body.maxGroupSize) || 0
-        };
+      const date = d?.date ?? d;
+      const out = { date: new Date(date) };
+      if (d && d.availableSlots != null) {
+        out.availableSlots = Number(d.availableSlots);
       }
-      return {
-        date: new Date(d.date || d),
-        availableSlots:
-          Number(
-            d.availableSlots != null ? d.availableSlots : req.body.maxGroupSize
-          ) || 0
-      };
+      return out;
     });
   } else if (typeof req.body.startDates === 'string') {
     // Trường hợp đặc biệt: vẫn còn là chuỗi JSON
     try {
       const arr = JSON.parse(req.body.startDates);
-      req.body.startDates = arr.map(d => ({
-        date: new Date(d.date || d),
-        availableSlots:
-          Number(
-            d.availableSlots != null ? d.availableSlots : req.body.maxGroupSize
-          ) || 0
-      }));
-    } catch {
-      // để Mongoose báo lỗi nếu dữ liệu sai
+      req.body.startDates = arr.map(d => {
+        const out = { date: new Date(d.date || d) };
+        if (d && d.availableSlots != null) {
+          out.availableSlots = Number(d.availableSlots);
+        } else if (req.method === 'POST') {
+          // ✅ Chỉ default khi CREATE
+          out.availableSlots = Number(req.body.maxGroupSize) || 0;
+        }
+        return out;
+      });
+    } catch (e) {
+      // để Mongoose/validator phía sau xử lý nếu dữ liệu sai
     }
   }
 
@@ -128,54 +138,109 @@ exports.normalizeMultipartJSON = (req, res, next) => {
 };
 
 exports.getAllTours = factory.getAll(Tour);
-exports.getTour = factory.getOne(Tour, { path: 'reviews' });
-exports.updateTour = catchAsync(async (req, res, next) => {
-  // === FIX: Xử lý startDates để thêm availableSlots ===
-  if (req.body.startDates && Array.isArray(req.body.startDates)) {
-    req.body.startDates = req.body.startDates.map(d => {
-      const dateValue = d.date || d; // d có thể là object hoặc string
-      const slotsValue =
-        d.availableSlots != null
-          ? Number(d.availableSlots)
-          : Number(req.body.maxGroupSize) || 0;
 
-      return {
-        date: new Date(dateValue),
-        availableSlots: slotsValue
-      };
-    });
-  } else if (typeof req.body.startDates === 'string') {
-    try {
-      const arr = JSON.parse(req.body.startDates);
-      req.body.startDates = arr.map(d => ({
-        date: new Date(d.date || d),
-        availableSlots:
-          Number(
-            d.availableSlots != null ? d.availableSlots : req.body.maxGroupSize
-          ) || 0
-      }));
-    } catch {
-      console.warn(
-        'Không parse được startDates khi update:',
-        req.body.startDates
-      );
-      req.body.startDates = [];
-    }
+exports.getTour = factory.getOne(Tour, { path: 'reviews' });
+
+exports.updateTour = catchAsync(async (req, res, next) => {
+  const current = await Tour.findById(req.params.id);
+  if (!current) return next(new AppError('Không tìm thấy tour', 404));
+
+  // Ép kiểu số nếu có trong payload
+  ['maxGroupSize', 'duration', 'price', 'priceDiscount'].forEach(f => {
+    if (req.body[f] != null) req.body[f] = Number(req.body[f]);
+  });
+
+  // ✅ Parse an toàn nếu client gửi JSON string
+  if (typeof req.body.startLocation === 'string') {
+    const parsed = tryParseJSON(req.body.startLocation, 'startLocation');
+    if (parsed) req.body.startLocation = parsed;
+    else delete req.body.startLocation; // không làm hỏng dữ liệu cũ
+  }
+  if (typeof req.body.locations === 'string') {
+    const parsed = tryParseJSON(req.body.locations, 'locations');
+    if (parsed) req.body.locations = parsed;
+    else delete req.body.locations;
+  }
+  if (typeof req.body.guides === 'string') {
+    const parsed = tryParseJSON(req.body.guides, 'guides');
+    if (parsed) req.body.guides = parsed;
+    else delete req.body.guides;
   }
 
-  // === Tiến hành cập nhật ===
-  const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
+  // ------------------------
+  // Merge startDates (giữ slot cũ nếu client không gửi availableSlots)
+  let incoming = req.body.startDates;
+  if (typeof incoming === 'string') {
+    incoming = tryParseJSON(incoming, 'startDates');
+    // nếu parse lỗi → incoming = undefined (không đụng tới startDates hiện có)
+  }
+
+  if (Array.isArray(incoming)) {
+    const toKey = d => {
+      const raw = d && d.date != null ? d.date : d;
+      const dt = new Date(raw);
+      return dt.toISOString().split('T')[0]; // so sánh theo ngày
+    };
+
+    // Map hiện tại trong DB
+    const existingMap = new Map(
+      (current.startDates || []).map(d => [
+        toKey(d),
+        {
+          date: new Date(d.date),
+          availableSlots: Number(d.availableSlots) || 0
+        }
+      ])
+    );
+
+    // Bắt đầu từ dữ liệu hiện có
+    const mergedMap = new Map(existingMap);
+
+    // Merge từng phần tử trong payload
+    incoming.forEach(d => {
+      const key = toKey(d);
+      const dateVal = new Date(d && d.date != null ? d.date : d);
+      const prev = existingMap.get(key);
+
+      // Không nested ternary: tính slots rõ ràng
+      let slots;
+      const hasSlots = d && d.availableSlots != null;
+
+      if (hasSlots) {
+        slots = Number(d.availableSlots);
+      } else if (prev) {
+        // giữ lại slot cũ nếu ngày đã tồn tại
+        slots = prev.availableSlots;
+      } else {
+        // ngày mới → mặc định maxGroupSize
+        const mg =
+          req.body.maxGroupSize != null
+            ? Number(req.body.maxGroupSize)
+            : Number(current.maxGroupSize);
+        slots = Number.isFinite(mg) ? mg : 0;
+      }
+
+      mergedMap.set(key, {
+        date: dateVal,
+        availableSlots: Math.max(0, Number(slots) || 0)
+      });
+    });
+
+    req.body.startDates = Array.from(mergedMap.values());
+  } else {
+    // không gửi startDates → không sửa mảng cũ
+    delete req.body.startDates;
+  }
+  // ------------------------
+
+  const updated = await Tour.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
   });
 
-  if (!tour) return next(new AppError('Không tìm thấy tour', 404));
-
-  res.status(200).json({
-    status: 'success',
-    data: { tour }
-  });
+  res.status(200).json({ status: 'success', data: { tour: updated } });
 });
+
 exports.deleteTour = factory.deleteOne(Tour);
 exports.createTour = catchAsync(async (req, res, next) => {
   if (typeof req.body.startDates === 'string') {

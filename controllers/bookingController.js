@@ -6,52 +6,14 @@ const factory = require('./handlerFactory');
 const AppError = require('../utils/appError');
 
 exports.getCheckoutSession = catchAsync(async (req, res, next) => {
-  // 1) Lấy thông tin tour hiện tại
+  // 1) Lấy tour
   const tour = await Tour.findById(req.params.tourId);
-  if (!tour) {
-    return next(new AppError('Không tìm thấy tour này.', 404));
-  }
+  if (!tour) return next(new AppError('Không tìm thấy tour này.', 404));
 
-  // 2) Lấy thông tin ngày khởi hành và số người tham gia
+  // 2) Lấy tham số đầu vào
+  const participants = Number.parseInt(req.query.participants, 10) || 1;
   const startDateStr = req.query.startDate;
 
-  // ⚙️ Nếu không có startDate, thay vì báo lỗi thì chọn ngày sớm nhất có slot
-  let startDate = null;
-  if (!startDateStr) {
-    const availableDate = (tour.startDates || []).find(
-      d => d.availableSlots > 0
-    );
-    if (availableDate) {
-      startDate = new Date(availableDate.date);
-      console.log(
-        '⚠️ Không có startDate từ client — tự động chọn ngày:',
-        startDate
-      );
-    } else {
-      // Nếu không còn ngày nào khả dụng
-      return next(
-        new AppError('Hiện tour này không còn ngày khởi hành trống.', 400)
-      );
-    }
-  } else {
-    startDate = new Date(startDateStr);
-  }
-
-  // Kiểm tra xem ngày khởi hành có hợp lệ không
-  const isValidStartDate = tour.startDates.some(
-    obj =>
-      new Date(obj.date).toISOString().split('T')[0] ===
-      startDate.toISOString().split('T')[0]
-  );
-
-  if (!isValidStartDate) {
-    return next(new AppError('Ngày khởi hành không hợp lệ.', 400));
-  }
-
-  // Lấy số lượng người tham gia từ query (mặc định 1 nếu không có)
-  const participants = Number.parseInt(req.query.participants, 10) || 1;
-
-  // Kiểm tra ràng buộc số lượng người tham gia (nằm trong maxGroupSize)
   if (participants < 1) {
     return next(
       new AppError('Số lượng người tham gia tối thiểu là 1 người.', 400)
@@ -66,11 +28,47 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
     );
   }
 
-  // Tính tổng giá
-  const totalPrice = tour.price * participants;
+  // 3) Xác định ngày khởi hành
+  let startDate;
+  if (!startDateStr) {
+    // Không có startDate -> chọn ngày sớm nhất còn slot
+    const firstAvailable = (tour.startDates || []).find(
+      d => Number(d.availableSlots) > 0
+    );
+    if (!firstAvailable) {
+      return next(
+        new AppError('Hiện tour này không còn ngày khởi hành trống.', 400)
+      );
+    }
+    startDate = new Date(firstAvailable.date);
+  } else {
+    startDate = new Date(startDateStr);
+    if (Number.isNaN(startDate.getTime())) {
+      return next(new AppError('startDate không hợp lệ.', 400));
+    }
+  }
 
-  // Kiểm tra tổng giá không vượt quá giới hạn của Stripe (₫99,999,999)
-  if (totalPrice > 99999999) {
+  // 4) Tìm đúng object ngày theo YYYY-MM-DD
+  const startKey = startDate.toISOString().split('T')[0];
+  const dateItem = (tour.startDates || []).find(
+    d => new Date(d.date).toISOString().split('T')[0] === startKey
+  );
+  if (!dateItem) {
+    return next(new AppError('Ngày khởi hành không hợp lệ.', 400));
+  }
+
+  // 5) ✅ CHẶN OVERBOOK THEO NGÀY
+  const daySlots = Number(dateItem.availableSlots);
+  if (Number.isFinite(daySlots) && participants > daySlots) {
+    return next(new AppError(`Chỉ còn ${daySlots} chỗ cho ngày này.`, 400));
+  }
+
+  // 6) Tính tổng tiền (Stripe với VND là zero-decimal -> dùng số nguyên)
+  const unitAmount = Math.round(Number(tour.price) || 0); // giá mỗi người
+  const totalPrice = unitAmount * participants;
+
+  // Giới hạn an toàn tuỳ logic của bạn
+  if (totalPrice > 99_999_999) {
     return next(
       new AppError(
         'Tổng số tiền thanh toán vượt quá giới hạn của Stripe (₫99,999,999).',
@@ -79,10 +77,9 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
     );
   }
 
-  // 3) Tạo Checkout Session với cấu trúc API của Stripe
+  // 7) Tạo Checkout Session (giữ nguyên cấu trúc API của bạn)
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
-    // URL thành công để chuyển hướng đến trang booking-success
     success_url: `${req.protocol}://${req.get('host')}/booking-success?tour=${
       req.params.tourId
     }&user=${
@@ -104,7 +101,7 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
               }`
             ]
           },
-          unit_amount: tour.price
+          unit_amount: unitAmount
         },
         quantity: participants
       }
@@ -112,7 +109,7 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
     mode: 'payment'
   });
 
-  // 4) Gửi về client
+  // 8) Trả về client
   res.status(200).json({
     status: 'success',
     session

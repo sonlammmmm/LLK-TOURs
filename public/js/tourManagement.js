@@ -1,123 +1,130 @@
 /* eslint-disable */
-import axios from "axios"
-import { showAlert } from "./alerts"
+import axios from 'axios';
+import { showAlert } from './alerts';
 
-// Sử dụng API createTour từ tourController
 export const createTour = async (tourData) => {
   try {
-    const url = "/api/v1/tours"
-
+    const url = '/api/v1/tours';
     const res = await axios({
-      method: "POST",
+      method: 'POST',
       url,
       data: tourData,
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    })
+      // KHÔNG set Content-Type; axios sẽ tự set boundary khi data là FormData
+    });
 
-    if (res.data.status === "success") {
-      showAlert("success", "Tour đã được tạo thành công!")
+    if (res.data.status === 'success') {
+      showAlert('success', 'Tour đã được tạo thành công!');
       window.setTimeout(() => {
-        location.assign("/admin/tours")
-      }, 1500)
+        location.assign('/admin/tours');
+      }, 1500);
     }
   } catch (err) {
-    console.error("Error creating tour:", err)
-    showAlert("error", err.response ? err.response.data.message : "Đã xảy ra lỗi khi tạo tour")
+    console.error('Error creating tour:', err);
+    showAlert('error', err.response ? err.response.data.message : 'Đã xảy ra lỗi khi tạo tour');
   }
-}
+};
 
-// Sử dụng API updateTour từ tourController
 export const updateTour = async (tourId, tourData) => {
   try {
-    const url = `/api/v1/tours/${tourId}`
-
+    const url = `/api/v1/tours/${tourId}`;
     const res = await axios({
-      method: "PATCH",
+      method: 'PATCH',
       url,
       data: tourData,
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    })
+      // KHÔNG set Content-Type; axios sẽ tự set boundary
+    });
 
-    if (res.data.status === "success") {
-      showAlert("success", "Tour đã được cập nhật thành công!")
+    if (res.data.status === 'success') {
+      showAlert('success', 'Tour đã được cập nhật thành công!');
       window.setTimeout(() => {
-        location.reload()
-      }, 1500)
+        location.reload();
+      }, 1500);
     }
   } catch (err) {
-    console.error("Error updating tour:", err)
-    showAlert("error", err.response ? err.response.data.message : "Đã xảy ra lỗi khi cập nhật tour")
+    console.error('Error updating tour:', err);
+    showAlert('error', err.response ? err.response.data.message : 'Đã xảy ra lỗi khi cập nhật tour');
   }
-}
+};
 
-// Sử dụng API deleteTour từ tourController
 export const deleteTour = async (tourId) => {
   try {
-    const url = `/api/v1/tours/${tourId}`
-
-    const res = await axios({
-      method: "DELETE",
-      url,
-    })
+    const url = `/api/v1/tours/${tourId}`;
+    const res = await axios({ method: 'DELETE', url });
 
     if (res.status === 204) {
-      showAlert("success", "Tour đã được xóa thành công!")
+      showAlert('success', 'Tour đã được xóa thành công!');
       window.setTimeout(() => {
-        location.reload()
-      }, 1500)
+        location.reload();
+      }, 1500);
     }
   } catch (err) {
-    showAlert("error", err.response ? err.response.data.message : "Đã xảy ra lỗi khi xóa tour")
+    showAlert('error', err.response ? err.response.data.message : 'Đã xảy ra lỗi khi xóa tour');
   }
-}
+};
 
-// Hàm helper để xử lý tọa độ đúng định dạng
+// Chuẩn hoá chuỗi "lng, lat" -> [lng, lat]; auto-swap nếu người dùng nhập nhầm (lat, lng)
 const parseCoordinates = (coordsStr) => {
-  const coords = coordsStr.split(",").map((coord) => Number.parseFloat(coord.trim()))
-  
-  // Kiểm tra tính hợp lệ của tọa độ
-  if (coords.length !== 2 || isNaN(coords[0]) || isNaN(coords[1])) {
-    throw new Error("Tọa độ không hợp lệ. Vui lòng nhập theo định dạng: kinh độ, vĩ độ")
-  }
-  
-  const [lng, lat] = coords
-  
-  // Kiểm tra phạm vi tọa độ hợp lệ
-  if (lng < -180 || lng > 180) {
-    throw new Error(`Kinh độ không hợp lệ: ${lng}. Kinh độ phải từ -180 đến 180`)
-  }
-  
-  if (lat < -90 || lat > 90) {
-    throw new Error(`Vĩ độ không hợp lệ: ${lat}. Vĩ độ phải từ -90 đến 90`)
-  }
-  
-  if (lng > 90 && lng < 180 && lat > 8 && lat < 24) {
-    console.warn("Cảnh báo: Tọa độ có vẻ bị đảo ngược. Đối với Việt Nam, kinh độ thường từ 102-110, vĩ độ từ 8-24")
-  }
-  
-  return [lng, lat]
-}
+  const parts = String(coordsStr || '')
+    .split(',')
+    .map((s) => Number.parseFloat(s.trim()));
 
-// Xử lý form tour
+  if (parts.length !== 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) {
+    throw new Error('Tọa độ không hợp lệ. Vui lòng nhập theo định dạng: kinh độ, vĩ độ (VD: 106.695, 10.775)');
+  }
+
+  let [lng, lat] = parts;
+
+  // Dải Việt Nam: lat 8–24, lng 102–110 → phát hiện đảo chiều
+  const inVNLat = (x) => x >= 8 && x <= 24;
+  const inVNLng = (x) => x >= 102 && x <= 110;
+  if (inVNLat(lng) && inVNLng(lat)) {
+    console.warn('Cảnh báo: Có thể bạn đã nhập nhầm (vĩ độ, kinh độ). Đã tự động đổi thành (kinh độ, vĩ độ).');
+    [lng, lat] = [lat, lng];
+  }
+
+  if (lng < -180 || lng > 180) throw new Error(`Kinh độ không hợp lệ: ${lng}. Kinh độ phải từ -180 đến 180`);
+  if (lat < -90 || lat > 90) throw new Error(`Vĩ độ không hợp lệ: ${lat}. Vĩ độ phải từ -90 đến 90`);
+
+  return [lng, lat]; // GeoJSON uses [lng, lat]
+};
+
+// Lấy giá trị input theo selector
+const getVal = (sel) => {
+  const el = document.querySelector(sel);
+  return el && el.value != null ? String(el.value).trim() : '';
+};
+
+// Tạo element từ HTML string
+const elFromHTML = (html) => {
+  const div = document.createElement('div');
+  div.innerHTML = html.trim();
+  return div.firstElementChild;
+};
+
 export const handleTourForm = () => {
-  const form = document.querySelector(".form-tour")
-  if (!form) return
+  const form = document.querySelector('.form-tour');
+  if (!form) return;
 
-  const tourId = document.getElementById("tour-id").value
+  const tourIdEl = document.getElementById('tour-id');
+  const tourId = tourIdEl ? tourIdEl.value : '';
 
-  // Xử lý thêm địa điểm
-  const locationsContainer = document.querySelector(".locations-container")
-  const btnAddLocation = document.querySelector(".btn-add-location")
+  const locationsContainer = document.querySelector('.locations-container');
+  const btnAddLocation = document.querySelector('.btn-add-location');
 
-  if (btnAddLocation) {
-    btnAddLocation.addEventListener("click", () => {
-      const locationIndex = document.querySelectorAll(".location-item").length
-      const locationHtml = `
-        <div class="location-item" data-index="${locationIndex}">
+  const startDatesContainer = document.querySelector('.start-dates-container');
+  const btnAddStartDate = document.querySelector('.btn-add-start-date');
+
+  const guidesContainer = document.querySelector('.guides-container');
+  const btnAddGuide = document.querySelector('.btn-add-guide');
+
+  const saveBtn = document.querySelector('.btn-save-tour');
+
+  /* ----- Thêm/Xoá địa điểm ----- */
+  if (btnAddLocation && locationsContainer) {
+    btnAddLocation.addEventListener('click', () => {
+      const idx = locationsContainer.querySelectorAll('.location-item').length;
+      const node = elFromHTML(`
+        <div class="location-item" data-index="${idx}">
           <button class="location-item__remove" type="button">×</button>
           <div class="form__group">
             <label class="form__label">Mô tả</label>
@@ -125,221 +132,233 @@ export const handleTourForm = () => {
           </div>
           <div class="form__group">
             <label class="form__label">Địa chỉ</label>
-            <input class="location-address form__input" type="text" required>
+            <input class="location-address form__input" type="text">
           </div>
           <div class="form__group">
             <label class="form__label">Tọa độ (kinh độ, vĩ độ)</label>
-            <input class="location-coordinates form__input" type="text" required placeholder="106.695249, 10.775400">
+            <input class="location-coordinates form__input" type="text" placeholder="106.695249, 10.775400">
             <small class="form__help">Định dạng: kinh độ, vĩ độ (VD: 106.695, 10.775)</small>
           </div>
           <div class="form__group">
             <label class="form__label">Ngày thứ</label>
-            <input class="location-day form__input" type="number" required min="1">
+            <input class="location-day form__input" type="number" min="1" required>
           </div>
         </div>
-      `
-      locationsContainer.insertAdjacentHTML("beforeend", locationHtml)
-      addLocationRemoveListeners()
-    })
+      `);
+      locationsContainer.insertBefore(node, btnAddLocation);
+    });
+
+    locationsContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.location-item__remove');
+      if (!btn) return;
+      const item = btn.closest('.location-item');
+      if (item) item.remove();
+    });
   }
 
-  // Xử lý thêm ngày khởi hành
-  const startDatesContainer = document.querySelector(".start-dates-container")
-  const btnAddStartDate = document.querySelector(".btn-add-start-date")
-
-  if (btnAddStartDate) {
-    btnAddStartDate.addEventListener("click", () => {
-      const dateIndex = document.querySelectorAll(".start-date-item").length
-      const dateHtml = `
-        <div class="start-date-item" data-index="${dateIndex}">
+  /* ----- Thêm/Xoá start date ----- */
+  if (btnAddStartDate && startDatesContainer) {
+    btnAddStartDate.addEventListener('click', () => {
+      const idx = startDatesContainer.querySelectorAll('.start-date-item').length;
+      const node = elFromHTML(`
+        <div class="start-date-item" data-index="${idx}">
           <button class="start-date-item__remove" type="button">×</button>
           <div class="form__group">
             <label class="form__label">Ngày khởi hành</label>
             <input class="start-date form__input" type="date" required>
           </div>
         </div>
-      `
-      startDatesContainer.insertAdjacentHTML("beforeend", dateHtml)
-      addStartDateRemoveListeners()
-    })
+      `);
+      startDatesContainer.insertBefore(node, btnAddStartDate);
+    });
+
+    startDatesContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.start-date-item__remove');
+      if (!btn) return;
+      const item = btn.closest('.start-date-item');
+      if (item) item.remove();
+    });
   }
 
-  // Xử lý thêm hướng dẫn viên
-  const guidesContainer = document.querySelector(".guides-container")
-  const btnAddGuide = document.querySelector(".btn-add-guide")
-
-  if (btnAddGuide) {
-    btnAddGuide.addEventListener("click", () => {
-      const guideIndex = document.querySelectorAll(".guide-item").length
-      const guideSelectOptions = Array.from(document.querySelectorAll(".guide-select option"))
-        .map((option) => `<option value="${option.value}">${option.textContent}</option>`)
-        .join("")
-
-      const guideHtml = `
-        <div class="guide-item" data-index="${guideIndex}">
+  /* ----- Thêm/Xoá guide ----- */
+  if (btnAddGuide && guidesContainer) {
+    btnAddGuide.addEventListener('click', () => {
+      const idx = guidesContainer.querySelectorAll('.guide-item').length;
+      const options = Array.from(document.querySelectorAll('.guide-select option'))
+        .map((o) => `<option value="${o.value}">${o.textContent}</option>`)
+        .join('');
+      const node = elFromHTML(`
+        <div class="guide-item" data-index="${idx}">
           <button class="guide-item__remove" type="button">×</button>
           <div class="form__group">
             <label class="form__label">Hướng dẫn viên</label>
             <select class="guide-select form__input" required>
-              ${guideSelectOptions}
+              ${options}
             </select>
           </div>
         </div>
-      `
-      guidesContainer.insertAdjacentHTML("beforeend", guideHtml)
-      addGuideRemoveListeners()
-    })
+      `);
+      guidesContainer.insertBefore(node, btnAddGuide);
+    });
+
+    guidesContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.guide-item__remove');
+      if (!btn) return;
+      const item = btn.closest('.guide-item');
+      if (item) item.remove();
+    });
   }
 
-  // Thêm event listener cho nút xóa địa điểm
-  function addLocationRemoveListeners() {
-    document.querySelectorAll(".location-item__remove").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.target.closest(".location-item").remove()
-      })
-    })
-  }
+  /* ----- Submit form ----- */
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-  // Thêm event listener cho nút xóa ngày khởi hành
-  function addStartDateRemoveListeners() {
-    document.querySelectorAll(".start-date-item__remove").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.target.closest(".start-date-item").remove()
-      })
-    })
-  }
-
-  // Thêm event listener cho nút xóa hướng dẫn viên
-  function addGuideRemoveListeners() {
-    document.querySelectorAll(".guide-item__remove").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.target.closest(".guide-item").remove()
-      })
-    })
-  }
-
-  // Khởi tạo các event listener
-  addLocationRemoveListeners()
-  addStartDateRemoveListeners()
-  addGuideRemoveListeners()
-
-  // Xử lý submit form
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault()
-    document.querySelector(".btn-save-tour").textContent = "Đang lưu..."
-    document.querySelector(".btn-save-tour").disabled = true
+    if (saveBtn) {
+      saveBtn.textContent = 'Đang lưu...';
+      saveBtn.disabled = true;
+    }
 
     try {
-      // Lấy dữ liệu từ form
-      const formData = new FormData()
+      const fd = new FormData();
 
-      // Thông tin cơ bản
-      formData.append("name", document.getElementById("name").value)
-      formData.append("duration", document.getElementById("duration").value)
-      formData.append("maxGroupSize", document.getElementById("maxGroupSize").value)
-      formData.append("price", document.getElementById("price").value)
+      // Các field cơ bản
+      fd.set('name', getVal('#name'));
+      const duration = getVal('#duration');
+      const maxGroupSize = getVal('#maxGroupSize');
+      const price = getVal('#price');
+      const priceDiscount = getVal('#priceDiscount');
+      const summary = getVal('#summary');
+      const description = getVal('#description');
 
-      // Xử lý giảm giá - chỉ thêm nếu có giá trị
-      const priceDiscount = document.getElementById("priceDiscount").value
-      if (priceDiscount && priceDiscount.trim() !== "") {
-        formData.append("priceDiscount", priceDiscount)
+      if (duration) fd.set('duration', duration);
+      if (maxGroupSize) fd.set('maxGroupSize', maxGroupSize);
+      if (price) fd.set('price', price);
+      if (priceDiscount) fd.set('priceDiscount', priceDiscount);
+      if (summary) fd.set('summary', summary);
+      if (description) fd.set('description', description);
+
+      // START LOCATION (JSON string)
+      const startLocDesc = getVal('#startLocation');
+      const startLocAddr = getVal('#startLocationAddress');
+      const startLocCoordsStr = getVal('#startLocationCoordinates');
+
+      if (startLocDesc || startLocAddr || startLocCoordsStr) {
+        let coords = undefined;
+        if (startLocCoordsStr) {
+          coords = parseCoordinates(startLocCoordsStr);
+        }
+        const startLocation = {
+          type: 'Point',
+          coordinates: coords ? [Number(coords[0]), Number(coords[1])] : undefined,
+          description: startLocDesc || undefined,
+          address: startLocAddr || undefined
+        };
+        Object.keys(startLocation).forEach((k) => startLocation[k] === undefined && delete startLocation[k]);
+        fd.set('startLocation', JSON.stringify(startLocation));
       }
 
-      formData.append("summary", document.getElementById("summary").value)
-
-      const description = document.getElementById("description").value
-      if (description) formData.append("description", description)
-
-      // Địa điểm bắt đầu - XỬ LÝ TỌA ĐỘ ĐÚNG
-      const startLocationDesc = document.getElementById("startLocation").value
-      const startLocationAddr = document.getElementById("startLocationAddress").value
-      const startLocationCoordsStr = document.getElementById("startLocationCoordinates").value
-
-      // Sử dụng hàm helper để parse tọa độ
-      const startLocationCoords = parseCoordinates(startLocationCoordsStr)
-
-      formData.append("startLocation[description]", startLocationDesc)
-      formData.append("startLocation[address]", startLocationAddr)
-      formData.append("startLocation[type]", "Point")
-      formData.append("startLocation[coordinates][0]", startLocationCoords[0]) // longitude
-      formData.append("startLocation[coordinates][1]", startLocationCoords[1]) // latitude
-
-      // Xử lý địa điểm trong tour - XỬ LÝ TỌA ĐỘ ĐÚNG
-      document.querySelectorAll(".location-item").forEach((item, index) => {
-        const description = item.querySelector(".location-description").value
-        const address = item.querySelector(".location-address").value
-        const coordsStr = item.querySelector(".location-coordinates").value
-        const day = Number.parseInt(item.querySelector(".location-day").value)
-
-        // Sử dụng hàm helper để parse tọa độ
-        const coords = parseCoordinates(coordsStr)
-
-        formData.append(`locations[${index}][type]`, "Point")
-        formData.append(`locations[${index}][coordinates][0]`, coords[0]) // longitude
-        formData.append(`locations[${index}][coordinates][1]`, coords[1]) // latitude
-        formData.append(`locations[${index}][address]`, address)
-        formData.append(`locations[${index}][description]`, description)
-        formData.append(`locations[${index}][day]`, day)
-      })
-
-      // Xử lý ngày khởi hành
-      ocument.querySelectorAll(".start-date-item").forEach((item, index) => {
-        const date = item.querySelector(".start-date").value
-        if (date) {
-          formData.append(`startDates[${index}]`, new Date(date).toISOString())
-        }
-      })
-
-      // Xử lý hướng dẫn viên
-      document.querySelectorAll(".guide-item").forEach((item, index) => {
-        const guideId = item.querySelector(".guide-select").value
-        if (guideId) {
-          formData.append(`guides[${index}]`, guideId)
-        }
-      })
-
-      // Xử lý ảnh
-      const imageCoverInput = document.getElementById("imageCover")
-      if (imageCoverInput.files.length > 0) {
-        formData.append("imageCover", imageCoverInput.files[0])
+      // IMAGES
+      const imageCoverInput = document.getElementById('imageCover');
+      if (imageCoverInput && imageCoverInput.files.length > 0) {
+        fd.set('imageCover', imageCoverInput.files[0]);
       }
-
-      const imagesInput = document.getElementById("images")
-      if (imagesInput.files.length > 0) {
+      const imagesInput = document.getElementById('images');
+      if (imagesInput && imagesInput.files.length > 0) {
         for (let i = 0; i < imagesInput.files.length; i++) {
-          formData.append("images", imagesInput.files[i])
+          fd.append('images', imagesInput.files[i]);
         }
       }
 
-      console.log("Form data prepared, sending request...")
+      // LOCATIONS (JSON string array)
+      const locationsPayload = [];
+      if (locationsContainer) {
+        const nodes = locationsContainer.querySelectorAll('.location-item');
+        nodes.forEach((item) => {
+          const desc = item.querySelector('.location-description')?.value?.trim();
+          const addr = item.querySelector('.location-address')?.value?.trim();
+          const coordStr = item.querySelector('.location-coordinates')?.value?.trim();
+          const dayStr = item.querySelector('.location-day')?.value;
 
-      // Gửi dữ liệu
+          if (!desc && !addr && !coordStr && !dayStr) return;
+
+          let coords;
+          if (coordStr) {
+            const [lng, lat] = parseCoordinates(coordStr);
+            coords = [Number(lng), Number(lat)];
+          }
+
+          const payload = {
+            type: 'Point',
+            coordinates: coords,
+            description: desc || undefined,
+            address: addr || undefined,
+            day: dayStr ? Number(dayStr) : undefined
+          };
+          Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
+          locationsPayload.push(payload);
+        });
+      }
+      if (locationsPayload.length) {
+        fd.set('locations', JSON.stringify(locationsPayload));
+      }
+
+      // START DATES (JSON string array of objects { date })
+      const startDatesPayload = [];
+      if (startDatesContainer) {
+        const nodes = startDatesContainer.querySelectorAll('.start-date-item');
+        nodes.forEach((item) => {
+          const dateVal = item.querySelector('.start-date')?.value;
+          if (!dateVal) return;
+          startDatesPayload.push({ date: new Date(dateVal).toISOString() });
+          // KHÔNG set availableSlots ở client → backend merge/giữ nguyên
+        });
+      }
+      if (startDatesPayload.length) {
+        fd.set('startDates', JSON.stringify(startDatesPayload));
+      }
+
+      // GUIDES (JSON string array of ids)
+      const guidesPayload = [];
+      if (guidesContainer) {
+        const selects = guidesContainer.querySelectorAll('.guide-select');
+        selects.forEach((sel) => {
+          const v = sel.value && sel.value.trim();
+          if (v) guidesPayload.push(v);
+        });
+      }
+      if (guidesPayload.length) {
+        fd.set('guides', JSON.stringify(guidesPayload));
+      }
+
+      // CREATE / UPDATE
       if (tourId) {
-        await updateTour(tourId, formData)
+        await updateTour(tourId, fd);
       } else {
-        await createTour(formData)
+        await createTour(fd);
       }
     } catch (err) {
-      console.error("Error in form submission:", err)
-      showAlert("error", err.message || "Đã xảy ra lỗi khi lưu tour")
+      console.error('Error in form submission:', err);
+      showAlert('error', err?.message || 'Đã xảy ra lỗi khi lưu tour');
     } finally {
-      document.querySelector(".btn-save-tour").textContent = "Lưu"
-      document.querySelector(".btn-save-tour").disabled = false
+      if (saveBtn) {
+        saveBtn.textContent = 'Lưu';
+        saveBtn.disabled = false;
+      }
     }
-  })
-}
+  });
+};
 
-// Xử lý xóa tour
 export const handleDeleteTour = () => {
-  const deleteButtons = document.querySelectorAll(".btn-delete-tour")
+  const deleteButtons = document.querySelectorAll('.btn-delete-tour');
 
   deleteButtons.forEach((btn) => {
-    btn.addEventListener("click", async (e) => {
-      const tourId = e.target.dataset.tourId
+    btn.addEventListener('click', async (e) => {
+      const tourId = e.currentTarget.dataset.tourId;
+      if (!tourId) return;
 
-      if (confirm("Bạn có chắc chắn muốn xóa tour này? Hành động này không thể hoàn tác.")) {
-        await deleteTour(tourId)
+      if (confirm('Bạn có chắc chắn muốn xóa tour này? Hành động này không thể hoàn tác.')) {
+        await deleteTour(tourId);
       }
-    })
-  })
-}
+    });
+  });
+};

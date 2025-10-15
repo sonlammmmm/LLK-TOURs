@@ -37,6 +37,7 @@ router
     authController.protect,
     authController.restrictTo('admin', 'lead-guide'),
     tourController.uploadTourImages,
+    tourController.normalizeMultipartJSON,
     tourController.resizeTourImages,
     tourController.updateTour
   )
