@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "start": "nodemon server.js",
+    "dev": "nodemon server.js",
+    "start": "node server.js",
     "start:prod": "cross-env NODE_ENV=production node server.js",
     "debug": "ndb server.js",
     "watch:js": "set TEMP=E:\\Temp&& set TMP=E:\\Temp&& npx parcel watch",
