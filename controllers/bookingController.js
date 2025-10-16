@@ -11,6 +11,13 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
     return next(new AppError('Bạn cần đăng nhập trước khi thanh toán.', 401));
   }
 
+  console.log('📱 Checkout request from:', {
+    userId: req.user.id,
+    tourId: req.params.tourId,
+    participants: req.query.participants,
+    startDate: req.query.startDate
+  });
+
   // 1) Lấy tour
   const tour = await Tour.findById(req.params.tourId);
   if (!tour) return next(new AppError('Không tìm thấy tour này.', 404));

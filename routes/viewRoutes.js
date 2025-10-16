@@ -44,11 +44,7 @@ router.get(
 router.get('/forgot-password', viewsController.getForgotPasswordForm);
 router.get('/reset-password/:token', viewsController.getResetPasswordForm);
 
-router.get(
-  '/booking-success',
-  authController.protect,
-  viewsController.getBookingSuccess
-);
+router.get('/booking-success', viewsController.getBookingSuccess);
 
 router.get(
   '/booking-invoice/:id',

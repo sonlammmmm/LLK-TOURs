@@ -125,10 +125,26 @@ app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
 app.use('/api/v1/bookings', bookingRouter);
-app.use('/api/v1/messages', messageRouter); // 👈 Thêm message API routes
+app.use('/api/v1/messages', messageRouter);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+});
+
+app.use((err, req, res, next) => {
+  // ✅ Log lỗi chi tiết để debug
+  if (err.statusCode === 400 || err.statusCode === 401) {
+    console.error('🚫 Validation Error:', {
+      message: err.message,
+      statusCode: err.statusCode,
+      path: req.path,
+      method: req.method,
+      body: req.body,
+      query: req.query,
+      user: req.user?.id
+    });
+  }
+  next(err);
 });
 
 app.use(globalErrorHandler);
