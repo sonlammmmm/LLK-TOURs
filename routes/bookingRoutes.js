@@ -8,6 +8,7 @@ const router = express.Router();
 // === STRIPE ===
 router.get(
   '/checkout-session/:tourId',
+  authController.protect,
   bookingController.checkBookingExists,
   bookingController.getCheckoutSession
 );

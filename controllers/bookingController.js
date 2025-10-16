@@ -6,6 +6,11 @@ const factory = require('./handlerFactory');
 const AppError = require('../utils/appError');
 
 exports.getCheckoutSession = catchAsync(async (req, res, next) => {
+  // ✅ Guard đăng nhập: tránh 500 mù nếu quên protect
+  if (!req.user || !req.user.id || !req.user.email) {
+    return next(new AppError('Bạn cần đăng nhập trước khi thanh toán.', 401));
+  }
+
   // 1) Lấy tour
   const tour = await Tour.findById(req.params.tourId);
   if (!tour) return next(new AppError('Không tìm thấy tour này.', 404));
@@ -31,7 +36,6 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   // 3) Xác định ngày khởi hành
   let startDate;
   if (!startDateStr) {
-    // Không có startDate -> chọn ngày sớm nhất còn slot
     const firstAvailable = (tour.startDates || []).find(
       d => Number(d.availableSlots) > 0
     );
@@ -57,63 +61,84 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
     return next(new AppError('Ngày khởi hành không hợp lệ.', 400));
   }
 
-  // 5) ✅ CHẶN OVERBOOK THEO NGÀY
+  // 5) Chặn overbook theo ngày
   const daySlots = Number(dateItem.availableSlots);
   if (Number.isFinite(daySlots) && participants > daySlots) {
     return next(new AppError(`Chỉ còn ${daySlots} chỗ cho ngày này.`, 400));
   }
 
-  // 6) Tính tổng tiền (Stripe với VND là zero-decimal -> dùng số nguyên)
-  const unitAmount = Math.round(Number(tour.price) || 0); // giá mỗi người
+  // 6) Tính tiền (VND là zero-decimal)
+  const unitAmount = Math.round(Number(tour.price) || 0);
   const totalPrice = unitAmount * participants;
-
-  // Giới hạn an toàn tuỳ logic của bạn
   if (totalPrice > 99_999_999) {
     return next(
       new AppError(
-        'Tổng số tiền thanh toán vượt quá giới hạn của Stripe (₫99,999,999).',
+        'Tổng số tiền thanh toán vượt quá giới hạn (₫99,999,999).',
         400
       )
     );
   }
 
-  // 7) Tạo Checkout Session (giữ nguyên cấu trúc API của bạn)
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ['card'],
-    success_url: `${req.protocol}://${req.get('host')}/booking-success?tour=${
-      req.params.tourId
-    }&user=${
-      req.user.id
-    }&price=${totalPrice}&participants=${participants}&startDate=${startDate.toISOString()}`,
-    cancel_url: `${req.protocol}://${req.get('host')}/tour/${tour.slug}`,
-    customer_email: req.user.email,
-    client_reference_id: req.params.tourId,
-    line_items: [
-      {
-        price_data: {
-          currency: 'vnd',
-          product_data: {
-            name: `Tour ${tour.name}`,
-            description: tour.summary,
-            images: [
-              `${req.protocol}://${req.get('host')}/img/tours/${
-                tour.imageCover
-              }`
-            ]
+  // 7) Tạo Checkout Session (bọc try/catch để log lỗi Stripe rõ ràng)
+  let session;
+  try {
+    session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      // Khuyến nghị API mới: không cần payment_method_types, Stripe tự chọn
+      // automatic_payment_methods: { enabled: true },
+
+      success_url: `${req.protocol}://${req.get('host')}/booking-success?tour=${
+        req.params.tourId
+      }&user=${
+        req.user.id
+      }&price=${totalPrice}&participants=${participants}&startDate=${encodeURIComponent(
+        startDate.toISOString()
+      )}`,
+      cancel_url: `${req.protocol}://${req.get('host')}/tour/${tour.slug}`,
+      customer_email: req.user.email,
+      client_reference_id: req.params.tourId,
+
+      line_items: [
+        {
+          price_data: {
+            currency: 'vnd', // zero-decimal
+            product_data: {
+              name: `Tour ${tour.name}`,
+              description: tour.summary,
+              images: [
+                `${req.protocol}://${req.get('host')}/img/tours/${
+                  tour.imageCover
+                }`
+              ]
+            },
+            unit_amount: unitAmount
           },
-          unit_amount: unitAmount
-        },
-        quantity: participants
+          quantity: participants
+        }
+      ],
+      metadata: {
+        tourId: `${tour.id}`,
+        userId: `${req.user.id}`,
+        startDate: startKey,
+        participants: `${participants}`
       }
-    ],
-    mode: 'payment'
-  });
+    });
+  } catch (err) {
+    console.error('Stripe error creating checkout session:', {
+      type: err.type,
+      code: err.code,
+      message: err.message
+    });
+    return next(
+      new AppError(
+        `Stripe error: ${err.message || 'Không tạo được phiên thanh toán'}`,
+        500
+      )
+    );
+  }
 
   // 8) Trả về client
-  res.status(200).json({
-    status: 'success',
-    session
-  });
+  res.status(200).json({ status: 'success', session });
 });
 
 exports.createBookingCheckout = catchAsync(async (req, res, next) => {
