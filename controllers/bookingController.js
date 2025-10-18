@@ -167,6 +167,39 @@ exports.createBookingCheckout = catchAsync(async (req, res, next) => {
 exports.createBooking = factory.createOne(Booking);
 exports.getBooking = factory.getOne(Booking);
 exports.getAllBookings = factory.getAll(Booking);
+
+exports.getMyBookings = catchAsync(async (req, res, next) => {
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+  const skip = (page - 1) * limit;
+
+  const filter = { user: req.user.id };
+  if (typeof req.query.paid !== 'undefined') {
+    filter.paid = req.query.paid === 'true';
+  }
+
+  const [items, total] = await Promise.all([
+    Booking.find(filter)
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(limit)
+      .populate({
+        path: 'tour',
+        select: 'name slug imageCover duration price'
+      })
+      .select('-__v'),
+    Booking.countDocuments(filter)
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    results: items.length,
+    page,
+    total,
+    data: items
+  });
+});
+
 exports.updateBooking = factory.updateOne(Booking);
 exports.deleteBooking = factory.deleteOne(Booking);
 

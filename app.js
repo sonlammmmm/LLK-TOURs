@@ -85,7 +85,8 @@ const limiter = rateLimit({
   max: 100,
   windowMs: 60 * 60 * 1000,
   message: 'Too many requests from this IP, please try again in an hour!',
-  skip: req => req.ip === '::1' || req.ip === '127.0.0.1'
+  skip: req =>
+    req.ip === '::1' || req.ip === '127.0.0.1' || req.ip === '10.0.2.2'
 });
 app.use('/api', limiter);
 

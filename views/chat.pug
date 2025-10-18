@@ -20,6 +20,8 @@ block content
         .user-view__form-container
           h2.heading-secondary.ma-bt-md Chat với Admin
           #chat-box.llk-chat-box
+            if (!messages || messages.length === 0)
+              .llk-chat-empty Chưa có tin nhắn nào
           form#chat-user-form.llk-chat-form
             input#chat-user-input(type='text', placeholder='Nhập tin nhắn...' autocomplete='off')
             button.llk-send-btn(type='submit')
@@ -28,7 +30,8 @@ block content
 
 append scripts
   script.
-    window.adminId = '#{admin._id}';
-    window.adminName = '#{admin.name}';
-    window.chatMessages = !{JSON.stringify(messages)};
+    // Truyền thông tin user hiện tại và lịch sử tin đã render
+    window.userId = '#{user._id}';
+    window.userName = '#{user.name}';
+    window.chatMessages = !{JSON.stringify(messages || [])};
   script(defer src="/js/chatUser.js")

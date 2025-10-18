@@ -133,9 +133,9 @@ bookingSchema.post('findOneAndUpdate', async function(doc) {
 });
 
 bookingSchema.pre(/^find/, function(next) {
-  this.populate('user').populate({
+  this.populate({ path: 'user', select: 'name email' }).populate({
     path: 'tour',
-    select: 'name duration'
+    select: 'name slug imageCover duration price'
   });
   next();
 });

@@ -49,94 +49,76 @@ const userSockets = new Map();
 io.on('connection', socket => {
   console.log(`🟢 Client connected: ${socket.id}`);
 
-  // User register với userId của họ
   socket.on('register', ({ userId, role }) => {
-    console.log('🧾 REGISTER payload:', { userId, role });
     userSockets.set(userId, socket.id);
     socket.userId = userId;
     socket.userRole = role;
-    socket.join(userId); // Join room = chính userId của họ
-    console.log(
-      `✅ User ${userId} (${role}) registered with socket ${socket.id}`
-    );
+    socket.join(userId); // phòng riêng theo userId
+    if (role === 'admin') socket.join('admins'); // phòng chung cho toàn bộ admin
+    console.log(`✅ ${userId} (${role}) registered`);
   });
 
-  // Admin join room của user để xem chat
   socket.on('joinUserRoom', ({ userId }) => {
     socket.join(userId);
     console.log(`✅ Admin joined room: ${userId}`);
   });
 
-  // Nhận và phát tin nhắn
   socket.on('chatMessage', async data => {
-    const {
-      senderId,
-      senderName,
-      receiverId,
-      receiverName,
-      message,
-      role
-    } = data;
-
-    // Validation
-    if (!senderId || !receiverId) {
-      console.error('❌ Missing senderId or receiverId:', data);
-      socket.emit('messageError', { error: 'Thiếu thông tin người gửi/nhận' });
-      return;
-    }
-
-    if (!message || !message.trim()) {
-      console.error('❌ Empty message');
-      socket.emit('messageError', { error: 'Tin nhắn không được để trống' });
-      return;
-    }
-
-    console.log('📨 Processing message:', {
-      from: `${senderName} (${senderId})`,
-      to: `${receiverName} (${receiverId})`,
-      role: role
-    });
-
     try {
-      // Lưu vào database
-      const savedMessage = await Message.create({
-        sender: senderId,
-        receiver: receiverId,
+      const {
+        senderId,
         senderName,
+        receiverId, // với admin→user: là userId; với user→admin: có thể bỏ, server tự suy ra
         receiverName,
+        message,
+        role // 'user' | 'admin'
+      } = data;
+
+      if (!senderId || !message || !message.trim()) {
+        return socket.emit('messageError', { error: 'Thiếu dữ liệu' });
+      }
+
+      // Quy ước hội thoại: luôn lưu receiver = userId
+      const convoUserId = role === 'user' ? senderId : receiverId;
+      if (!convoUserId) {
+        return socket.emit('messageError', { error: 'Thiếu userId hội thoại' });
+      }
+
+      const saved = await Message.create({
+        sender: senderId,
+        receiver: convoUserId, // 🔑 mọi message đều trỏ về userId
+        senderName,
+        receiverName: receiverName || 'Admins',
         content: message,
         role
       });
 
-      const messageData = {
+      const payload = {
         senderId,
         senderName,
-        receiverId,
-        receiverName,
+        receiverId: convoUserId,
+        receiverName: receiverName || 'Admins',
         message,
         role,
-        createdAt: savedMessage.createdAt
+        createdAt: saved.createdAt
       };
 
-      // Gửi cho người nhận (vào room của receiverId)
-      io.to(receiverId).emit('newMessage', messageData);
+      // Phát cho user phòng của họ
+      io.to(convoUserId).emit('newMessage', payload);
+      // Phát cho người gửi
+      io.to(senderId).emit('newMessage', payload);
+      // Phát cho TẤT CẢ admin
+      io.to('admins').emit('newMessage', payload);
 
-      // Gửi cho người gửi (vào room của senderId)
-      io.to(senderId).emit('newMessage', messageData);
-
-      console.log(`✅ Message saved and sent successfully`);
+      console.log('✅ message broadcasted');
     } catch (err) {
-      console.error('❌ Lỗi khi lưu tin nhắn:', err.message);
-      console.error('Data received:', data);
+      console.error('❌ send error:', err);
       socket.emit('messageError', { error: 'Không thể gửi tin nhắn' });
     }
   });
 
   socket.on('disconnect', () => {
-    if (socket.userId) {
-      userSockets.delete(socket.userId);
-      console.log(`🔴 User ${socket.userId} disconnected`);
-    }
+    if (socket.userId) userSockets.delete(socket.userId);
     console.log(`🔴 Client disconnected: ${socket.id}`);
   });
 });

@@ -3,62 +3,41 @@ const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 
 // Trang admin chat
-exports.getAdminChatView = catchAsync(async (req, res, next) => {
-  const users = await User.find({ role: 'user' }).select('name email _id');
-  res.status(200).render('adminChat', {
-    title: 'Chat khách hàng',
-    users
-  });
+exports.getAdminChatView = catchAsync(async (req, res) => {
+  res.status(200).render('adminChat', { title: 'Chat khách hàng' });
 });
 
-// Trang user chat (/chat)
-exports.getUserChatView = catchAsync(async (req, res, next) => {
-  const admin = await User.findOne({ role: 'admin' }).select('_id name');
-
-  if (!admin) {
-    return res.status(404).render('error', {
-      title: 'Lỗi',
-      msg: 'Không tìm thấy admin trong hệ thống'
-    });
-  }
-
+// Trang user chat
+exports.getUserChatView = catchAsync(async (req, res) => {
+  // Lấy toàn bộ tin của user này, không cần chọn 1 admin
+  const userId = req.user._id;
   const messages = await Message.find({
-    $or: [
-      { sender: req.user._id, receiver: admin._id },
-      { sender: admin._id, receiver: req.user._id }
-    ]
+    $or: [{ sender: userId }, { receiver: userId }]
   }).sort({ createdAt: 1 });
 
-  const serializedMessages = messages.map(msg => ({
-    sender: msg.sender.toString(),
-    receiver: msg.receiver.toString(),
-    senderName: msg.senderName,
-    receiverName: msg.receiverName,
-    content: msg.content,
-    role: msg.role,
-    createdAt: msg.createdAt
+  const serialized = messages.map(m => ({
+    sender: m.sender.toString(),
+    receiver: m.receiver.toString(),
+    senderName: m.senderName,
+    receiverName: m.receiverName,
+    content: m.content,
+    role: m.role,
+    createdAt: m.createdAt
   }));
 
   res.status(200).render('chat', {
     title: 'Chat với admin',
     user: req.user,
-    admin: {
-      _id: admin._id.toString(),
-      name: admin.name
-    },
-    messages: serializedMessages
+    // không cần truyền adminId cố định nữa
+    messages: serialized
   });
 });
 
-// API: Lấy lịch sử chat giữa admin và 1 user
-exports.getChatHistory = catchAsync(async (req, res, next) => {
+// API: lịch sử hội thoại của 1 user cụ thể (cho admin UI)
+exports.getChatHistory = catchAsync(async (req, res) => {
   const { userId } = req.params;
-
   const messages = await Message.find({
-    $or: [
-      { sender: req.user._id, receiver: userId },
-      { sender: userId, receiver: req.user._id }
-    ]
+    $or: [{ sender: userId }, { receiver: userId }]
   }).sort({ createdAt: 1 });
 
   res.status(200).json({
@@ -68,24 +47,17 @@ exports.getChatHistory = catchAsync(async (req, res, next) => {
   });
 });
 
-// API: Lấy danh sách users có tin nhắn với admin (với phân trang)
-exports.getUsersWithMessages = catchAsync(async (req, res, next) => {
+// API: danh sách user có hội thoại, gom theo receiver = userId
+exports.getUsersWithMessages = catchAsync(async (req, res) => {
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 8;
   const skip = (page - 1) * limit;
 
-  const usersWithLastMessage = await Message.aggregate([
-    {
-      $match: {
-        $or: [{ sender: req.user._id }, { receiver: req.user._id }]
-      }
-    },
+  const agg = await Message.aggregate([
     { $sort: { createdAt: -1 } },
     {
       $group: {
-        _id: {
-          $cond: [{ $eq: ['$sender', req.user._id] }, '$receiver', '$sender']
-        },
+        _id: '$receiver', // receiver luôn là userId
         lastMessage: { $first: '$content' },
         lastMessageTime: { $first: '$createdAt' }
       }
@@ -95,43 +67,32 @@ exports.getUsersWithMessages = catchAsync(async (req, res, next) => {
     { $limit: limit }
   ]);
 
-  const userIds = usersWithLastMessage.map(u => u._id);
+  const userIds = agg.map(a => a._id).filter(Boolean);
   const users = await User.find({ _id: { $in: userIds }, role: 'user' }).select(
     'name email role'
   );
 
-  const usersMap = new Map(users.map(u => [u._id.toString(), u]));
-  const result = usersWithLastMessage
+  const map = new Map(users.map(u => [u._id.toString(), u]));
+  const result = agg
     .map(item => {
-      const user = usersMap.get(item._id.toString());
-      if (!user) return null;
-      return {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        lastMessage: item.lastMessage,
-        lastMessageTime: item.lastMessageTime
-      };
+      const u = map.get((item._id || '').toString());
+      return u
+        ? {
+            _id: u._id,
+            name: u.name,
+            email: u.email,
+            lastMessage: item.lastMessage,
+            lastMessageTime: item.lastMessageTime
+          }
+        : null;
     })
     .filter(Boolean);
 
-  const totalUsers = await Message.aggregate([
-    {
-      $match: {
-        $or: [{ sender: req.user._id }, { receiver: req.user._id }]
-      }
-    },
-    {
-      $group: {
-        _id: {
-          $cond: [{ $eq: ['$sender', req.user._id] }, '$receiver', '$sender']
-        }
-      }
-    },
+  const totalUsersAgg = await Message.aggregate([
+    { $group: { _id: '$receiver' } },
     { $count: 'total' }
   ]);
-
-  const total = totalUsers.length > 0 ? totalUsers[0].total : 0;
+  const total = totalUsersAgg[0]?.total || 0;
   const totalPages = Math.ceil(total / limit);
   const hasMore = page < totalPages;
 
@@ -145,7 +106,7 @@ exports.getUsersWithMessages = catchAsync(async (req, res, next) => {
   });
 });
 
-// ✅ API mới: Tìm kiếm user theo tên, email, hoặc ID (hỗ trợ khôi phục lịch sử)
+//Tìm kiếm user theo tên, email, hoặc ID (hỗ trợ khôi phục lịch sử)
 exports.searchUsers = catchAsync(async (req, res, next) => {
   const keyword = req.query.q || '';
 

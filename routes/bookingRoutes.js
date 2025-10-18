@@ -24,8 +24,11 @@ router.get('/vnpay-return', vnpayController.vnpayReturn);
 
 router.get('/vnpay-ipn', vnpayController.vnpayIpn);
 
-// === ADMIN ===
 router.use(authController.protect);
+
+router.get('/my', bookingController.getMyBookings);
+
+// ADMIN/LEAD-GUIDE
 router.use(authController.restrictTo('admin', 'lead-guide'));
 
 router

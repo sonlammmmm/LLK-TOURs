@@ -35,6 +35,7 @@ if (window.userId) {
 function displayMessage(msg) {
   const div = document.createElement('div');
   div.classList.add('llk-chat-message');
+  // Admin panel: mọi tin nhắn từ phía admin đều là "mine"
   if (msg.role === 'admin' || msg.senderId === window.userId) {
     div.classList.add('mine');
   }
@@ -135,7 +136,7 @@ async function loadUserList(page = 1) {
       return;
     }
 
-    userList.querySelectorAll('.llk-user-empty').forEach(el => el.remove());
+    userList.querySelectorAll('.llk-user-empty').forEach((el) => el.remove());
 
     const limited = data.data.users.slice(0, 6);
     limited.forEach((user) => appendUserToList(user, false));
@@ -243,7 +244,7 @@ chatForm.addEventListener('submit', (e) => {
   socket.emit('chatMessage', {
     senderId: window.userId,
     senderName: window.userName,
-    receiverId,
+    receiverId,          // luôn = userId đang mở
     receiverName,
     message,
     role: 'admin'
@@ -253,9 +254,10 @@ chatForm.addEventListener('submit', (e) => {
 
 // ========== SOCKET REALTIME ==========
 socket.on('newMessage', (msg) => {
-  if (msg.receiverId === window.userId && msg.role === 'user') {
+  // Từ nay server broadcast vào phòng 'admins', nên mọi tin do user gửi đều tới đây
+  if (msg.role === 'user') {
     appendUserToList(
-      { _id: msg.senderId, name: msg.senderName, lastMessage: msg.message },
+      { _id: msg.senderId, name: msg.senderName, lastMessage: msg.message || msg.content },
       true
     );
 
@@ -292,6 +294,7 @@ searchInput.addEventListener('input', () => {
 
   if (!keyword) {
     userList.innerHTML = '';
+    usersMap.clear();
     loadUserList(1);
     return;
   }
@@ -300,10 +303,11 @@ searchInput.addEventListener('input', () => {
     userList.innerHTML =
       '<li class="llk-user-loading"><i class="fa-solid fa-spinner fa-spin"></i> Đang tìm...</li>';
     try {
-      const res = await fetch(`/api/v1/messages/search-users?q=${keyword}`);
+      const res = await fetch(`/api/v1/messages/search-users?q=${encodeURIComponent(keyword)}`);
       const data = await res.json();
       userList.innerHTML = '';
-      if (data.data.users.length === 0) {
+      usersMap.clear();
+      if (!data.data || data.data.users.length === 0) {
         userList.innerHTML = '<li class="llk-user-empty">Không tìm thấy người dùng</li>';
         return;
       }
