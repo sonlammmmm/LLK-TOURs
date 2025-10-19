@@ -10,6 +10,7 @@ const cookieParser = require('cookie-parser');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
+const bookingController = require('./controllers/bookingController');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
@@ -90,6 +91,12 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
+app.post(
+  '/api/v1/bookings/stripe-webhook',
+  express.raw({ type: 'application/json' }),
+  bookingController.stripeWebhook
+);
+
 // Phân tích dữ liệu body, đọc dữ liệu từ body vào req.body
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
@@ -133,7 +140,7 @@ app.all('*', (req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-  // ✅ Log lỗi chi tiết để debug
+  //  Log lỗi chi tiết
   if (err.statusCode === 400 || err.statusCode === 401) {
     console.error('🚫 Validation Error:', {
       message: err.message,

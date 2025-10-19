@@ -2,31 +2,54 @@ extends base
 
 block content
   main.main
-    .booking-success-container
-      .booking-success-card
-        .booking-success-icon
-          svg
-            use(xlink:href='/img/icons.svg#icon-check-circle')
-        
-        h2.heading-secondary Thanh toán thành công!
-        
-        p.booking-success-message Cảm ơn bạn đã đặt tour. Chúng tôi đã gửi email xác nhận đến địa chỉ email của bạn.
-        
-        .booking-success-details
-          .booking-success-item
-            span.booking-success-label Tour:
-            span.booking-success-value= booking.tour.name
+    .booking-success
+      if pending
+        //- ĐANG CHỜ XÁC NHẬN
+        .booking-success__pending
+          .booking-success__spinner
+            svg.spinner
+              circle(cx="50" cy="50" r="45")
+          h2.hd-secondary Đang xác nhận thanh toán...
+          p.booking-success__message Vui lòng đợi trong giây lát, chúng tôi đang xử lý booking của bạn.
+          p.booking-success__note Không đóng trang này.
+      else
+        //- ĐÃ XÁC NHẬN THÀNH CÔNG
+        .booking-success__confirmed
+          .booking-success__icon
+            svg.checkmark
+              use(xlink:href='/img/icons.svg#icon-check')
           
-          .booking-success-item
-            span.booking-success-label Số lượng người:
-            span.booking-success-value= `${booking.participants} người`
-          
-          .booking-success-item
-            span.booking-success-label Tổng tiền:
-            span.booking-success-value= `${booking.price.toLocaleString('vi-VN')} VND`
-        
-        p.booking-success-redirect Bạn sẽ được chuyển hướng đến trang "Tour của tôi" sau <span id="countdown">10</span> giây.
-        
-        .booking-success-actions
-          a.btn.btn--green(href='/my-tours') Xem tour của tôi
-          a.btn.btn--blue(href='/') Trang chủ
+          h2.hd-secondary Thanh toán thành công! 🎉
+          p.booking-success__message Cảm ơn bạn đã đặt tour. Chúng tôi đã gửi email xác nhận đến hộp thư của bạn.
+
+          if booking
+            .booking-success__details
+              h3 Thông tin booking:
+              
+              .booking-detail-row
+                strong Tour:
+                span= booking.tour.name
+              
+              .booking-detail-row
+                strong Ngày khởi hành:
+                span= new Date(booking.startDate).toLocaleDateString('vi-VN')
+              
+              .booking-detail-row
+                strong Số người:
+                span= `${booking.participants} người`
+              
+              .booking-detail-row
+                strong Tổng tiền:
+                span= `${booking.price.toLocaleString('vi-VN')} ₫`
+              
+              .booking-detail-row
+                strong Trạng thái:
+                span.status-badge.status-badge--paid= booking.paid ? 'Đã thanh toán' : 'Chưa thanh toán'
+
+          .booking-success__actions
+            a.btn.btn--green(href='/my-tours') Xem tour của tôi
+            a.btn.btn--gray(href='/') Quay về trang chủ
+
+block scripts
+  if pending && sid
+    script(src='/js/bookingSuccess.js')

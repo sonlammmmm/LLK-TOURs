@@ -271,45 +271,25 @@ exports.getBookingForm = catchAsync(async (req, res, next) => {
 });
 
 exports.getBookingSuccess = catchAsync(async (req, res, next) => {
-  const {
-    booking: bookingId,
-    tour,
-    user,
-    price,
-    participants,
-    startDate
-  } = req.query;
+  const { booking: bookingId, sid } = req.query;
 
-  let booking;
-
+  let booking = null;
   if (bookingId) {
-    booking = await Booking.findById(bookingId);
-
-    if (!booking) {
-      return next(new AppError('Không tìm thấy thông tin đặt tour', 404));
-    }
-  } else if (tour && user && price) {
-    booking = await Booking.create({
-      tour,
-      user,
-      price,
-      participants: participants || 1,
-      startDate: startDate ? new Date(startDate) : new Date()
-    });
-  } else {
-    return next(new AppError('Không tìm thấy thông tin đặt tour', 404));
+    booking = await Booking.findById(bookingId).populate('tour user');
+  } else if (sid) {
+    booking = await Booking.findOne({
+      paymentMethod: 'stripe',
+      providerSessionId: sid
+    }).populate('tour user');
   }
 
-  await booking.populate([
-    { path: 'tour', select: 'name startDates duration' },
-    { path: 'user', select: 'name email' }
-  ]);
+  const pending = !booking;
 
-  // ✅ CẬP NHẬT: Hiển thị phương thức thanh toán
-  res.status(200).render('bookingSuccess', {
-    title: 'Thanh toán thành công',
+  return res.status(200).render('bookingSuccess', {
+    title: pending ? 'Đang xác nhận thanh toán' : 'Thanh toán thành công',
     booking,
-    paymentMethod: booking?.paymentMethod || 'stripe'
+    pending,
+    sid: sid || null // dùng cho client poll
   });
 });
 

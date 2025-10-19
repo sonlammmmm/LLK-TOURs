@@ -38,11 +38,19 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     enum: ['stripe', 'vnpay'],
     default: 'stripe'
+  },
+  // ✅ THÊM TRƯỜNG NÀY
+  providerSessionId: {
+    type: String,
+    unique: true,
+    sparse: true // Cho phép null/undefined
   }
 });
 
 bookingSchema.index({ tour: 1 });
 bookingSchema.index({ user: 1 });
+// ✅ THÊM INDEX CHO WEBHOOK QUERY
+bookingSchema.index({ paymentMethod: 1, providerSessionId: 1 });
 
 // MIDDLEWARE: Giảm slot khi tạo booking
 bookingSchema.post('save', async doc => {
@@ -51,24 +59,21 @@ bookingSchema.post('save', async doc => {
     if (tour) {
       await tour.decreaseSlots(doc.startDate, doc.participants);
       console.log(
-        `Đã giảm ${doc.participants} slot cho tour ${tour.name} ngày ${doc.startDate}`
+        `✅ Đã giảm ${doc.participants} slot cho tour ${tour.name} ngày ${doc.startDate}`
       );
     }
   } catch (err) {
     console.error('❌ Lỗi khi giảm slot:', err.message);
-    // Có thể rollback booking ở đây nếu cần
   }
 });
 
 // MIDDLEWARE: Hoàn lại slot khi xóa booking
 bookingSchema.pre('findOneAndDelete', async function(next) {
-  // Lưu booking trước khi xóa để có thể hoàn slot
   this._deletedBooking = await this.model.findOne(this.getFilter());
   next();
 });
 
-// eslint-disable-next-line no-unused-vars
-bookingSchema.post('findOneAndDelete', async function(_doc) {
+bookingSchema.post('findOneAndDelete', async function() {
   if (this._deletedBooking) {
     try {
       const tour = await Tour.findById(this._deletedBooking.tour);
@@ -87,9 +92,8 @@ bookingSchema.post('findOneAndDelete', async function(_doc) {
   }
 });
 
-// MIDDLEWARE: Xử lý khi cập nhật booking (thay đổi số người hoặc ngày)
+// MIDDLEWARE: Xử lý khi cập nhật booking
 bookingSchema.pre('findOneAndUpdate', async function(next) {
-  // Lưu booking cũ
   this._originalBooking = await this.model.findOne(this.getFilter());
   next();
 });
@@ -105,18 +109,13 @@ bookingSchema.post('findOneAndUpdate', async function(doc) {
       const oldStartDate = this._originalBooking.startDate;
       const newStartDate = doc.startDate;
 
-      // Nếu đổi ngày khởi hành
       if (oldStartDate.getTime() !== newStartDate.getTime()) {
-        // Hoàn slot cho ngày cũ
         await tour.increaseSlots(oldStartDate, oldParticipants);
-        // Trừ slot cho ngày mới
         await tour.decreaseSlots(newStartDate, newParticipants);
         console.log(
           `✅ Đã chuyển ${newParticipants} slot từ ${oldStartDate} sang ${newStartDate}`
         );
-      }
-      // Nếu chỉ đổi số người
-      else if (oldParticipants !== newParticipants) {
+      } else if (oldParticipants !== newParticipants) {
         const difference = newParticipants - oldParticipants;
         if (difference > 0) {
           await tour.decreaseSlots(newStartDate, difference);

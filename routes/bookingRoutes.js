@@ -5,6 +5,15 @@ const vnpayController = require('../controllers/vnpayController');
 
 const router = express.Router();
 
+// Stripe webhook (raw body)
+router.post(
+  '/stripe-webhook',
+  express.raw({ type: 'application/json' }),
+  bookingController.stripeWebhook
+);
+
+router.get('/by-session/:sid', bookingController.getByStripeSession);
+
 // === STRIPE ===
 router.get(
   '/checkout-session/:tourId',

@@ -37,9 +37,10 @@ export const bookTour = async (tourId, startDate, participants) => {
 
     // Tạo session
     const sessionRes = await axios.get(
-      `/api/v1/bookings/checkout-session/${tourId}?startDate=${encodeURIComponent(
-        startDate
-      )}&participants=${participants}`
+      `/api/v1/bookings/checkout-session/${tourId}` +
+      `?startDate=${encodeURIComponent(startDate)}` +
+      `&participants=${participants}` +
+      `&platform=web`
     );
 
     const session = sessionRes?.data?.session;

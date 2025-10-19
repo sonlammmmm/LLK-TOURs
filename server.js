@@ -68,25 +68,22 @@ io.on('connection', socket => {
       const {
         senderId,
         senderName,
-        receiverId, // với admin→user: là userId; với user→admin: có thể bỏ, server tự suy ra
+        receiverId,
         receiverName,
         message,
-        role // 'user' | 'admin'
+        role
       } = data;
-
       if (!senderId || !message || !message.trim()) {
         return socket.emit('messageError', { error: 'Thiếu dữ liệu' });
       }
 
-      // Quy ước hội thoại: luôn lưu receiver = userId
       const convoUserId = role === 'user' ? senderId : receiverId;
-      if (!convoUserId) {
+      if (!convoUserId)
         return socket.emit('messageError', { error: 'Thiếu userId hội thoại' });
-      }
 
       const saved = await Message.create({
         sender: senderId,
-        receiver: convoUserId, // 🔑 mọi message đều trỏ về userId
+        receiver: convoUserId,
         senderName,
         receiverName: receiverName || 'Admins',
         content: message,
@@ -94,6 +91,7 @@ io.on('connection', socket => {
       });
 
       const payload = {
+        _id: saved._id.toString(),
         senderId,
         senderName,
         receiverId: convoUserId,
@@ -103,12 +101,14 @@ io.on('connection', socket => {
         createdAt: saved.createdAt
       };
 
-      // Phát cho user phòng của họ
+      // Phát 1 lần cho phòng user
       io.to(convoUserId).emit('newMessage', payload);
-      // Phát cho người gửi
-      io.to(senderId).emit('newMessage', payload);
-      // Phát cho TẤT CẢ admin
-      io.to('admins').emit('newMessage', payload);
+
+      // Nếu sender là admin, phát thêm về phòng riêng của admin (tùy nhu cầu)
+      if (role === 'admin') io.to(senderId).emit('newMessage', payload);
+
+      // Phát cho tất cả admin khi sender là user
+      if (role === 'user') io.to('admins').emit('newMessage', payload);
 
       console.log('✅ message broadcasted');
     } catch (err) {

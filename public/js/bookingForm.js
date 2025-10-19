@@ -8,7 +8,7 @@ export const bookTour = async (tourId, startDate, participants) => {
     const session = await axios(
       `/api/v1/bookings/checkout-session/${tourId}?startDate=${encodeURIComponent(
         startDate
-      )}&participants=${participants}`
+      )}&participants=${participants}&platform=web` // <-- thêm platform=web
     );
     window.location.replace(session.data.session.url);
   } catch (err) {
@@ -27,7 +27,6 @@ export const initBookingForm = () => {
   const pricePerPersonEl = document.getElementById("price-per-person");
 
   if (!bookTourBtn || !participantInput || !participantNumber || !participantsDisplay || !pricePerPersonEl || !totalPriceEl) {
-    // Form không tồn tại ở trang hiện tại
     return;
   }
 
@@ -52,7 +51,6 @@ export const initBookingForm = () => {
     totalPriceEl.textContent = `${(total || 0).toLocaleString("vi-VN")} ₫`;
   };
 
-  // === CHỌN NGÀY: dùng class .selected để khớp CSS của bạn ===
   if (dateButtons.length > 0) {
     dateButtons.forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -65,7 +63,6 @@ export const initBookingForm = () => {
     });
   }
 
-  // === TĂNG / GIẢM NGƯỜI ===
   const decreaseBtn = document.querySelector(".decrease-btn");
   const increaseBtn = document.querySelector(".increase-btn");
 
@@ -93,7 +90,6 @@ export const initBookingForm = () => {
     });
   }
 
-  // khi người dùng nhập tay (nếu có input hiển thị)
   participantInput.addEventListener("input", () => {
     const val = parseInt(participantInput.value || '1', 10);
     currentParticipants = Math.min(Math.max(val || 1, 1), maxSize);
@@ -101,11 +97,9 @@ export const initBookingForm = () => {
     updateTotal();
   });
 
-  // Khởi tạo hiển thị ban đầu
   updateParticipantsUI();
   updateTotal();
 
-  // === NÚT THANH TOÁN ===
   bookTourBtn.addEventListener("click", async (e) => {
     e.preventDefault();
     if (isProcessing) return;
@@ -160,7 +154,6 @@ export const initBookingForm = () => {
   });
 };
 
-// Chỉ khởi tạo 1 lần khi DOM sẵn sàng
 document.addEventListener("DOMContentLoaded", () => {
   initBookingForm();
 });
