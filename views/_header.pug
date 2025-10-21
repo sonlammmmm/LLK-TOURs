@@ -36,7 +36,7 @@ header.header
           span Quản lý
 
       .user-dropdown
-        button.user-dropdown__toggle
+        button.user-dropdown__toggle(type='button')
           img.nav__user-img(src=`/img/users/${user.photo}` alt=`${user.name}`)
           .user-info
             span.user-name= user.name.split(' ').pop() 

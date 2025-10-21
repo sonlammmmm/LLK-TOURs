@@ -225,7 +225,9 @@ if (document.querySelector(".booking-detail")) {
 initViewToggle()
 
 // Initialize booking success page
-initBookingSuccess()
+if (document.querySelector('.booking-success') && typeof initBookingSuccess === 'function') {
+  initBookingSuccess();
+}
 
 // Initialize review management
 const reviewManagementList = document.querySelector(".review-management__list")
@@ -287,18 +289,20 @@ export const initHeader = () => {
   // User dropdown functionality
   const userDropdown = document.querySelector('.user-dropdown');
   const userDropdownToggle = document.querySelector('.user-dropdown__toggle');
-  
-  if (userDropdownToggle) {
+
+  if (userDropdown && userDropdownToggle) {
     userDropdownToggle.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       userDropdown.classList.toggle('active');
+      // optional a11y
+      userDropdownToggle.setAttribute('aria-expanded', userDropdown.classList.contains('active'));
     });
-    
-    // Close dropdown when clicking outside
+
     document.addEventListener('click', (e) => {
       if (!userDropdown.contains(e.target)) {
         userDropdown.classList.remove('active');
+        userDropdownToggle.setAttribute('aria-expanded', 'false');
       }
     });
   }
@@ -397,7 +401,8 @@ export const handleLogout = () => {
         if (typeof logout === 'function') {
           logout();
         } else {
-          window.location.href = '/logout';
+          fetch('/api/v1/users/logout', { credentials: 'same-origin' })
+            .finally(() => location.assign('/'));
         }
       }
     });
