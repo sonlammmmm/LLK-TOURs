@@ -6,7 +6,7 @@ const messageController = require('../controllers/messageController'); // 👈 t
 
 const router = express.Router();
 
-// Middleware kiểm tra đăng nhập
+// Middleware gắn thông tin user đã đăng nhập nếu có
 router.use(authController.isLoggedIn);
 
 // -------------------- TRANG NGƯỜI DÙNG --------------------
