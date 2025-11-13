@@ -37,9 +37,23 @@ block content
               .booking-detail-row
                 strong Số người:
                 span= `${booking.participants} người`
-              
+
+              if booking.services && booking.services.length
+                .booking-detail-row
+                  strong Dịch vụ thêm:
+                  ul.booking-services
+                    each service in booking.services
+                      li
+                        span= `${service.name} x ${service.quantity}`
+                        span.booking-services__price= `${(service.total || 0).toLocaleString('vi-VN')} ₫`
+
+              if booking.discountAmount && booking.discountAmount > 0
+                .booking-detail-row
+                  strong Giảm giá:
+                  span= `- ${(booking.discountAmount || 0).toLocaleString('vi-VN')} ₫`
+
               .booking-detail-row
-                strong Tổng tiền:
+                strong Tổng thanh toán:
                 span= `${booking.price.toLocaleString('vi-VN')} ₫`
               
               .booking-detail-row

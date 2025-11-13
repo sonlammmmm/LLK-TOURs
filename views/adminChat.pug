@@ -1,65 +1,32 @@
-extends base
+extends adminLayout
 
-block content
-  - var hideFooter = true
-  main.main
-    .user-view
-      nav.user-view__menu
-        .admin-nav
-          h5.admin-nav__heading Quản lý
-          ul.side-nav
-            li
-              a(href='/admin/dashboard')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-home')
-                | Dashboard
-            li
-              a.active(href='/admin/chat')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-message-square')
-                | Chat khách hàng
-            li
-              a(href='/admin/tours')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-map')
-                | Quản lý tours
-            li
-              a(href='/admin/users')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-user')
-                | Quản lý User
-            li
-              a(href='/admin/bookings')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-briefcase')
-                | Lịch sử đặt tour
-            li
-              a(href='/admin/reviews')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-star')
-                | Quản lý đánh giá
+block adminContent
+  .llk-admin-topbar
+    .llk-admin-topbar__left
+      h1.llk-admin-topbar__title Chat khách hàng
+      p.llk-admin-topbar__subtitle Giữ kết nối với người dùng theo thời gian thực.
+    .llk-admin-topbar__right
+      button.btn.btn--ghost(type='button')
+        svg(width='16' height='16')
+          use(xlink:href='/img/icons.svg#icon-archive')
+        |  Lưu hội thoại
 
-      .user-view__content
-        .user-view__form-container
-          h2.heading-secondary.mb-3 CHAT KHÁCH HÀNG
-          .llk-chat-wrapper
-            aside.llk-chat-sidebar
-              h3 Danh sách Chat
+  section.llk-admin-panel
+    .llk-chat-wrapper
+      aside.llk-chat-sidebar
+        h3 Danh sách Chat
+        .llk-search-box
+          input#user-search(type='text', placeholder='Tìm kiếm người dùng...')
+        ul#user-list
 
-              // Ô tìm kiếm người dùng
-              .llk-search-box
-                input#user-search(type='text', placeholder='Tìm kiếm người dùng...')
+      section.llk-chat-main
+        #chat-box.llk-chat-box
+          .llk-chat-empty Chọn người dùng để bắt đầu chat
+        form#chat-form.llk-chat-form
+          input#chat-input(type='text', placeholder='Nhập tin nhắn...' autocomplete='off')
+          button.llk-send-btn(type='submit')
+            i(class="fa-solid fa-paper-plane")
+            |  Gửi
 
-              ul#user-list
-
-            section.llk-chat-main
-              #chat-box.llk-chat-box
-                .llk-chat-empty Chọn người dùng để bắt đầu chat
-              form#chat-form.llk-chat-form
-                input#chat-input(type='text', placeholder='Nhập tin nhắn...' autocomplete='off')
-                button.llk-send-btn(type='submit')
-                  i(class="fa-solid fa-paper-plane")
-                  |  Gửi
-
-block scripts
+block append scripts
   script(src="/js/chatAdmin.js")

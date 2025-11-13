@@ -4,7 +4,7 @@ import { login, logout } from "./login"
 import { updateSettings } from "./updateSettings"
 import { signup } from "./signup"
 import { bookTour } from "./stripe"
-import { handleTourForm, handleDeleteTour } from "./tourManagement"
+import { handleTourForm, handleDeleteTour, initTourAdminInteractions } from "./tourManagement"
 import { handleUserForm, handleDeactivateUser, handleActivateUser } from "./userManagement"
 import {
   handleDeleteBooking,
@@ -33,6 +33,7 @@ const bookBtn = document.getElementById("book-tour")
 const bookTourBtns = document.querySelectorAll(".book-tour-btn")
 const tourForm = document.querySelector(".form-tour")
 const tourManagementList = document.querySelector(".tour-management__list")
+const adminTourGrid = document.querySelector(".llk-admin-tour-grid")
 const userForm = document.querySelector(".form-user")
 const userManagementList = document.querySelector(".user-management__list")
 const bookingManagementList = document.querySelector(".booking-management__list")
@@ -195,6 +196,11 @@ if (tourForm) {
 
 if (tourManagementList) {
   handleDeleteTour()
+}
+
+if (adminTourGrid) {
+  handleDeleteTour()
+  initTourAdminInteractions()
 }
 
 // User Management
@@ -391,22 +397,22 @@ export const initHeader = () => {
 
 // Logout functionality
 export const handleLogout = () => {
-  const logoutBtn = document.querySelector('.logout-btn');
-  if (logoutBtn) {
+  const logoutButtons = document.querySelectorAll('.logout-btn');
+  logoutButtons.forEach((logoutBtn) => {
     logoutBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      
+
       if (confirm('Bạn có chắc chắn muốn đăng xuất không?')) {
-        // Call your existing logout function
         if (typeof logout === 'function') {
           logout();
         } else {
-          fetch('/api/v1/users/logout', { credentials: 'same-origin' })
-            .finally(() => location.assign('/'));
+          fetch('/api/v1/users/logout', { credentials: 'same-origin' }).finally(() =>
+            location.assign('/')
+          );
         }
       }
     });
-  }
+  });
 };
 
 // Initialize header when DOM is loaded

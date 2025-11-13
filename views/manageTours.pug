@@ -1,127 +1,97 @@
-extends base
+extends adminLayout
 
-block content
-  - var hideFooter = true
-  main.main
-    .user-view
-      nav.user-view__menu
-        .admin-nav
-          h5.admin-nav__heading Quản lý
-          ul.side-nav
-            li
-              a(href='/admin/dashboard')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-home')
-                | Dashboard
-            li
-              a(href='/admin/chat')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-message-square')
-                | Chat khách hàng
-            li
-              a.active(href='/admin/tours')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-map')
-                | Quản lý tours
-            li
-              a(href='/admin/users')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-user')
-                | Quản lý User
-            li
-              a(href='/admin/bookings')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-briefcase')
-                | Lịch sử đặt tour
-            li
-              a(href='/admin/reviews')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-star')
-                | Quản lý đánh giá
+block adminContent
+  .llk-admin-topbar
+    .llk-admin-topbar__left
+      h1.llk-admin-topbar__title Quản lý tour
+      p.llk-admin-topbar__subtitle Kiểm soát hành trình và ngày khởi hành theo thời gian thực.
+    .llk-admin-topbar__right
+      button.btn.btn--ghost(type='button')
+        svg(width='16' height='16')
+          use(xlink:href='/img/icons.svg#icon-settings')
+        |  Tùy chỉnh
+      a.btn.btn--small.btn--green(href='/admin/tours/new')
+        svg(width='16' height='16')
+          use(xlink:href='/img/icons.svg#icon-plus-circle')
+        |  Tạo tour mới
 
-      .user-view__content
-        .user-view__form-container
-          .tour-management__header
-            h2.heading-secondary Quản lý tour
-            a.btn.btn--small.btn--green(href='/admin/tours/new') Tạo tour mới
-          
-          .count-display Đang hiển thị <strong>#{tours.length}</strong> trên tổng số <strong>#{tours.length}</strong>
-          
-          .search-filter
-            input.search-input(type='text', placeholder='Tìm kiếm tour...')
-            select.filter-duration
-              option(value='') Tất cả thời gian
-              option(value='1-3') 1-3 ngày
-              option(value='4-7') 4-7 ngày
-              option(value='8+') 8+ ngày
-            select.filter-price
-              option(value='') Tất cả giá
-              option(value='0-3000000') 0-3,000,000 VND
-              option(value='3000000-6000000') 3,000,000-6,000,000 VND
-              option(value='6000000+') 6,000,000+ VND
-            button.btn-toggle-view(type='button') Chuyển chế độ xem
-          
-          .no-data-message.hidden Không có tour nào phù hợp với tiêu chí tìm kiếm.
-          
-          .table-container.hidden
-            table.table-view
-              thead
-                tr
-                  th Ảnh
-                  th Tên
-                  th Thời gian
-                  th Số người
-                  th Giá
-                  th Đánh giá
-                  th Thao tác
-              tbody
-                if tours.length === 0
-                  tr
-                    td(colspan='7') Không có tour nào.
+  section.llk-admin-panel
+    header.llk-admin-panel__header
+      .llk-admin-panel__header-title
+        h2.heading-secondary Tổng quan tour
+        p.medium-text Tổng hợp số lượng tour, ngày khởi hành và vé đã bán.
+
+    .llk-admin-panel__stats
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Tổng số tour
+        strong.llk-admin-stat-card__value #{tours.length}
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Ngày khởi hành sắp tới
+        strong.llk-admin-stat-card__value #{totalUpcomingDepartures}
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Vé đã đặt
+        strong.llk-admin-stat-card__value #{totalFutureBookings}
+
+    .llk-admin-panel__toolbar
+      input.llk-admin-panel__search(type='text', placeholder='Tìm tour theo tên...')
+      select.llk-admin-panel__filter
+        option(value='') Tất cả trạng thái
+        option(value='active') Đang mở bán
+        option(value='upcoming') Sắp khởi hành
+      button.btn.btn--ghost.llk-admin-panel__toggle(type='button') Chế độ lưới
+
+    if tours.length === 0
+      p.llk-admin-empty Không có tour nào vừa được tạo.
+    else
+      .llk-admin-tour-grid
+        each tour in tours
+          article.llk-admin-tour-card
+            .llk-admin-tour-card__media
+              if tour.imageCover
+                img.llk-admin-tour-card__image(src=`/img/tours/${tour.imageCover}`, alt=`${tour.name}`)
+              else
+                .llk-admin-tour-card__image--placeholder Chưa có hình
+              span.llk-admin-tour-card__badge #{tour.duration} ngày
+            .llk-admin-tour-card__body
+              .llk-admin-tour-card__head
+                h3.llk-admin-tour-card__title= tour.name
+                .llk-admin-tour-card__actions
+                  a.btn.btn--small.btn--blue(href=`/admin/tours/${tour._id}/edit`) Sửa
+                  a.btn.btn--small.btn--green(href=`/tour/${tour.slug}`, target='_blank') Xem
+                  button.btn.btn--small.btn--red.btn-delete-tour(type='button', data-tour-id=`${tour._id}`) Xóa
+              p.llk-admin-tour-card__summary= tour.summary || 'Chưa có mô tả'
+              .llk-admin-tour-card__meta
+                span
+                  svg
+                    use(xlink:href='/img/icons.svg#icon-dollar-sign')
+                  | #{tour.price.toLocaleString('vi-VN')} VND
+                span
+                  svg
+                    use(xlink:href='/img/icons.svg#icon-user')
+                  | #{tour.maxGroupSize} khách
+                span
+                  svg
+                    use(xlink:href='/img/icons.svg#icon-star')
+                  | #{tour.ratingsAverage} (#{tour.ratingsQuantity})
+              .llk-admin-tour-card__dates
+                h4.llk-admin-tour-card__dates-title Ngày khởi hành đang hoạt động
+                if tour.activeStartDates.length
+                  ul.llk-admin-tour-card__dates-list
+                    each date in tour.activeStartDates.slice(0, 3)
+                      li.llk-admin-tour-card__date-item
+                        span.llk-admin-tour-card__date #{date.dateFormatted}
+                        span.llk-admin-tour-card__date-meta Đặt #{date.bookedSeats} vé · Còn #{date.availableSlots} slot
+                  if tour.activeStartDates.length > 3
+                    p.llk-admin-tour-card__more +#{tour.activeStartDates.length - 3} ngày khác
                 else
-                  each tour in tours
-                    tr
-                      td
-                        img.img-small(src=`/img/tours/${tour.imageCover}`, alt=`${tour.name}`)
-                      td= tour.name
-                      td #{tour.duration} ngày
-                      td #{tour.maxGroupSize} người
-                      td #{tour.price.toLocaleString('vi-VN')} VND
-                      td #{tour.ratingsAverage} (#{tour.ratingsQuantity})
-                      td
-                        .table-actions
-                          a.btn.btn--small.btn--blue(href=`/admin/tours/${tour.id}/edit`) Sửa
-                          a.btn.btn--small.btn--green(href=`/tour/${tour.slug}`, target='_blank') Xem
-                          button.btn.btn--small.btn--red.btn-delete-tour(data-tour-id=`${tour.id}`) Xóa
-          
-          .tour-management__list
-            if tours.length === 0
-              p.tour-management__empty Không có tour nào.
-            else
-              each tour in tours
-                .tour-management__item
-                  .tour-management__info
-                    img.tour-management__img(src=`/img/tours/${tour.imageCover}`, alt=`${tour.name}`)
-                    .tour-management__details
-                      h4.tour-management__name= tour.name
-                      .tour-management__stats
-                        span.tour-management__duration
-                          svg
-                            use(xlink:href='/img/icons.svg#icon-clock')
-                          | #{tour.duration} ngày
-                        span.tour-management__group-size
-                          svg
-                            use(xlink:href='/img/icons.svg#icon-user')
-                          | #{tour.maxGroupSize} người
-                        span.tour-management__price
-                          svg
-                            use(xlink:href='/img/icons.svg#icon-dollar-sign')
-                          | #{tour.price.toLocaleString('vi-VN')} VND
-                        span.tour-management__rating
-                          svg
-                            use(xlink:href='/img/icons.svg#icon-star')
-                          | #{tour.ratingsAverage} (#{tour.ratingsQuantity})
-                  .tour-management__actions
-                    a.btn.btn--small.btn--blue(href=`/admin/tours/${tour.id}/edit`) Sửa
-                    a.btn.btn--small.btn--green(href=`/tour/${tour.slug}`, target='_blank') Xem
-                    button.btn.btn--small.btn--red.btn-delete-tour(data-tour-id=`${tour.id}`) Xóa
+                  p.llk-admin-tour-card__no-dates Chưa có ngày khởi hành mới.
+              form.llk-admin-tour-card__quick-start(
+                data-tour-id=`${tour._id}`
+                data-max-size=`${tour.maxGroupSize}`
+              )
+                label(for=`quick-date-${tour._id}`) Thêm ngày khởi hành nhanh
+                .llk-admin-tour-card__quick-start-row
+                  input(type='date', required, id=`quick-date-${tour._id}`)
+                  input(type='number', min='1', max=`${tour.maxGroupSize}`, placeholder=`${tour.maxGroupSize}`, aria-label='Số slot')
+                  button.btn.btn--small.btn--blue(type='submit') Thêm
+                small.help-text Slot mặc định = sức chứa nếu bạn bỏ trống.

@@ -1,79 +1,48 @@
-extends base
+extends adminLayout
 
-block content
-  main.main
-    .user-view
-      nav.user-view__menu
-        .admin-nav
-          h5.admin-nav__heading Quản lý
-          ul.side-nav
-            li
-              a(href='/admin/dashboard')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-home')
-                | Dashboard
-            li
-              a(href='/admin/tours')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-map')
-                | Quản lý tours
-            li
-              a(href='/admin/users')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-user')
-                | Quản lý User
-            li
-              a(href='/admin/bookings')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-briefcase')
-                | Lịch sử đặt tour
-            li
-              a(href='/admin/reviews')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-star')
-                | Quản lý đánh giá
+block adminContent
+  .llk-admin-topbar
+    .llk-admin-topbar__left
+      h1.llk-admin-topbar__title= title
+      p.llk-admin-topbar__subtitle Quản lý thông tin và vai trò tài khoản.
+    .llk-admin-topbar__right
+      a.btn.btn--ghost(href='/admin/users') ← Quay lại danh sách
 
-      .user-view__content
-        .user-view__form-container
-          h2.heading-secondary.ma-bt-md= title
-          
-          form.form.form-user(enctype='multipart/form-data')
-            input#user-id(type='hidden', value=`${user ? user.id : ''}`)
-            
-            .form__group
-              label.form__label(for='name') Tên người dùng
-              input#name.form__input(type='text', value=`${user ? user.name : ''}`, required)
-            
-            .form__group
-              label.form__label(for='email') Email
-              input#email.form__input(type='email', value=`${user ? user.email : ''}`, required)
-            
-            .form__group
-              label.form__label(for='role') Vai trò
-              select#role.form__input(required)
-                each role in ['user', 'guide', 'lead-guide', 'admin']
-                  option(value=role, selected=user && user.role === role)= role
-            
-            if !user
-              .form__group.password-group
-                label.form__label(for='password') Mật khẩu
-                input#password.form__input(type='password', required, minlength='6')
-              
-              .form__group.password-group
-                label.form__label(for='passwordConfirm') Xác nhận mật khẩu
-                input#passwordConfirm.form__input(type='password', required, minlength='6')
-              
-              .form__group.password-requirements
-                p.password-hint Mật khẩu phải có ít nhất 6 ký tự
-            
-            .form__group
-              label.form__label(for='photo') Ảnh đại diện
-              if user && user.photo
-                .form__current-image
-                  img(src=`/img/users/${user.photo}`, alt='Ảnh đại diện hiện tại')
-                  p Ảnh đại diện hiện tại
-              input#photo.form__upload(type='file', accept='image/*')
-              label(for='photo') Chọn ảnh đại diện
-            
-            .form__group.right
-              button.btn.btn--small.btn--green.btn-save-user= user ? 'Cập nhật' : 'Tạo mới'
+  section.llk-admin-panel
+    form.form.form-user(enctype='multipart/form-data')
+      input#user-id(type='hidden', value=`${user ? user.id : ''}`)
+      .llk-admin-form-grid
+        .llk-admin-form-card
+          h3.heading-tertiary Thông tin cơ bản
+          .form__group
+            label.form__label(for='name') Tên người dùng
+            input#name.form__input(type='text', value=`${user ? user.name : ''}`, required)
+          .form__group
+            label.form__label(for='email') Email
+            input#email.form__input(type='email', value=`${user ? user.email : ''}`, required)
+          .form__group
+            label.form__label(for='role') Vai trò
+            select#role.form__input(required)
+              each role in ['user', 'guide', 'lead-guide', 'admin']
+                option(value=role, selected=user && user.role === role)= role
+          if !user
+            .form__group.password-group
+              label.form__label(for='password') Mật khẩu
+              input#password.form__input(type='password', required, minlength='6')
+            .form__group.password-group
+              label.form__label(for='passwordConfirm') Xác nhận mật khẩu
+              input#passwordConfirm.form__input(type='password', required, minlength='6')
+            .form__group.password-requirements
+              p.password-hint Mật khẩu phải có ít nhất 6 ký tự.
+        .llk-admin-form-card
+          h3.heading-tertiary Ảnh đại diện
+          .form__group
+            label.form__label(for='photo') Ảnh đại diện
+            if user && user.photo
+              .form__current-image
+                img(src=`/img/users/${user.photo}`, alt='Ảnh đại diện hiện tại')
+                p Ảnh đại diện hiện tại
+            input#photo.form__upload(type='file', accept='image/*')
+            label(for='photo') Chọn ảnh đại diện
+      .form__group.right
+        button.btn.btn--small.btn--green.btn-save-user= user ? 'Cập nhật' : 'Tạo mới'

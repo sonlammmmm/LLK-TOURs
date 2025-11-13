@@ -2,18 +2,53 @@
 import axios from "axios";
 import { showAlert } from "./alerts";
 
-// === STRIPE PAYMENT FUNCTION ===
-export const bookTour = async (tourId, startDate, participants) => {
+const parseCurrency = el =>
+  parseInt(String(el.textContent || "").replace(/[^\d]/g, ""), 10) || 0;
+
+const formatCurrency = value =>
+  `${(value || 0).toLocaleString("vi-VN")} ₫`;
+
+const readBookingData = () => {
+  const node = document.getElementById("booking-data");
+  if (!node) return {};
   try {
-    const session = await axios(
-      `/api/v1/bookings/checkout-session/${tourId}?startDate=${encodeURIComponent(
-        startDate
-      )}&participants=${participants}&platform=web` // <-- thêm platform=web
+    return JSON.parse(node.textContent || "{}");
+  } catch {
+    return {};
+  }
+};
+
+const bookingData = readBookingData();
+const availableServices = bookingData.services || [];
+
+const getServiceById = id => availableServices.find(s => s.id === id);
+
+export const bookTour = async (
+  tourId,
+  startDate,
+  participants,
+  selectedServices,
+  promotionCode
+) => {
+  try {
+    const session = await axios.post(
+      `/api/v1/bookings/checkout-session/${tourId}`,
+      {
+        startDate,
+        participants,
+        selectedServices,
+        promotionCode,
+        platform: "web"
+      }
     );
     window.location.replace(session.data.session.url);
   } catch (err) {
-    console.error("❌ Stripe booking error:", err);
-    showAlert("error", "Không thể tạo phiên thanh toán Stripe!");
+    console.error("Stripe booking error:", err);
+    const message =
+      err.response?.data?.message ||
+      "Không thể tạo phiên thanh toán Stripe!";
+    showAlert("error", message);
+    throw err;
   }
 };
 
@@ -21,40 +56,216 @@ export const initBookingForm = () => {
   const bookTourBtn = document.getElementById("book-tour");
   const dateButtons = document.querySelectorAll(".booking-date-btn");
   const participantInput = document.getElementById("participants-input");
-  const participantNumber = document.getElementById("participants-number"); // cột trái
-  const participantsDisplay = document.getElementById("participants-display"); // cột phải
-  const totalPriceEl = document.getElementById("total-price");
+  const participantNumber = document.getElementById("participants-number");
+  const participantsDisplay = document.getElementById("participants-display");
   const pricePerPersonEl = document.getElementById("price-per-person");
+  const servicesTotalEl = document.getElementById("services-total");
+  const discountAmountEl = document.getElementById("discount-amount");
+  const grandTotalEl = document.getElementById("grand-total");
+  const promotionInput = document.getElementById("promotion-code");
+  const applyPromoBtn = document.getElementById("apply-promo");
+  const removePromoBtn = document.getElementById("remove-promo");
+  const promotionMessage = document.getElementById("promotion-message");
 
-  if (!bookTourBtn || !participantInput || !participantNumber || !participantsDisplay || !pricePerPersonEl || !totalPriceEl) {
+  if (
+    !bookTourBtn ||
+    !participantInput ||
+    !participantNumber ||
+    !participantsDisplay ||
+    !pricePerPersonEl ||
+    !servicesTotalEl ||
+    !discountAmountEl ||
+    !grandTotalEl
+  ) {
     return;
   }
 
   let selectedDate = null;
-  let currentParticipants = parseInt(participantInput.value || '1', 10);
-  let isProcessing = false;
-
+  let currentParticipants = parseInt(participantInput.value || "1", 10);
   const maxSize = parseInt(bookTourBtn.dataset.maxSize, 10) || 1;
+  let isProcessing = false;
+  let isApplyingPromotion = false;
 
-  const parseCurrency = (el) =>
-    parseInt(String(el.textContent || '').replace(/[^\d]/g, ''), 10) || 0;
-
-  const updateParticipantsUI = () => {
-    participantNumber.textContent = currentParticipants;
-    participantsDisplay.textContent = currentParticipants;
-    participantInput.value = currentParticipants;
+  const state = {
+    selectedServices: new Map(),
+    discountAmount: 0,
+    promotionCode: null
   };
 
-  const updateTotal = () => {
+  const getSelectedServicesPayload = () =>
+    Array.from(state.selectedServices.values()).map(item => ({
+      serviceId: item.serviceId,
+      quantity: item.quantity
+    }));
+
+  const resetPromotion = (reason = "") => {
+    state.discountAmount = 0;
+    state.promotionCode = null;
+    if (promotionInput) promotionInput.value = "";
+    if (promotionMessage) {
+      promotionMessage.textContent = reason || "";
+      promotionMessage.classList.remove("promo-message--error");
+    }
+    if (removePromoBtn) {
+      removePromoBtn.hidden = true;
+      removePromoBtn.disabled = true;
+    }
+  };
+
+  const updateTotals = () => {
     const unit = parseCurrency(pricePerPersonEl);
-    const total = unit * currentParticipants;
-    totalPriceEl.textContent = `${(total || 0).toLocaleString("vi-VN")} ₫`;
+    const baseTotal = unit * currentParticipants;
+    let servicesTotal = 0;
+
+    state.selectedServices.forEach(selection => {
+      const service = getServiceById(selection.serviceId);
+      if (!service) return;
+      const quantity =
+        service.chargeType === "per-person"
+          ? currentParticipants
+          : selection.quantity || 1;
+      servicesTotal += service.price * quantity;
+    });
+
+    state.servicesTotal = servicesTotal;
+    const subtotal = baseTotal + servicesTotal;
+    const discount = Math.min(state.discountAmount || 0, subtotal);
+    const grandTotal = subtotal - discount;
+
+    servicesTotalEl.textContent = formatCurrency(servicesTotal);
+    discountAmountEl.textContent =
+      discount > 0 ? `- ${formatCurrency(discount)}` : formatCurrency(0);
+    grandTotalEl.textContent = formatCurrency(grandTotal);
+  };
+
+  const refreshPromotionIfNeeded = async () => {
+    if (!state.promotionCode) {
+      updateTotals();
+      return;
+    }
+    try {
+      await applyPromotion(state.promotionCode, { silent: true });
+    } catch {
+      resetPromotion("Mã khuyến mãi đã được bỏ do thay đổi giỏ dịch vụ.");
+      updateTotals();
+    }
+  };
+
+  const handleServiceSelection = checkbox => {
+    const { serviceId } = checkbox.dataset;
+    const service = getServiceById(serviceId);
+    if (!service) return;
+
+    const quantityInput = document.querySelector(
+      `input.service-quantity-input[data-service-id="${serviceId}"]`
+    );
+
+    if (checkbox.checked) {
+      const quantity =
+        service.chargeType === "per-person"
+          ? currentParticipants
+          : service.allowMultiple && quantityInput
+            ? Math.max(
+                parseInt(quantityInput.value || "1", 10) ||
+                  service.minQuantity ||
+                  1,
+                service.minQuantity || 1
+              )
+            : 1;
+      state.selectedServices.set(serviceId, { serviceId, quantity });
+      if (quantityInput) {
+        quantityInput.disabled = false;
+      }
+    } else {
+      state.selectedServices.delete(serviceId);
+      if (quantityInput) {
+        quantityInput.disabled = true;
+      }
+    }
+    updateTotals();
+    refreshPromotionIfNeeded();
+  };
+
+  const handleQuantityChange = (input, serviceId) => {
+    const service = getServiceById(serviceId);
+    if (!service) return;
+    const min = parseInt(input.min || "1", 10) || 1;
+    const max =
+      parseInt(input.max || `${Number.MAX_SAFE_INTEGER}`, 10) ||
+      Number.MAX_SAFE_INTEGER;
+    let value = parseInt(input.value || "1", 10) || min;
+    value = Math.min(Math.max(value, min), max);
+    input.value = value;
+    if (state.selectedServices.has(serviceId)) {
+      state.selectedServices.set(serviceId, { serviceId, quantity: value });
+      updateTotals();
+      refreshPromotionIfNeeded();
+    }
+  };
+
+  const applyPromotion = async (code, { silent } = {}) => {
+    const trimmed = (code || "").trim().toUpperCase();
+    if (!trimmed) {
+      if (!silent) showAlert("error", "Vui lòng nhập mã hợp lệ.");
+      return;
+    }
+    if (isApplyingPromotion) return;
+    isApplyingPromotion = true;
+    if (applyPromoBtn) {
+      applyPromoBtn.disabled = true;
+      applyPromoBtn.textContent = "Đang kiểm tra...";
+    }
+    if (promotionMessage) {
+      promotionMessage.textContent = "";
+      promotionMessage.classList.remove("promo-message--error");
+    }
+    try {
+      const res = await axios.post("/api/v1/promotions/preview", {
+        tourId: bookTourBtn.dataset.tourId,
+        participants: currentParticipants,
+        selectedServices: getSelectedServicesPayload(),
+        promotionCode: trimmed
+      });
+      const data = res.data.data;
+      state.discountAmount = data?.discountAmount || 0;
+      state.promotionCode = trimmed;
+      if (promotionMessage) {
+        promotionMessage.textContent = data?.promotion
+          ? `Đã áp dụng mã ${trimmed}.`
+          : `Ưu đãi được cập nhật.`;
+      }
+      if (removePromoBtn) {
+        removePromoBtn.hidden = false;
+        removePromoBtn.disabled = false;
+      }
+      updateTotals();
+      if (!silent) {
+        showAlert("success", `Áp dụng mã ${trimmed} thành công!`);
+      }
+    } catch (err) {
+      state.discountAmount = 0;
+      state.promotionCode = null;
+      const message =
+        err.response?.data?.message || "Mã khuyến mãi không hợp lệ.";
+      if (promotionMessage) {
+        promotionMessage.textContent = message;
+        promotionMessage.classList.add("promo-message--error");
+      }
+      if (!silent) showAlert("error", message);
+      throw err;
+    } finally {
+      isApplyingPromotion = false;
+      if (applyPromoBtn) {
+        applyPromoBtn.disabled = false;
+        applyPromoBtn.textContent = "Áp dụng";
+      }
+    }
   };
 
   if (dateButtons.length > 0) {
-    dateButtons.forEach((btn) => {
+    dateButtons.forEach(btn => {
       btn.addEventListener("click", () => {
-        dateButtons.forEach((b) => b.classList.remove("selected"));
+        dateButtons.forEach(b => b.classList.remove("selected"));
         btn.classList.add("selected");
         selectedDate = btn.dataset.date;
         bookTourBtn.disabled = false;
@@ -66,12 +277,32 @@ export const initBookingForm = () => {
   const decreaseBtn = document.querySelector(".decrease-btn");
   const increaseBtn = document.querySelector(".increase-btn");
 
+  const updateParticipantsUI = () => {
+    participantNumber.textContent = currentParticipants;
+    participantsDisplay.textContent = currentParticipants;
+    participantInput.value = currentParticipants;
+  };
+
+  const updatePerPersonServices = () => {
+    state.selectedServices.forEach(selection => {
+      const service = getServiceById(selection.serviceId);
+      if (service && service.chargeType === "per-person") {
+        state.selectedServices.set(selection.serviceId, {
+          serviceId: selection.serviceId,
+          quantity: currentParticipants
+        });
+      }
+    });
+  };
+
   if (decreaseBtn) {
     decreaseBtn.addEventListener("click", () => {
       if (currentParticipants > 1) {
-        currentParticipants--;
+        currentParticipants -= 1;
         updateParticipantsUI();
-        updateTotal();
+        updatePerPersonServices();
+        updateTotals();
+        refreshPromotionIfNeeded();
       } else {
         showAlert("error", "Tối thiểu 1 người tham gia");
       }
@@ -81,9 +312,11 @@ export const initBookingForm = () => {
   if (increaseBtn) {
     increaseBtn.addEventListener("click", () => {
       if (currentParticipants < maxSize) {
-        currentParticipants++;
+        currentParticipants += 1;
         updateParticipantsUI();
-        updateTotal();
+        updatePerPersonServices();
+        updateTotals();
+        refreshPromotionIfNeeded();
       } else {
         showAlert("error", `Không vượt quá ${maxSize} người!`);
       }
@@ -91,65 +324,89 @@ export const initBookingForm = () => {
   }
 
   participantInput.addEventListener("input", () => {
-    const val = parseInt(participantInput.value || '1', 10);
+    const val = parseInt(participantInput.value || "1", 10);
     currentParticipants = Math.min(Math.max(val || 1, 1), maxSize);
     updateParticipantsUI();
-    updateTotal();
+    updatePerPersonServices();
+    updateTotals();
+    refreshPromotionIfNeeded();
   });
 
-  updateParticipantsUI();
-  updateTotal();
+  document
+    .querySelectorAll(".service-checkbox")
+    .forEach(checkbox =>
+      checkbox.addEventListener("change", () =>
+        handleServiceSelection(checkbox)
+      )
+    );
 
-  bookTourBtn.addEventListener("click", async (e) => {
+  document.querySelectorAll(".service-quantity-input").forEach(input => {
+    input.addEventListener("input", () =>
+      handleQuantityChange(input, input.dataset.serviceId)
+    );
+  });
+
+  document.querySelectorAll(".promo-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      if (promotionInput) {
+        promotionInput.value = chip.dataset.code || "";
+        promotionInput.focus();
+      }
+    });
+  });
+
+  if (applyPromoBtn && promotionInput) {
+    applyPromoBtn.addEventListener("click", async () => {
+      if (!selectedDate) {
+        showAlert("error", "Vui lòng chọn ngày khởi hành trước.");
+        return;
+      }
+      try {
+        await applyPromotion(promotionInput.value);
+      } catch {
+        // handled inside
+      }
+    });
+  }
+
+  if (removePromoBtn) {
+    removePromoBtn.addEventListener("click", () => {
+      resetPromotion("Đã bỏ mã khuyến mãi.");
+      updateTotals();
+    });
+  }
+
+  updateParticipantsUI();
+  updateTotals();
+
+  bookTourBtn.addEventListener("click", async e => {
     e.preventDefault();
     if (isProcessing) return;
-    isProcessing = true;
-
-    const form = bookTourBtn.closest("form");
-    const selectedRadio = form ? form.querySelector('input[name="paymentMethod"]:checked') : null;
-    const selectedPayment = selectedRadio ? selectedRadio.value : null;
-    const tourId = bookTourBtn.dataset.tourId;
-
     if (!selectedDate) {
       showAlert("error", "Vui lòng chọn ngày khởi hành!");
-      isProcessing = false;
-      return;
-    }
-    if (!selectedPayment) {
-      showAlert("error", "Vui lòng chọn phương thức thanh toán!");
-      isProcessing = false;
       return;
     }
 
+    const tourId = bookTourBtn.dataset.tourId;
     const originalText = bookTourBtn.textContent;
     bookTourBtn.disabled = true;
     bookTourBtn.textContent = "Đang xử lý...";
+    isProcessing = true;
 
     try {
-      if (selectedPayment === "vnpay") {
-        const res = await fetch(
-          `/api/v1/bookings/create-vnpay-url?tourId=${tourId}&startDate=${encodeURIComponent(
-            selectedDate
-          )}&participants=${currentParticipants}`
-        );
-        const data = await res.json();
-
-        if (data?.status === "success" && data?.paymentUrl) {
-          showAlert("success", "Đang chuyển hướng đến VNPAY...");
-          window.location.href = data.paymentUrl;
-        } else {
-          showAlert("error", "Không thể tạo liên kết thanh toán VNPAY!");
-        }
-      } else {
-        await bookTour(tourId, selectedDate, currentParticipants);
-      }
-    } catch (err) {
-      console.error("❌ Lỗi thanh toán:", err);
-      showAlert("error", "Đã xảy ra lỗi khi thanh toán!");
+      await bookTour(
+        tourId,
+        selectedDate,
+        currentParticipants,
+        getSelectedServicesPayload(),
+        state.promotionCode
+      );
+    } catch {
+      // error already surfaced
     } finally {
-      isProcessing = false;
       bookTourBtn.disabled = false;
       bookTourBtn.textContent = originalText;
+      isProcessing = false;
     }
   });
 };

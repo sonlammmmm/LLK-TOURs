@@ -36,7 +36,7 @@ const bookingSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['stripe', 'vnpay'],
+    enum: ['stripe'],
     default: 'stripe'
   },
   // ✅ THÊM TRƯỜNG NÀY
@@ -44,6 +44,66 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     unique: true,
     sparse: true // Cho phép null/undefined
+  },
+  currency: {
+    type: String,
+    uppercase: true,
+    default: 'VND'
+  },
+  basePrice: {
+    type: Number,
+    default: 0
+  },
+  services: {
+    type: [
+      {
+        service: {
+          type: mongoose.Schema.ObjectId,
+          ref: 'Service'
+        },
+        name: String,
+        chargeType: {
+          type: String,
+          enum: ['per-person', 'per-booking']
+        },
+        price: Number,
+        quantity: {
+          type: Number,
+          default: 1
+        },
+        total: Number
+      }
+    ],
+    default: []
+  },
+  servicesTotal: {
+    type: Number,
+    default: 0
+  },
+  subtotal: {
+    type: Number,
+    default: 0
+  },
+  discountAmount: {
+    type: Number,
+    default: 0
+  },
+  promotionSnapshot: {
+    promotion: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Promotion'
+    },
+    userPromotion: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'UserPromotion'
+    },
+    code: String,
+    name: String,
+    discountType: {
+      type: String,
+      enum: ['percent', 'fixed']
+    },
+    discountValue: Number
   }
 });
 
@@ -132,10 +192,18 @@ bookingSchema.post('findOneAndUpdate', async function(doc) {
 });
 
 bookingSchema.pre(/^find/, function(next) {
-  this.populate({ path: 'user', select: 'name email' }).populate({
-    path: 'tour',
-    select: 'name slug imageCover duration price'
-  });
+  this.populate({
+    path: 'user',
+    select: 'name email photo role'
+  })
+    .populate({
+      path: 'tour',
+      select: 'name slug imageCover duration price startDates'
+    })
+    .populate({
+      path: 'services.service',
+      select: 'name price chargeType status'
+    });
   next();
 });
 

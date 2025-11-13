@@ -1,0 +1,83 @@
+extends base
+
+block content
+  - var hideFooter = true
+  main.main
+    .user-view
+      nav.user-view__menu
+        .admin-nav
+          h5.admin-nav__heading Quản lý
+          ul.side-nav
+            li
+              a(href='/admin/dashboard')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-home')
+                | Dashboard
+            li
+              a(href='/admin/chat')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-message-square')
+                | Chat khách hàng
+            li
+              a(href='/admin/tours')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-map')
+                | Quản lý tours
+            li
+              a(href='/admin/services')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-layers')
+                | Quản lý dịch vụ
+            li
+              a.active(href='/admin/promotions')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-gift')
+                | Quản lý khuyến mãi
+            li
+              a(href='/admin/users')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-user')
+                | Quản lý User
+            li
+              a(href='/admin/bookings')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-briefcase')
+                | Lịch sử đặt tour
+            li
+              a(href='/admin/reviews')
+                svg
+                  use(xlink:href='/img/icons.svg#icon-star')
+                | Quản lý đánh giá
+
+      .user-view__content
+        .user-view__form-container
+          h2.heading-secondary= `Gắn mã ${promotion.code} cho user`
+          .promotion-summary
+            p
+              strong Tên chương trình:
+              |  #{promotion.name}
+            p
+              strong Giá trị:
+              |  #{promotion.discountType === 'percent' ? `${promotion.discountValue}%` : `${promotion.discountValue.toLocaleString('vi-VN')} ₫`}
+          form.form.form-assign-promotion
+            input(type='hidden', id='assign-promotion-id', value=promotion.id)
+            .form__group
+              label.form__label(for='assign-user') Chọn người dùng
+              select#assign-user.form__select
+                option(value='') -- Chọn user --
+                each user in users
+                  option(value=user.id)= `${user.name} (${user.email})`
+            .form__group
+              label.form__label(for='assign-limit') Số lần sử dụng tối đa
+              input#assign-limit.form__input(type='number', min='1', value=promotion.perUserLimit || 1)
+            .form__group
+              label.form__label(for='assign-expiry') Hết hạn (tùy chọn)
+              input#assign-expiry.form__input(type='date')
+            .form__group
+              label.form__label(for='assign-note') Ghi chú
+              textarea#assign-note.form__textarea rows='3'
+            .form__group
+              button.btn.btn--green.btn-assign-promotion(type='submit') Gắn mã cho user
+
+block scripts
+  script(src='/js/promotionManagement.js', type='module')

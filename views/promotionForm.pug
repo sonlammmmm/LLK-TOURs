@@ -1,0 +1,67 @@
+extends adminLayout
+
+block adminContent
+  .llk-admin-topbar
+    .llk-admin-topbar__left
+      h1.llk-admin-topbar__title= promotion ? `Chỉnh sửa khuyến mãi: ${promotion.name}` : 'Tạo khuyến mãi mới'
+      p.llk-admin-topbar__subtitle Quản lý mã giảm giá và ưu đãi.
+    .llk-admin-topbar__right
+      a.btn.btn--ghost(href='/admin/promotions') ← Quay lại danh sách
+
+  section.llk-admin-panel
+    form.form.form-promotion
+      input(type='hidden', id='promotion-id', value=promotion ? promotion.id : '')
+      .llk-admin-form-grid
+        .llk-admin-form-card
+          h3.heading-tertiary Thông tin chương trình
+          .form__group
+            label.form__label(for='promo-name') Tên chương trình
+            input#promo-name.form__input(type='text', required, value=promotion ? promotion.name : '')
+          .form__group
+            label.form__label(for='promo-code') Mã khuyến mãi
+            input#promo-code.form__input(type='text', required, value=promotion ? promotion.code : '')
+          .form__group
+            label.form__label(for='promo-description') Mô tả
+            textarea#promo-description.form__textarea(rows='3')= promotion ? promotion.description : ''
+          .form__group
+            label.form__label(for='status') Trạng thái
+            select#status.form__select
+              option(value='draft', selected=promotion && promotion.status === 'draft') Nháp
+              option(value='active', selected=!promotion || promotion.status === 'active') Kích hoạt
+              option(value='inactive', selected=promotion && promotion.status === 'inactive') Tạm dừng
+        .llk-admin-form-card
+          h3.heading-tertiary Thiết lập ưu đãi
+          .form__group
+            label.form__label(for='discountType') Loại ưu đãi
+            select#discountType.form__select
+              option(value='percent', selected=!promotion || promotion.discountType === 'percent') Giảm theo %
+              option(value='fixed', selected=promotion && promotion.discountType === 'fixed') Giảm theo số tiền
+          .form__group
+            label.form__label(for='discountValue') Giá trị ưu đãi
+            input#discountValue.form__input(type='number', min='0', required, value=promotion ? promotion.discountValue : '')
+          .form__group.form__group--columns
+            .form__column
+              label.form__label(for='maxDiscountAmount') Mức giảm tối đa (VND)
+              input#maxDiscountAmount.form__input(type='number', min='0', value=promotion ? promotion.maxDiscountAmount : '')
+            .form__column
+              label.form__label(for='minOrderAmount') Đơn hàng tối thiểu (VND)
+              input#minOrderAmount.form__input(type='number', min='0', value=promotion ? promotion.minOrderAmount : '')
+          .form__group.form__group--columns
+            .form__column
+              label.form__label(for='startDate') Bắt đầu
+              input#startDate.form__input(type='date', value=promotion && promotion.startDate ? promotion.startDate.toISOString().slice(0, 10) : '')
+            .form__column
+              label.form__label(for='endDate') Kết thúc
+              input#endDate.form__input(type='date', value=promotion && promotion.endDate ? promotion.endDate.toISOString().slice(0, 10) : '')
+          .form__group.form__group--columns
+            .form__column
+              label.form__label(for='usageLimit') Giới hạn tổng lượt dùng
+              input#usageLimit.form__input(type='number', min='0', value=promotion ? promotion.usageLimit : '')
+            .form__column
+              label.form__label(for='perUserLimit') Giới hạn mỗi người
+              input#perUserLimit.form__input(type='number', min='1', value=promotion ? promotion.perUserLimit : 1)
+      .form__group.right
+        button.btn.btn--green.btn-save-promotion(type='submit')= promotion ? 'Cập nhật khuyến mãi' : 'Tạo khuyến mãi'
+
+block append scripts
+  script(src='/js/promotionManagement.js', type='module')

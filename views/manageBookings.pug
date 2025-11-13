@@ -1,134 +1,56 @@
-extends base
+extends adminLayout
 
-block content
-  - var hideFooter = true
-  main.main
-    .user-view
-      nav.user-view__menu
-        .admin-nav
-          h5.admin-nav__heading Quản lý
-          ul.side-nav
-            li
-              a(href='/admin/dashboard')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-home')
-                | Dashboard
-            li
-              a(href='/admin/chat')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-message-square')
-                | Chat khách hàng
-            li
-              a(href='/admin/tours')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-map')
-                | Quản lý tours
-            li
-              a(href='/admin/users')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-user')
-                | Quản lý User
-            li
-              a.active(href='/admin/bookings')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-briefcase')
-                | Lịch sử đặt tour
-            li
-              a(href='/admin/reviews')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-star')
-                | Quản lý đánh giá
+block adminContent
+  .llk-admin-topbar
+    .llk-admin-topbar__left
+      h1.llk-admin-topbar__title Lịch sử đặt tour
+      p.llk-admin-topbar__subtitle Theo dõi thanh toán và trạng thái vé.
 
-      .user-view__content
-        .user-view__form-container
-          .booking-management__header
-            h2.heading-secondary Lịch sử đặt tour
-          
-          .count-display Đang hiển thị <strong>#{bookings.length}</strong> trên tổng số <strong>#{bookings.length}</strong>
-          
-          .search-filter
-            input.search-input(type='text', placeholder='Tìm kiếm đặt tour...')
-            select.filter-status
-              option(value='') Tất cả trạng thái
-              option(value='paid') Đã thanh toán
-              option(value='unpaid') Chưa thanh toán
-            button.btn-toggle-view(type='button') Chuyển chế độ xem
-          
-          .no-data-message.hidden Không có đặt tour nào phù hợp với tiêu chí tìm kiếm.
-          
-          .table-container.hidden
-            table.table-view
-              thead
-                tr
-                  th Tour
-                  th Người dùng
-                  th Số người
-                  th Giá
-                  th Ngày đặt
-                  th Trạng thái
-                  th Mã đặt tour
-                  th Thao tác
-              tbody
-                if bookings.length === 0
-                  tr
-                    td(colspan='8') Không có đặt tour nào.
-                else
-                  each booking in bookings
-                    tr
-                      td= booking.tour.name
-                      td
-                        .booking-management__user
-                          img.img-small(src=`/img/users/${booking.user.photo}`, alt=`${booking.user.name}`)
-                          span= booking.user.name
-                      td= booking.participants || 1
-                      td= booking.price.toLocaleString('vi-VN') + ' VND'
-                      td= new Date(booking.createdAt).toLocaleDateString('vi-VN')
-                      td
-                        span(class=`booking-badge booking-badge--${booking.paid ? 'paid' : 'unpaid'}`)= booking.paid ? 'Đã thanh toán' : 'Chưa thanh toán'
-                      td ##{booking.id.slice(-8).toUpperCase()}
-                      td
-                        .table-actions
-                          a.btn.btn--small.btn--blue(href=`/admin/bookings/${booking.id}`) Chi tiết
-                          if booking.paid
-                            button.btn.btn--small.btn--orange.btn-toggle-payment(data-booking-id=`${booking.id}`, data-paid="true") ⏳ Chưa thanh toán
-                          else
-                            button.btn.btn--small.btn--green.btn-toggle-payment(data-booking-id=`${booking.id}`, data-paid="false") 💵 Đã thanh toán
-                          button.btn.btn--small.btn--red.btn-delete-booking(data-booking-id=`${booking.id}`) Xóa
-                                
-          .booking-management__list
-            if bookings.length === 0
-              p.booking-management__empty Không có đặt tour nào.
-            else
-              each booking in bookings
-                .booking-management__item
-                  .booking-management__info
-                    h4.booking-management__tour= booking.tour.name
-                    // Thêm ID hóa đơn
-                    span.booking-management__id Mã đặt tour: ##{booking.id.slice(-8).toUpperCase()}
-                    .booking-management__user
-                      img.booking-management__user-img(src=`/img/users/${booking.user.photo}`, alt=`${booking.user.name}`)
-                      span.booking-management__user-name= booking.user.name
-                    .booking-management__details
-                      span.booking-management__participants
-                        svg
-                          use(xlink:href='/img/icons.svg#icon-user')
-                        | #{booking.participants || 1} người
-                      span.booking-management__price
-                        svg
-                          use(xlink:href='/img/icons.svg#icon-dollar-sign')
-                        | #{booking.price.toLocaleString('vi-VN')} VND
-                      span.booking-management__date
-                        svg
-                          use(xlink:href='/img/icons.svg#icon-calendar')
-                        | #{new Date(booking.createdAt).toLocaleDateString('vi-VN')}
-                      span(class=`booking-management__status booking-management__status--${booking.paid ? 'paid' : 'unpaid'}`)
-                        svg
-                          use(xlink:href=`/img/icons.svg#icon-${booking.paid ? 'check' : 'x'}`)
-                        | #{booking.paid ? 'Đã thanh toán' : 'Chưa thanh toán'}
-                  .booking-management__actions
-                    a.btn.btn--small.btn--blue(href=`/admin/bookings/${booking.id}`) Chi tiết
-                    if booking.paid
-                      button.btn.btn--small.btn--orange.btn-toggle-payment(data-booking-id=`${booking.id}`, data-paid="true") ⏳ Chưa thanh toán
-                    else
-                      button.btn.btn--small.btn--green.btn-toggle-payment(data-booking-id=`${booking.id}`, data-paid="false") 💵 Đã thanh toán
-                    button.btn.btn--small.btn--red.btn-delete-booking(data-booking-id=`${booking.id}`) Xóa
+  section.llk-admin-panel
+    .llk-admin-panel__toolbar
+      input.llk-admin-panel__search(type='text', placeholder='Tìm kiếm đặt tour...')
+      select.llk-admin-panel__filter
+        option(value='') Tất cả trạng thái
+        option(value='paid') Đã thanh toán
+        option(value='unpaid') Chưa thanh toán
+      button.btn.btn--ghost.llk-admin-panel__toggle(type='button') Chế độ danh sách
+
+    if bookings.length === 0
+      p.llk-admin-empty Không có đặt tour nào.
+    else
+      .booking-management__list
+        each booking in bookings
+          .booking-management__item
+            .booking-management__info
+              h4.booking-management__tour= booking.tour.name
+              span.booking-management__id Mã đặt tour: ##{booking.id.slice(-8).toUpperCase()}
+              .booking-management__user
+                img.booking-management__user-img(src=`/img/users/${booking.user.photo}`, alt=`${booking.user.name}`)
+                span.booking-management__user-name= booking.user.name
+              .booking-management__details
+                span.booking-management__participants
+                  svg
+                    use(xlink:href='/img/icons.svg#icon-user')
+                  | #{booking.participants || 1} người
+                span.booking-management__price
+                  svg
+                    use(xlink:href='/img/icons.svg#icon-dollar-sign')
+                  | #{booking.price.toLocaleString('vi-VN')} VND
+                span.booking-management__date
+                  svg
+                    use(xlink:href='/img/icons.svg#icon-calendar')
+                  | #{new Date(booking.createdAt).toLocaleDateString('vi-VN')}
+                span(class=`booking-management__status booking-management__status--${booking.paid ? 'paid' : 'unpaid'}`)
+                  svg
+                    use(xlink:href=`/img/icons.svg#icon-${booking.paid ? 'check' : 'x'}`)
+                  | #{booking.paid ? 'Đã thanh toán' : 'Chưa thanh toán'}
+            .booking-management__actions
+              a.btn.btn--small.btn--blue(href=`/admin/bookings/${booking.id}`) Chi tiết
+              if booking.paid
+                button.btn.btn--small.btn--orange.btn-toggle-payment(data-booking-id=`${booking.id}`, data-paid="true") Đổi trạng thái
+              else
+                button.btn.btn--small.btn--green.btn-toggle-payment(data-booking-id=`${booking.id}`, data-paid="false") Đánh dấu thanh toán
+              button.btn.btn--small.btn--red.btn-delete-booking(data-booking-id=`${booking.id}`) Xóa
+
+block append scripts
+  script(src="/js/bookingManagement.js", type="module")

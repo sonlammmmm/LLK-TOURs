@@ -1,0 +1,33 @@
+aside.llk-admin-sidenav
+  .llk-admin-sidenav__brand
+    span.llk-admin-sidenav__brand-text LLK Travel
+    p.dash-tag Trung tâm quản trị
+  - const menuItems = [];
+  - menuItems.push({ key: 'dashboard', label: 'Dashboard', href: '/admin/dashboard', icon: 'home' });
+  - menuItems.push({ key: 'chat', label: 'Chat khách hàng', href: '/admin/chat', icon: 'message-square' });
+  - menuItems.push({ key: 'tours', label: 'Quản lý tours', href: '/admin/tours', icon: 'map' });
+  - menuItems.push({ key: 'services', label: 'Quản lý dịch vụ', href: '/admin/services', icon: 'layers' });
+  - menuItems.push({ key: 'promotions', label: 'Quản lý khuyến mãi', href: '/admin/promotions', icon: 'gift' });
+  - menuItems.push({ key: 'users', label: 'Quản lý người dùng', href: '/admin/users', icon: 'user' });
+  - menuItems.push({ key: 'bookings', label: 'Lịch sử đặt tour', href: '/admin/bookings', icon: 'briefcase' });
+  - menuItems.push({ key: 'reviews', label: 'Quản lý đánh giá', href: '/admin/reviews', icon: 'star' });
+  nav.llk-admin-sidenav__nav
+    ul.llk-admin-sidenav__list
+      each item in menuItems
+        - const isActive = adminMenuActive === item.key;
+        li
+          a(class=`llk-admin-sidenav__link${isActive ? ' is-active' : ''}` href=item.href)
+            svg.llk-admin-sidenav__icon
+              use(xlink:href=`/img/icons.svg#icon-${item.icon}`)
+            span #{item.label}
+  if user
+    .llk-admin-sidenav__profile
+      img.llk-admin-sidenav__avatar(src=`/img/users/${user.photo}` alt=`${user.name}`)
+      .llk-admin-sidenav__profile-texts
+        span.llk-admin-sidenav__profile-name= user.name
+        span.llk-admin-sidenav__profile-role= user.role === 'admin' ? 'Quản trị viên' : user.role
+      a.llk-admin-sidenav__logout.logout-btn(href='/logout')
+        i.fa-solid.fa-arrow-right-from-bracket
+        |  Đăng xuất
+  .llk-admin-sidenav__footer
+    small © #{new Date().getFullYear()} LLK Travel

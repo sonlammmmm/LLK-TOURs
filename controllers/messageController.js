@@ -4,7 +4,10 @@ const catchAsync = require('../utils/catchAsync');
 
 // Trang admin chat
 exports.getAdminChatView = catchAsync(async (req, res) => {
-  res.status(200).render('adminChat', { title: 'Chat khách hàng' });
+  res.status(200).render('adminChat', {
+    title: 'Chat khách hàng',
+    adminMenuActive: 'chat'
+  });
 });
 
 // Trang user chat
@@ -69,7 +72,7 @@ exports.getUsersWithMessages = catchAsync(async (req, res) => {
 
   const userIds = agg.map(a => a._id).filter(Boolean);
   const users = await User.find({ _id: { $in: userIds }, role: 'user' }).select(
-    'name email role'
+    'name email role photo'
   );
 
   const map = new Map(users.map(u => [u._id.toString(), u]));
@@ -81,6 +84,7 @@ exports.getUsersWithMessages = catchAsync(async (req, res) => {
             _id: u._id,
             name: u.name,
             email: u.email,
+            photo: u.photo,
             lastMessage: item.lastMessage,
             lastMessageTime: item.lastMessageTime
           }
@@ -125,7 +129,7 @@ exports.searchUsers = catchAsync(async (req, res, next) => {
   }
 
   const users = await User.find(query)
-    .select('_id name email')
+    .select('_id name email photo')
     .limit(10);
 
   res.status(200).json({

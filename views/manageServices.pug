@@ -1,0 +1,45 @@
+extends adminLayout
+
+block adminContent
+  .llk-admin-topbar
+    .llk-admin-topbar__left
+      h1.llk-admin-topbar__title Quản lý dịch vụ
+      p.llk-admin-topbar__subtitle Cấu hình dịch vụ bổ sung cho tour.
+    .llk-admin-topbar__right
+      a.btn.btn--small.btn--green(href='/admin/services/new') Tạo dịch vụ mới
+
+  section.llk-admin-panel
+    if !services || services.length === 0
+      p.llk-admin-empty Chưa có dịch vụ nào được cấu hình.
+    else
+      .service-table
+        table
+          thead
+            tr
+              th Tên dịch vụ
+              th Giá (VND)
+              th Loại tính phí
+              th Trạng thái
+              th Thao tác
+          tbody
+            each service in services
+              tr
+                td
+                  strong= service.name
+                  if service.shortDescription
+                    p.table-desc= service.shortDescription
+                td= `${service.price.toLocaleString('vi-VN')} ₫`
+                td= service.chargeType === 'per-person' ? 'Theo người' : 'Theo lượt'
+                td
+                  span(class=`badge ${service.status === 'active' ? 'badge--green' : 'badge--gray'}`)= service.status === 'active' ? 'Đang hiển thị' : 'Đã ẩn'
+                td
+                  .table-actions
+                    button.btn.btn--small.btn--orange.btn-toggle-service(
+                      data-service-id=`${service.id}`,
+                      data-next-status=`${service.status === 'active' ? 'inactive' : 'active'}`
+                    )= service.status === 'active' ? 'Ẩn dịch vụ' : 'Hiển thị'
+                    a.btn.btn--small.btn--blue(href=`/admin/services/${service.id}/edit`) Chỉnh sửa
+                    button.btn.btn--small.btn--red.btn-delete-service(data-service-id=`${service.id}`) Xóa
+
+block append scripts
+  script(src="/js/serviceManagement.js", type="module")

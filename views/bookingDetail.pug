@@ -1,114 +1,77 @@
-extends base
+extends adminLayout
 
-block content
-  - var hideFooter = true
-  main.main
-    .user-view
-      nav.user-view__menu
-        .admin-nav
-          h5.admin-nav__heading Quản lý
-          ul.side-nav
-            li
-              a(href='/admin/dashboard')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-home')
-                | Dashboard
-            li
-              a(href='/admin/chat')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-message-square')
-                | Chat khách hàng
-            li
-              a(href='/admin/tours')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-map')
-                | Quản lý tours
-            li
-              a(href='/admin/users')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-user')
-                | Quản lý User
-            li
-              a(href='/admin/bookings')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-briefcase')
-                | Lịch sử đặt tour
-            li
-              a(href='/admin/reviews')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-star')
-                | Quản lý đánh giá
-                
-      .user-view__content
-        .user-view__form-container
-          h2.heading-secondary.ma-bt-md Chi tiết đặt tour
-          
-          .booking-detail
-            .booking-detail__section
-              h3.heading-tertiary.ma-bt-sm Thông tin tour
-              .booking-detail__item
-                .booking-detail__label Tour:
-                .booking-detail__value
-                  a(href=`/tour/${booking.tour.slug}`, target='_blank')= booking.tour.name
-              
-              if booking.tour.startDates && booking.tour.startDates.length > 0
-                .booking-detail__item
-                  .booking-detail__label Ngày khởi hành:
-                  .booking-detail__value= booking.startDate ? new Date(booking.startDate).toLocaleDateString('vi-VN') : new Date(booking.tour.startDates[0]).toLocaleDateString('vi-VN')
-              
-              .booking-detail__item
-                .booking-detail__label Thời gian:
-                .booking-detail__value= booking.tour.duration ? `${booking.tour.duration} ngày` : 'Chưa xác định'
-              
-              .booking-detail__item
-                .booking-detail__label Số lượng người:
-                .booking-detail__value= `${booking.participants || 1} người`
-              
-              .booking-detail__item
-                .booking-detail__label Mã đặt tour:
-                .booking-detail__value= `#${booking.id.slice(-8).toUpperCase()}`
-            
-            .booking-detail__section
-              h3.heading-tertiary.ma-bt-sm Thông tin người đặt
-              .booking-detail__user
-                img.booking-detail__user-img(src=`/img/users/${booking.user.photo}`, alt=`${booking.user.name}`)
-                .booking-detail__user-info
-                  .booking-detail__item
-                    .booking-detail__label Tên:
-                    .booking-detail__value= booking.user.name
-                  
-                  .booking-detail__item
-                    .booking-detail__label Email:
-                    .booking-detail__value= booking.user.email
-                  
-                  .booking-detail__item
-                    .booking-detail__label Vai trò:
-                    .booking-detail__value
-                      span(class=`user-badge user-badge--${booking.user.role}`)= booking.user.role
-            
-            .booking-detail__section
-              h3.heading-tertiary.ma-bt-sm Thông tin thanh toán
-              .booking-detail__item
-                .booking-detail__label Giá/người:
-                .booking-detail__value= `${(booking.price / (booking.participants || 1)).toLocaleString('vi-VN')} VND`
-              
-              .booking-detail__item
-                .booking-detail__label Tổng tiền:
-                .booking-detail__value= `${booking.price.toLocaleString('vi-VN')} VND`
-              
-              .booking-detail__item
-                .booking-detail__label Trạng thái:
-                .booking-detail__value
-                  span(class=`booking-badge booking-badge--${booking.paid ? 'paid' : 'unpaid'}`)= booking.paid ? 'Đã thanh toán' : 'Chưa thanh toán'
-              
-              .booking-detail__item
-                .booking-detail__label Ngày đặt:
-                .booking-detail__value= new Date(booking.createdAt).toLocaleString('vi-VN')
-            
-            .booking-detail__actions
-              if !booking.paid
-                button.btn.btn--small.btn--green.btn-mark-paid(data-booking-id=`${booking.id}`) Đánh dấu đã thanh toán
-              else
-                button.btn.btn--small.btn--orange.btn-mark-unpaid(data-booking-id=`${booking.id}`) Đánh dấu chưa thanh toán
-              a.btn.btn--small.btn--blue.btn-print-booking-invoice(href=`/booking-invoice/${booking.id}?print=true`, target='_blank', data-booking-id=`${booking.id}`) In hóa đơn
-              button.btn.btn--small.btn--red.btn-delete-booking(data-booking-id=`${booking.id}`) Xóa đặt tour
+block adminContent
+  .llk-admin-topbar
+    .llk-admin-topbar__left
+      h1.llk-admin-topbar__title Chi tiết đặt tour
+      p.llk-admin-topbar__subtitle Mã đặt tour: ##{booking.id.slice(-8).toUpperCase()}
+    .llk-admin-topbar__right
+      a.btn.btn--ghost(href='/admin/bookings') ← Quay lại danh sách
+
+  section.llk-admin-panel
+    .llk-admin-detail-grid
+      .llk-admin-detail-card
+        h3.heading-tertiary Thông tin tour
+        .booking-detail__item
+          span.booking-detail__label Tour:
+          span.booking-detail__value
+            a(href=`/tour/${booking.tour.slug}`, target='_blank')= booking.tour.name
+        if booking.tour.startDates && booking.tour.startDates.length > 0
+          .booking-detail__item
+            span.booking-detail__label Ngày khởi hành:
+            span.booking-detail__value= booking.startDate ? new Date(booking.startDate).toLocaleDateString('vi-VN') : new Date(booking.tour.startDates[0]).toLocaleDateString('vi-VN')
+        .booking-detail__item
+          span.booking-detail__label Thời gian:
+          span.booking-detail__value= booking.tour.duration ? `${booking.tour.duration} ngày` : 'Chưa xác định'
+        .booking-detail__item
+          span.booking-detail__label Số lượng:
+          span.booking-detail__value= `${booking.participants || 1} người`
+        if booking.services && booking.services.length
+          .booking-detail__item
+            span.booking-detail__label Dịch vụ thêm:
+            span.booking-detail__value
+              ul.booking-detail__services
+                each service in booking.services
+                  li #{service.name} x #{service.quantity} - #{(service.total || 0).toLocaleString('vi-VN')} ₫
+        if booking.discountAmount && booking.discountAmount > 0
+          .booking-detail__item
+            span.booking-detail__label Giảm giá:
+            span.booking-detail__value= `- ${(booking.discountAmount || 0).toLocaleString('vi-VN')} ₫`
+      .llk-admin-detail-card
+        h3.heading-tertiary Thông tin người đặt
+        .booking-detail__user
+          img.booking-detail__user-img(src=`/img/users/${booking.user.photo}`, alt=`${booking.user.name}`)
+          .booking-detail__user-info
+            .booking-detail__item
+              span.booking-detail__label Tên:
+              span.booking-detail__value= booking.user.name
+            .booking-detail__item
+              span.booking-detail__label Email:
+              span.booking-detail__value= booking.user.email
+            .booking-detail__item
+              span.booking-detail__label Vai trò:
+              span.booking-detail__value
+                span(class=`user-badge user-badge--${booking.user.role}`)= booking.user.role
+      .llk-admin-detail-card
+        h3.heading-tertiary Thông tin thanh toán
+        .booking-detail__item
+          span.booking-detail__label Giá/người:
+          span.booking-detail__value= `${(booking.price / (booking.participants || 1)).toLocaleString('vi-VN')} VND`
+        .booking-detail__item
+          span.booking-detail__label Tổng tiền:
+          span.booking-detail__value= `${booking.price.toLocaleString('vi-VN')} VND`
+        .booking-detail__item
+          span.booking-detail__label Trạng thái:
+          span.booking-detail__value
+            span(class=`booking-badge booking-badge--${booking.paid ? 'paid' : 'unpaid'}`)= booking.paid ? 'Đã thanh toán' : 'Chưa thanh toán'
+        .booking-detail__item
+          span.booking-detail__label Ngày đặt:
+          span.booking-detail__value= new Date(booking.createdAt).toLocaleString('vi-VN')
+
+    .booking-detail__actions
+      if !booking.paid
+        button.btn.btn--small.btn--green.btn-mark-paid(data-booking-id=`${booking.id}`) Đánh dấu đã thanh toán
+      else
+        button.btn.btn--small.btn--orange.btn-mark-unpaid(data-booking-id=`${booking.id}`) Đánh dấu chưa thanh toán
+      a.btn.btn--small.btn--blue.btn-print-booking-invoice(href=`/booking-invoice/${booking.id}?print=true`, target='_blank', data-booking-id=`${booking.id}`) In hóa đơn
+      button.btn.btn--small.btn--red.btn-delete-booking(data-booking-id=`${booking.id}`) Xóa đặt tour

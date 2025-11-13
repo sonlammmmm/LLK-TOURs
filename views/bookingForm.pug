@@ -91,43 +91,80 @@ block content
 
           // CỘT PHẢI: THANH TOÁN
           .booking-right-col
+            
+
             .booking-payment-card
+              - var serviceStep = services && services.length ? 4 : 3;
               h3.booking-payment-title Chi tiết thanh toán
-              
               .booking-payment-row
                 .booking-payment-label Giá tour:
                 .booking-payment-value#price-per-person= `${tour.price.toLocaleString('vi-VN')} ₫`
-              
               .booking-payment-row
                 .booking-payment-label Số người:
                 .booking-payment-value#participants-display 1
-              
+              if services && services.length
+                .booking-section.booking-services
+                  label.booking-section-label
+                    span.booking-step-number 3
+                    span Chọn dịch vụ thêm:
+                  .services-list
+                    each service in services
+                      .service-item
+                        label.service-card
+                          input.service-checkbox(type="checkbox", data-service-id=service.id, data-price=service.price, data-charge-type=service.chargeType, data-allow-multiple=service.allowMultiple, data-max-quantity=service.maxQuantity, data-min-quantity=service.minQuantity, data-name=service.name)
+                          .service-card__content
+                            .service-card__head
+                              .service-card__title= service.name
+                              span.service-card__price= `${service.price.toLocaleString('vi-VN')} ₫`
+                            if service.shortDescription
+                              .service-card__desc= service.shortDescription
+                            .service-card__meta
+                              span.badge.badge--neutral= service.chargeType === 'per-person' ? 'Tính theo người' : 'Tính theo lượt'
+                            if service.allowMultiple && service.chargeType === 'per-booking'
+                              .service-quantity
+                                label(for=`service-qty-${service.id}`) Số lượng
+                                input.service-quantity-input(type="number", id=`service-qty-${service.id}`, min=service.minQuantity || 1, max=service.maxQuantity || service.minQuantity || 1, value=service.minQuantity || 1, data-service-id=service.id, disabled)
+              .booking-payment-row
+                .booking-payment-label Tổng dịch vụ:
+                .booking-payment-value#services-total 0 ₫
+              .booking-payment-row
+                .booking-payment-label Giảm giá:
+                .booking-payment-value#discount-amount 0 ₫
               .booking-payment-row.total-row
                 .booking-payment-label Tổng cộng:
-                .booking-payment-value#total-price= `${tour.price.toLocaleString('vi-VN')} ₫`
-
+                .booking-payment-value#grand-total= `${tour.price.toLocaleString('vi-VN')} ₫`
               .booking-section
                 label.booking-section-label
-                  span.booking-step-number 3
-                  span Chọn hình thức thanh toán:
-                .payment-methods
-                  label.payment-option
-                    input(type="radio", name="paymentMethod", value="stripe", checked)
-                    span 💳 Thanh toán qua Stripe
-                  label.payment-option
-                    input(type="radio", name="paymentMethod", value="vnpay")
-                    span 🇻🇳 Thanh toán qua VNPAY
-                    
-              .booking-actions
-                a.btn.btn--gray(href=`/tour/${tour.slug}`) Quay lại
-                button.btn.btn--green#book-tour(
-                  type="button",
-                  data-tour-id=`${tour._id}`,
-                  data-max-size=`${tour.maxGroupSize}`,
-                  data-price=`${tour.price}`,
-                  disabled
-                ) Thanh toán ngay
+                  span.booking-step-number #{serviceStep}
+                  span Áp mã khuyến mãi:
+                .promotion-actions
+                  input#promotion-code(type="text", placeholder="Nhập mã khuyến mãi" autocomplete="off")
+                  button.btn.btn--small.btn--blue#apply-promo(type="button") Áp dụng
+                  button.btn.btn--small.btn--gray#remove-promo(type="button", disabled=true, hidden) Xóa mã
+                p.promo-message#promotion-message
+                if userPromotions && userPromotions.length
+                  .user-promotions-hint
+                    span Có #{userPromotions.length} mã cho bạn:
+                    .promo-chip-list
+                      each promo in userPromotions
+                        button(type="button", class="promo-chip", data-code=promo.code, data-name=promo.name, data-expiry=promo.expiresAt)= promo.code
+
+            .booking-actions
+              a.btn.btn--gray(href=`/tour/${tour.slug}`) Quay lại
+              button.btn.btn--green#book-tour(
+                type="button",
+                data-tour-id=`${tour._id}`,
+                data-max-size=`${tour.maxGroupSize}`,
+                data-price=`${tour.price}`,
+                disabled
+              ) Thanh toán ngay
 
 block scripts
+  -
+    const bookingDataPayload = JSON.stringify({
+      services: services || [],
+      userPromotions: userPromotions || []
+    });
+  script#booking-data(type='application/json')!= bookingDataPayload
   script(src="/js/bookingForm.js", type="module")
   script(src="/js/stripe.js", type="module")

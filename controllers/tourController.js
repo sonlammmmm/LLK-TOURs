@@ -288,7 +288,14 @@ exports.createTour = catchAsync(async (req, res, next) => {
 
   // GUIDES (nếu gửi nhiều ID)
   if (typeof req.body.guides === 'string') {
-    req.body.guides = [req.body.guides];
+    try {
+      const parsedGuides = JSON.parse(req.body.guides);
+      req.body.guides = Array.isArray(parsedGuides)
+        ? parsedGuides
+        : [parsedGuides];
+    } catch (err) {
+      req.body.guides = [req.body.guides];
+    }
   }
 
   // Đảm bảo maxGroupSize là số

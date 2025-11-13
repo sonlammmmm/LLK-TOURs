@@ -39,6 +39,8 @@ block content
                 span.invoice-value= booking.participants
         
         .invoice-table
+          - const baseTotal = booking.basePrice || booking.price;
+          - const baseUnit = (baseTotal || 0) / (booking.participants || 1);
           table
             thead
               tr
@@ -49,12 +51,27 @@ block content
             tbody
               tr
                 td= booking.tour.name
-                td= `${(booking.price / booking.participants).toLocaleString('vi-VN')} VND`
+                td= `${baseUnit.toLocaleString('vi-VN')} VND`
                 td= booking.participants
-                td= `${booking.price.toLocaleString('vi-VN')} VND`
+                td= `${baseTotal.toLocaleString('vi-VN')} VND`
+              if booking.services && booking.services.length
+                each service in booking.services
+                  tr
+                    td= service.name
+                    td= `${(service.price || 0).toLocaleString('vi-VN')} VND`
+                    td= service.quantity
+                    td= `${(service.total || 0).toLocaleString('vi-VN')} VND`
             tfoot
+              if booking.servicesTotal
+                tr
+                  td(colspan='3') Tổng dịch vụ
+                  td= `${booking.servicesTotal.toLocaleString('vi-VN')} VND`
+              if booking.discountAmount && booking.discountAmount > 0
+                tr
+                  td(colspan='3') Giảm giá
+                  td= `- ${(booking.discountAmount || 0).toLocaleString('vi-VN')} VND`
               tr
-                td(colspan='3') Tổng cộng
+                td(colspan='3') Tổng thanh toán
                 td= `${booking.price.toLocaleString('vi-VN')} VND`
         
         .invoice-footer

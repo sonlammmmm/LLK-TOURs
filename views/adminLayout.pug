@@ -1,0 +1,13 @@
+extends base
+
+block content
+  - var hideFooter = true
+  - var hideHeader = true
+  main.llk-admin-page
+    include _adminMenu
+    section.llk-admin-content
+      block adminContent
+
+block append scripts
+  script.
+    document.body.classList.add('llk-admin-body');

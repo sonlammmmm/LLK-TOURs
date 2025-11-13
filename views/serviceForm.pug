@@ -1,0 +1,67 @@
+extends adminLayout
+
+block adminContent
+  .llk-admin-topbar
+    .llk-admin-topbar__left
+      h1.llk-admin-topbar__title= service ? `Chỉnh sửa dịch vụ: ${service.name}` : 'Tạo dịch vụ mới'
+      p.llk-admin-topbar__subtitle Cấu hình dịch vụ bổ sung cho tour.
+    .llk-admin-topbar__right
+      a.btn.btn--ghost(href='/admin/services') ← Quay lại danh sách
+
+  section.llk-admin-panel
+    form.form.form-service
+      input(type='hidden', id='service-id', value=service ? service.id : '')
+      .llk-admin-form-grid
+        .llk-admin-form-card
+          h3.heading-tertiary Thông tin chính
+          .form__group
+            label.form__label(for='name') Tên dịch vụ
+            input#name.form__input(type='text', required, value=service ? service.name : '')
+          .form__group
+            label.form__label(for='code') Mã dịch vụ (tùy chọn)
+            input#code.form__input(type='text', value=service ? service.code : '')
+          .form__group
+            label.form__label(for='shortDescription') Mô tả ngắn
+            textarea#shortDescription.form__textarea(rows='2')= service ? service.shortDescription : ''
+          .form__group
+            label.form__label(for='description') Mô tả chi tiết
+            textarea#description.form__textarea(rows='4')= service ? service.description : ''
+        .llk-admin-form-card
+          h3.heading-tertiary Thiết lập hiển thị
+          .form__group
+            label.form__label(for='price') Giá (VND)
+            input#price.form__input(type='number', min='0', required, value=service ? service.price : '')
+          .form__group
+            label.form__label(for='chargeType') Loại tính phí
+            select#chargeType.form__select
+              option(value='per-person', selected=service && service.chargeType === 'per-person') Theo người
+              option(value='per-booking', selected=service && service.chargeType === 'per-booking') Theo lượt/booking
+          .form__group
+            label.form__checkbox
+              input#allowMultiple(type='checkbox', checked=service ? service.allowMultiple : false)
+              span Cho phép chọn nhiều lần (áp dụng cho dịch vụ theo lượt)
+          .form__group.form__group--columns
+            .form__column
+              label.form__label(for='minQuantity') Số lượng tối thiểu
+              input#minQuantity.form__input(type='number', min='1', value=service ? service.minQuantity : 1)
+            .form__column
+              label.form__label(for='maxQuantity') Số lượng tối đa
+              input#maxQuantity.form__input(type='number', min='1', value=service ? service.maxQuantity : 1)
+          .form__group
+            label.form__label(for='visibility') Hiển thị
+            select#visibility.form__select
+              option(value='public', selected=!service || service.visibility === 'public') Công khai
+              option(value='private', selected=service && service.visibility === 'private') Nội bộ
+          .form__group
+            label.form__label(for='status') Trạng thái
+            select#status.form__select
+              option(value='active', selected=!service || service.status === 'active') Đang hiển thị
+              option(value='inactive', selected=service && service.status === 'inactive') Đã ẩn
+          .form__group
+            label.form__label(for='displayOrder') Thứ tự hiển thị
+            input#displayOrder.form__input(type='number', value=service ? service.displayOrder : 0)
+      .form__group.right
+        button.btn.btn--green.btn-save-service(type='submit')= service ? 'Cập nhật dịch vụ' : 'Tạo dịch vụ'
+
+block append scripts
+  script(src='/js/serviceManagement.js', type='module')

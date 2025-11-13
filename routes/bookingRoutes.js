@@ -1,7 +1,6 @@
 const express = require('express');
 const bookingController = require('../controllers/bookingController');
 const authController = require('../controllers/authController');
-const vnpayController = require('../controllers/vnpayController');
 
 const router = express.Router();
 
@@ -15,23 +14,12 @@ router.post(
 router.get('/by-session/:sid', bookingController.getByStripeSession);
 
 // === STRIPE ===
-router.get(
+router.post(
   '/checkout-session/:tourId',
   authController.protect,
   bookingController.checkBookingExists,
   bookingController.getCheckoutSession
 );
-
-// === VNPAY ===
-router.get(
-  '/create-vnpay-url',
-  bookingController.checkBookingExists,
-  vnpayController.createPaymentUrl
-);
-
-router.get('/vnpay-return', vnpayController.vnpayReturn);
-
-router.get('/vnpay-ipn', vnpayController.vnpayIpn);
 
 router.use(authController.protect);
 

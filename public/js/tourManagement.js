@@ -116,8 +116,62 @@ export const handleTourForm = () => {
 
   const guidesContainer = document.querySelector('.guides-container');
   const btnAddGuide = document.querySelector('.btn-add-guide');
+  const maxGroupSizeInput = document.getElementById('maxGroupSize');
 
   const saveBtn = document.querySelector('.btn-save-tour');
+  const stepperButtons = form.querySelectorAll('.tour-form__stepper-button');
+  const stepSections = form.querySelectorAll('.tour-form__step');
+  let currentStep = 1;
+  const quickStartDateInput = document.getElementById('quick-start-date');
+  const quickStartSlotsInput = document.getElementById('quick-start-slots');
+
+  const goToStep = (step) => {
+    const target = Math.min(Math.max(1, Number(step)), stepSections.length);
+    currentStep = target;
+    stepSections.forEach((section) => {
+      const sectionStep = Number(section.dataset.step);
+      section.classList.toggle('is-active', sectionStep === currentStep);
+    });
+    stepperButtons.forEach((btn) => {
+      const btnStep = Number(btn.dataset.step);
+      btn.classList.toggle('is-active', btnStep === currentStep);
+    });
+  };
+
+  if (stepSections.length && stepperButtons.length) {
+    goToStep(1);
+    stepperButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.step) goToStep(Number(btn.dataset.step));
+      });
+    });
+  }
+
+  form.addEventListener('click', (e) => {
+    const navBtn = e.target.closest('[data-step-action]');
+    if (!navBtn) return;
+    const targetStep = Number(navBtn.dataset.stepTarget);
+    if (!Number.isNaN(targetStep)) {
+      goToStep(targetStep);
+    }
+  });
+
+  const syncEmptyStartSlots = () => {
+    if (!startDatesContainer || !maxGroupSizeInput) return;
+    const fallback = maxGroupSizeInput.value;
+    if (!fallback) return;
+    startDatesContainer
+      .querySelectorAll('.start-date-slots')
+      .forEach((input) => {
+        if (!input.value) input.value = fallback;
+      });
+  };
+
+  maxGroupSizeInput?.addEventListener('input', () => {
+    syncEmptyStartSlots();
+  });
+
+  syncEmptyStartSlots();
 
   /* ----- Thêm/Xoá địa điểm ----- */
   if (btnAddLocation && locationsContainer) {
@@ -167,9 +221,31 @@ export const handleTourForm = () => {
             <label class="form__label">Ngày khởi hành</label>
             <input class="start-date form__input" type="date" required>
           </div>
+          <div class="form__group">
+            <label class="form__label">Slot tối đa</label>
+            <input class="start-date-slots form__input" type="number" min="1" placeholder="Tối đa">
+          </div>
         </div>
       `);
-      startDatesContainer.insertBefore(node, btnAddStartDate);
+
+      const dateField = node.querySelector('.start-date');
+      if (quickStartDateInput && quickStartDateInput.value) {
+        dateField.value = quickStartDateInput.value;
+        quickStartDateInput.value = '';
+      }
+
+      const slotsField = node.querySelector('.start-date-slots');
+      const quickSlotsValue = quickStartSlotsInput?.value;
+      const fallbackSlots =
+        quickSlotsValue || maxGroupSizeInput?.value || '';
+      if (fallbackSlots) {
+        slotsField.value = fallbackSlots;
+      }
+      if (quickSlotsValue && quickStartSlotsInput) {
+        quickStartSlotsInput.value = '';
+      }
+
+      startDatesContainer.appendChild(node);
     });
 
     startDatesContainer.addEventListener('click', (e) => {
@@ -229,6 +305,11 @@ export const handleTourForm = () => {
       const priceDiscount = getVal('#priceDiscount');
       const summary = getVal('#summary');
       const description = getVal('#description');
+      const parsedMaxGroupSize = Number(maxGroupSize);
+      const fallbackAvailableSlots =
+        !Number.isNaN(parsedMaxGroupSize) && parsedMaxGroupSize > 0
+          ? parsedMaxGroupSize
+          : 0;
 
       if (duration) fd.set('duration', duration);
       if (maxGroupSize) fd.set('maxGroupSize', maxGroupSize);
@@ -309,8 +390,16 @@ export const handleTourForm = () => {
         nodes.forEach((item) => {
           const dateVal = item.querySelector('.start-date')?.value;
           if (!dateVal) return;
-          startDatesPayload.push({ date: new Date(dateVal).toISOString() });
-          // KHÔNG set availableSlots ở client → backend merge/giữ nguyên
+          const payload = { date: new Date(dateVal).toISOString() };
+          const slotsValue = Number(
+            item.querySelector('.start-date-slots')?.value
+          );
+          if (!Number.isNaN(slotsValue) && slotsValue > 0) {
+            payload.availableSlots = slotsValue;
+          } else if (fallbackAvailableSlots > 0) {
+            payload.availableSlots = fallbackAvailableSlots;
+          }
+          startDatesPayload.push(payload);
         });
       }
       if (startDatesPayload.length) {
@@ -358,6 +447,57 @@ export const handleDeleteTour = () => {
 
       if (confirm('Bạn có chắc chắn muốn xóa tour này? Hành động này không thể hoàn tác.')) {
         await deleteTour(tourId);
+      }
+    });
+  });
+};
+
+export const initTourAdminInteractions = () => {
+  const quickForms = document.querySelectorAll('.llk-admin-tour-card__quick-start');
+  if (!quickForms.length) return;
+
+  quickForms.forEach((form) => {
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const dateInput = form.querySelector('input[type="date"]');
+      const slotInput = form.querySelector('input[type="number"]');
+      const submitBtn = form.querySelector('button[type="submit"]');
+
+      const tourId = form.dataset.tourId;
+      const maxSize = Number(form.dataset.maxSize) || 0;
+      const dateValue = dateInput?.value;
+      const slotsValue = Number(slotInput?.value) || maxSize;
+
+      if (!dateValue) {
+        showAlert('error', 'Vui lòng chọn ngày khởi hành');
+        return;
+      }
+
+      try {
+        if (submitBtn) submitBtn.disabled = true;
+        await axios({
+          method: 'PATCH',
+          url: `/api/v1/tours/${tourId}`,
+          data: {
+            startDates: JSON.stringify([
+              {
+                date: new Date(dateValue).toISOString(),
+                availableSlots: slotsValue
+              }
+            ]),
+            maxGroupSize: maxSize
+          }
+        });
+        showAlert('success', 'Đã thêm ngày khởi hành mới');
+        window.setTimeout(() => window.location.reload(), 1200);
+      } catch (err) {
+        console.error('Error adding quick start date:', err);
+        showAlert(
+          'error',
+          err.response ? err.response.data.message : 'Không thể thêm ngày khởi hành'
+        );
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
       }
     });
   });

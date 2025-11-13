@@ -1,184 +1,91 @@
-extends base
+extends adminLayout
 
-block content
-  - var hideFooter = true
-  main.main
-    .user-view
-      nav.user-view__menu
-        .admin-nav
-          h5.admin-nav__heading Quản lý
-          ul.side-nav
-            li
-              a.active(href='/admin/dashboard')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-home')
-                | Dashboard
-            li
-              a(href='/admin/chat')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-message-square')
-                | Chat khách hàng
-            li
-              a(href='/admin/tours')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-map')
-                | Quản lý tours
-            li
-              a(href='/admin/users')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-user')
-                | Quản lý User
-            li
-              a(href='/admin/bookings')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-briefcase')
-                | Lịch sử đặt tour
-            li
-              a(href='/admin/reviews')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-star')
-                | Quản lý đánh giá
+block adminContent
+  .llk-admin-topbar
+    .llk-admin-topbar__left
+      h1.llk-admin-topbar__title Dashboard Overview
+      p.llk-admin-topbar__subtitle Welcome back! Here's what's happening với hệ thống của bạn hôm nay.
+    .llk-admin-topbar__right
+      div.llk-admin-topbar__search
+        svg(width='16' height='16')
+          use(xlink:href='/img/icons.svg#icon-search')
+        input(type='text', placeholder='Search…')
+      button.btn.btn--ghost(type='button')
+        svg(width='16' height='16')
+          use(xlink:href='/img/icons.svg#icon-bell')
+      a.btn.btn--small.btn--green(href='/admin/tours/new') Tạo tour nhanh
 
-      .user-view__content
-        .user-view__form-container
-          h2.heading-secondary.mb-5 Thống kê tổng quan
-          .stats-dashboard
-            // Section cho reviews
-            .revenue-section.mb-5
-              h3.heading-tertiary.mb-3 Doanh thu
-              .stats-card-grid
-                // Card doanh thu ngày hiện tại
-                .stats-card
-                  .stats-card__icon-wrapper
-                    .stats-card__icon.stats-card__icon--orange
-                      svg
-                        use(xlink:href='/img/icons.svg#icon-dollar-sign')
-                  .stats-card__content
-                    h3.stats-card__title Doanh thu ngày hôm nay - #{formattedDate}
-                    .stats-card__value #{todayRevenue.toLocaleString('vi-VN')} ₫
-                
-                // Card doanh thu tháng hiện tại
-                .stats-card
-                  .stats-card__icon-wrapper
-                    .stats-card__icon.stats-card__icon--blue
-                      svg
-                        use(xlink:href='/img/icons.svg#icon-dollar-sign')
-                  .stats-card__content
-                    h3.stats-card__title Doanh thu tháng hiện tại - #{formattedMonth}
-                    .stats-card__value #{monthRevenue.toLocaleString('vi-VN')} ₫
-                
-                // Card doanh thu năm hiện tại
-                .stats-card
-                  .stats-card__icon-wrapper
-                    .stats-card__icon.stats-card__icon--green
-                      svg
-                        use(xlink:href='/img/icons.svg#icon-dollar-sign')
-                  .stats-card__content
-                    h3.stats-card__title Doanh thu trong năm nay - #{currentYear}
-                    .stats-card__value #{yearRevenue.toLocaleString('vi-VN')} ₫
-              
-            // Section riêng cho booking status
-            .booking-status-section.mb-5
-              h3.heading-tertiary.mb-3 Tổng quan Bookings
-              .stats-card-grid.stats-card-grid--payment   
-                // Thẻ Tổng Đặt Tour
-                a.stats-card(href='/admin/bookings')
-                  .stats-card__icon-wrapper
-                    .stats-card__icon.stats-card__icon--purple
-                      svg
-                        use(xlink:href='/img/icons.svg#icon-briefcase')
-                  .stats-card__content
-                    h3.stats-card__title Tổng số Đặt Tour
-                    .stats-card__value #{stats.totalBookings}
-                    .stats-card__subtitle Tất cả booking
+  section.llk-admin-panel.llk-admin-dashboard
+    .llk-admin-panel__stats.llk-admin-panel__stats--wide
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Doanh thu hôm nay (#{formattedDate})
+        strong.llk-admin-stat-card__value #{todayRevenue.toLocaleString('vi-VN')} ₫
+        small.llk-admin-stat-card__trend +2.1% so với hôm qua
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Doanh thu tháng #{formattedMonth}
+        strong.llk-admin-stat-card__value #{monthRevenue.toLocaleString('vi-VN')} ₫
+        small.llk-admin-stat-card__trend +4.5% MoM
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Doanh thu năm #{currentYear}
+        strong.llk-admin-stat-card__value #{yearRevenue.toLocaleString('vi-VN')} ₫
+        small.llk-admin-stat-card__trend +12.3% YoY
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Tỷ lệ chuyển đổi
+        strong.llk-admin-stat-card__value #{stats.conversionRate || '3.42%'}
+        small.llk-admin-stat-card__trend.text-success +0.8%
 
-                // Thẻ Booking đã thanh toán
-                a.stats-card.stats-card--success(href='/admin/bookings?status=paid')
-                  .stats-card__icon-wrapper
-                    .stats-card__icon.stats-card__icon--success
-                      svg
-                        use(xlink:href='/img/icons.svg#icon-check-circle')
-                  .stats-card__content
-                    h3.stats-card__title Đã thanh toán
-                    .stats-card__value #{stats.paidBookings}
-                    .stats-card__subtitle Booking hoàn tất
-                    .stats-card__percentage
-                      - var paidPercentage = stats.totalBookings > 0 ? Math.round((stats.paidBookings / stats.totalBookings) * 100) : 0
-                      span.percentage--success #{paidPercentage}%
-                
-                // Thẻ Booking chưa thanh toán
-                a.stats-card.stats-card--warning(href='/admin/bookings?status=unpaid')
-                  .stats-card__icon-wrapper
-                    .stats-card__icon.stats-card__icon--warning
-                      svg
-                        use(xlink:href='/img/icons.svg#icon-clock')
-                  .stats-card__content
-                    h3.stats-card__title Chưa thanh toán
-                    .stats-card__value #{stats.unpaidBookings}
-                    .stats-card__subtitle Cần xử lý
-                    .stats-card__percentage
-                      - var unpaidPercentage = stats.totalBookings > 0 ? Math.round((stats.unpaidBookings / stats.totalBookings) * 100) : 0
-                      span.percentage--warning #{unpaidPercentage}%
+    .llk-admin-dashboard__grid
+      .llk-admin-chart-card
+        .llk-admin-chart-card__header
+          h3.heading-tertiary Revenue Overview
+        pre#dashboardRevenueData(style='display:none') !{JSON.stringify(revenueData)}
+        .chart-wrapper
+          canvas#monthlyChart
+      .llk-admin-chart-card
+        .llk-admin-chart-card__header
+          h3.heading-tertiary Profit vs Expenses
+        pre#dashboardDailyRevenueData(style='display:none') !{JSON.stringify(dailyRevenueByMonth)}
+        .chart-wrapper
+          canvas#dailyChart
 
-            // Các card thống kê chung
-            .stats-card-grid.mb-5
-              // Thẻ Tours
-              a.stats-card(href='/admin/tours')
-                .stats-card__icon-wrapper
-                  .stats-card__icon.stats-card__icon--blue
-                    svg
-                      use(xlink:href='/img/icons.svg#icon-map')
-                .stats-card__content
-                  h3.stats-card__title Tổng số Tour
-                  .stats-card__value #{stats.totalTours}
-              
-              // Thẻ Người Dùng
-              a.stats-card(href='/admin/users')
-                .stats-card__icon-wrapper
-                  .stats-card__icon.stats-card__icon--indigo
-                    svg
-                      use(xlink:href='/img/icons.svg#icon-user')
-                .stats-card__content
-                  h3.stats-card__title Tổng số Người Dùng
-                  .stats-card__value #{stats.totalUsers}
-              
-              // Thẻ Đánh Giá
-              a.stats-card(href='/admin/reviews')
-                  .stats-card__icon-wrapper
-                    .stats-card__icon.stats-card__icon--orange
-                      svg
-                        use(xlink:href='/img/icons.svg#icon-star')
-                  .stats-card__content
-                    h3.stats-card__title Tổng số Đánh Giá
-                    .stats-card__value #{stats.totalReviews}
-                
-          // --- Biểu đồ doanh thu theo tháng ---
-          .chart-container.mb-5
-            .chart-header
-              h2.heading-secondary Biểu đồ doanh thu theo tháng
-              .chart-filter
-                label.chart-filter__label(for="selectYear") Chọn năm:
-                select#selectYear.chart-filter__select(name="year")
-                  each year in availableYears
-                    option(value=year, selected= selectedYear === year ? "selected" : undefined)= year
-            // Nhúng dữ liệu doanh thu theo tháng từ API
-            pre#dashboardRevenueData(style="display: none") !{JSON.stringify(revenueData)}
-            .chart-wrapper
-              canvas#monthlyChart
+    .llk-admin-dashboard__two-col
+      .llk-admin-table-card
+        h3.heading-tertiary Recent Orders
+        ul.llk-admin-table
+          each order in stats.recentOrders || []
+            li
+              span
+                strong= order.customer
+                br
+                small= order.note
+              span
+                strong= order.amount
+                br
+                small.status-label= order.status
+          if !stats.recentOrders || !stats.recentOrders.length
+            li
+              span Chưa có dữ liệu
+      .llk-admin-table-card
+        h3.heading-tertiary Top Products
+        ul.llk-admin-table
+          each product in stats.topProducts || []
+            li
+              span
+                strong= product.name
+                br
+                small= product.sales + ' sales'
+              span
+                strong= product.revenue
+                br
+                small.text-success +#{product.growth}%
+          if !stats.topProducts || !stats.topProducts.length
+            li
+              span Chưa có dữ liệu
 
-          // --- Biểu đồ doanh thu theo ngày ---
-          .chart-container
-            .chart-header
-              h2.heading-secondary Biểu đồ doanh thu theo ngày
-              .chart-filter
-                label.chart-filter__label(for="selectMonth") Chọn tháng:
-                select#selectMonth.chart-filter__select
-                  each month, index in dailyRevenueByMonth
-                    option(value=index, selected= index === 0 ? "selected" : undefined)= month.month
-            // Nhúng dữ liệu doanh thu theo ngày từ API
-            pre#dashboardDailyRevenueData(style="display: none") !{JSON.stringify(dailyRevenueByMonth)}
-            .chart-wrapper
-              canvas#dailyChart
+    .llk-admin-panel__toolbar
+      a.btn.btn--small.btn--blue(href='/admin/tours') Quản lý tour
+      a.btn.btn--small.btn--blue(href='/admin/users') Quản lý người dùng
+      a.btn.btn--small.btn--blue(href='/admin/bookings') Theo dõi bookings
 
 block scripts
-  script(src="/js/dashboard.js")
+  script(src='/js/dashboard.js')

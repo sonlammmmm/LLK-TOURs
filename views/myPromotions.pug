@@ -1,0 +1,31 @@
+extends base
+
+block content
+  main.main
+    section.section-promo
+      .row
+        .col-12
+          h2.heading-secondary Mã khuyến mãi của tôi
+          if !promotions || promotions.length === 0
+            p.no-data Bạn chưa có mã khuyến mãi nào được gắn riêng.
+          else
+            .promo-cards
+              each assignment in promotions
+                .promo-card
+                  .promo-card__header
+                    span.promo-card__code= assignment.code || assignment.promotion.code
+                    span.badge.badge--neutral= assignment.promotion.discountType === 'percent' ? `${assignment.promotion.discountValue}%` : `${assignment.promotion.discountValue.toLocaleString('vi-VN')} ₫`
+                  p.promo-card__title= assignment.promotion.name
+                  if assignment.promotion.description
+                    p.promo-card__desc= assignment.promotion.description
+                  ul.promo-card__meta
+                    li
+                      strong Hạn dùng:
+                      |  #{assignment.expiresAt ? new Date(assignment.expiresAt).toLocaleDateString('vi-VN') : (assignment.promotion.endDate ? new Date(assignment.promotion.endDate).toLocaleDateString('vi-VN') : 'Không giới hạn')}
+                    li
+                      strong Lượt dùng:
+                      |  #{assignment.usageCount || 0}/#{assignment.usageLimit || assignment.promotion.perUserLimit || 1}
+                  button.btn.btn--small.btn--blue.btn-copy-code(data-code=assignment.code || assignment.promotion.code) Sao chép mã
+
+block scripts
+  script(src='/js/myPromotions.js', type='module')

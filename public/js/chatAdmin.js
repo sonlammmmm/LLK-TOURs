@@ -16,6 +16,9 @@ let hasMore = true;
 const LS_KEY = 'LLK_ADMINCHAT_CURRENT_USER';
 const HISTORY_KEY = 'LLK_ADMINCHAT_HISTORY';
 
+const getAvatarSrc = (user) =>
+  user && user.photo ? `/img/users/${user.photo}` : '/img/users/default.jpg';
+
 // Maps lưu trạng thái
 const usersMap = new Map();
 const unreadCount = new Map();
@@ -92,13 +95,14 @@ function appendUserToList(user, prepend = false) {
     return;
   }
 
+  const avatar = getAvatarSrc(user);
   const li = document.createElement('li');
   li.className = 'llk-user-item';
   li.dataset.userid = user._id;
   li.dataset.username = user.name;
   li.innerHTML = `
     <div class="llk-user-info">
-      <i class="fa-solid fa-user-circle"></i>
+      <img class="llk-user-avatar" src="${avatar}" alt="${user.name}">
       <div class="llk-user-texts">
         <span class="llk-user-name">${user.name}</span>
         <small class="llk-user-last">${user.lastMessage || 'Tin nhắn mới'}</small>

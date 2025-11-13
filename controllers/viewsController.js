@@ -1,6 +1,9 @@
 const Tour = require('../models/tourModel');
 const User = require('../models/userModel');
 const Booking = require('../models/bookingModel');
+const Service = require('../models/serviceModel');
+const Promotion = require('../models/promotionModel');
+const UserPromotion = require('../models/userPromotionModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const Review = require('../models/reviewModel');
@@ -163,11 +166,93 @@ exports.updateUserData = catchAsync(async (req, res, next) => {
 });
 
 exports.getManageTours = catchAsync(async (req, res, next) => {
-  const tours = await Tour.find();
+  const toursRaw = await Tour.find();
+  const now = new Date();
+
+  const bookingStats = await Booking.aggregate([
+    {
+      $match: {
+        startDate: { $gt: now }
+      }
+    },
+    {
+      $group: {
+        _id: {
+          tour: '$tour',
+          startDate: {
+            $dateToString: { format: '%Y-%m-%d', date: '$startDate' }
+          }
+        },
+        bookedSeats: { $sum: '$participants' }
+      }
+    }
+  ]);
+
+  const bookingMap = bookingStats.reduce((acc, stat) => {
+    const tourId = stat._id.tour.toString();
+    const dateKey = stat._id.startDate;
+    if (!acc[tourId]) acc[tourId] = {};
+    acc[tourId][dateKey] = stat.bookedSeats;
+    return acc;
+  }, {});
+
+  const tours = toursRaw.map(tour => {
+    const tourObj = tour.toObject();
+    const tourId = tourObj._id.toString();
+    const activeStartDates =
+      (tourObj.startDates || [])
+        .filter(
+          dateObj =>
+            dateObj &&
+            dateObj.date &&
+            new Date(dateObj.date).toString() !== 'Invalid Date' &&
+            new Date(dateObj.date) > now
+        )
+        .map(dateObj => {
+          const dateValue = new Date(dateObj.date);
+          const dateKey = dateValue.toISOString().split('T')[0];
+          const availableSlots =
+            typeof dateObj.availableSlots === 'number'
+              ? dateObj.availableSlots
+              : tourObj.maxGroupSize;
+          const bookedSeats =
+            bookingMap[tourId] && bookingMap[tourId][dateKey] != null
+              ? bookingMap[tourId][dateKey]
+              : Math.max(0, tourObj.maxGroupSize - availableSlots);
+
+          return {
+            date: dateValue,
+            dateFormatted: dateValue.toLocaleDateString('vi-VN', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            }),
+            availableSlots,
+            bookedSeats,
+            capacity: tourObj.maxGroupSize
+          };
+        })
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    tourObj.activeStartDates = activeStartDates;
+    return tourObj;
+  });
+
+  const totalUpcomingDepartures = tours.reduce(
+    (sum, tour) => sum + tour.activeStartDates.length,
+    0
+  );
+  const totalFutureBookings = bookingStats.reduce(
+    (sum, stat) => sum + (stat.bookedSeats || 0),
+    0
+  );
 
   res.status(200).render('manageTours', {
     title: 'Quản lý tour',
-    tours
+    tours,
+    adminMenuActive: 'tours',
+    totalUpcomingDepartures,
+    totalFutureBookings
   });
 });
 
@@ -178,6 +263,7 @@ exports.getNewTourForm = catchAsync(async (req, res, next) => {
 
   res.status(200).render('tourForm', {
     title: 'Tạo tour mới',
+    adminMenuActive: 'tours',
     guides
   });
 });
@@ -196,7 +282,8 @@ exports.getEditTourForm = catchAsync(async (req, res, next) => {
   res.status(200).render('tourForm', {
     title: `Chỉnh sửa tour: ${tour.name}`,
     tour,
-    guides
+    guides,
+    adminMenuActive: 'tours'
   });
 });
 
@@ -207,14 +294,16 @@ exports.getManageUsers = catchAsync(async (req, res, next) => {
 
   res.status(200).render('manageUsers', {
     title: 'Quản lý Người dùng',
-    users
+    users,
+    adminMenuActive: 'users'
   });
 });
 
 exports.getNewUserForm = catchAsync(async (req, res, next) => {
   res.status(200).render('userForm', {
     title: 'Tạo người dùng mới',
-    user: null
+    user: null,
+    adminMenuActive: 'users'
   });
 });
 
@@ -227,7 +316,8 @@ exports.getEditUserForm = catchAsync(async (req, res, next) => {
 
   res.status(200).render('userForm', {
     title: `Chỉnh sửa người dùng: ${user.name}`,
-    user
+    user,
+    adminMenuActive: 'users'
   });
 });
 
@@ -236,10 +326,109 @@ exports.getManageBookings = catchAsync(async (req, res, next) => {
 
   res.status(200).render('manageBookings', {
     title: 'Lịch sử đặt tour',
-    bookings
+    bookings,
+    adminMenuActive: 'bookings'
   });
 });
 
+exports.getManageServices = catchAsync(async (req, res, next) => {
+  const services = await Service.find().sort({
+    status: 1,
+    displayOrder: 1,
+    name: 1
+  });
+
+  res.status(200).render('manageServices', {
+    title: 'Quản lý dịch vụ',
+    services,
+    adminMenuActive: 'services'
+  });
+});
+
+exports.getServiceForm = catchAsync(async (req, res, next) => {
+  let service = null;
+
+  if (req.params.id) {
+    service = await Service.findById(req.params.id);
+    if (!service) {
+      return next(new AppError('Không tìm thấy dịch vụ', 404));
+    }
+  }
+
+  res.status(200).render('serviceForm', {
+    title: service ? `Chỉnh sửa dịch vụ: ${service.name}` : 'Tạo dịch vụ mới',
+    service,
+    adminMenuActive: 'services'
+  });
+});
+
+exports.getManagePromotions = catchAsync(async (req, res, next) => {
+  const promotions = await Promotion.find().sort('-createdAt');
+
+  res.status(200).render('managePromotions', {
+    title: 'Quản lý khuyến mãi',
+    promotions,
+    adminMenuActive: 'promotions'
+  });
+});
+
+exports.getPromotionForm = catchAsync(async (req, res, next) => {
+  let promotion = null;
+
+  if (req.params.id) {
+    promotion = await Promotion.findById(req.params.id);
+    if (!promotion) {
+      return next(new AppError('Không tìm thấy khuyến mãi', 404));
+    }
+  }
+
+  res.status(200).render('promotionForm', {
+    title: promotion
+      ? `Chỉnh sửa khuyến mãi: ${promotion.name}`
+      : 'Tạo khuyến mãi mới',
+    promotion,
+    adminMenuActive: 'promotions'
+  });
+});
+
+exports.getPromotionAssignForm = catchAsync(async (req, res, next) => {
+  const promotion = await Promotion.findById(req.params.id);
+  if (!promotion) {
+    return next(new AppError('Không tìm thấy khuyến mãi', 404));
+  }
+
+  const users = await User.find()
+    .select('name email role')
+    .sort('name');
+
+  res.status(200).render('promotionAssignForm', {
+    title: `Gắn mã cho user - ${promotion.name}`,
+    promotion,
+    users,
+    adminMenuActive: 'promotions'
+  });
+});
+
+exports.getMyPromotionsView = catchAsync(async (req, res, next) => {
+  const now = new Date();
+  const assignments = await UserPromotion.find({
+    user: req.user.id,
+    status: { $in: ['assigned', 'active'] },
+    $or: [{ expiresAt: null }, { expiresAt: { $gte: now } }]
+  })
+    .populate({
+      path: 'promotion',
+      match: { status: { $nin: ['archived', 'inactive'] } }
+    })
+    .sort('-createdAt');
+
+  const promos = assignments.filter(item => item.promotion);
+
+  res.status(200).render('myPromotions', {
+    title: 'Mã khuyến mãi của tôi',
+    promotions: promos
+  });
+});
 exports.getBookingDetail = catchAsync(async (req, res, next) => {
   const booking = await Booking.findById(req.params.id);
 
@@ -249,7 +438,8 @@ exports.getBookingDetail = catchAsync(async (req, res, next) => {
 
   res.status(200).render('bookingDetail', {
     title: `Chi tiết đặt tour: ${booking.tour.name}`,
-    booking
+    booking,
+    adminMenuActive: 'bookings'
   });
 });
 
@@ -260,13 +450,50 @@ exports.getBookingForm = catchAsync(async (req, res, next) => {
     return next(new AppError('Không tìm thấy tour với ID này', 404));
   }
 
-  // Format ngày khởi hành với thông tin slot
   const startDatesWithSlots = formatStartDatesWithSlots(tour);
+
+  const services = await Service.find({
+    status: 'active',
+    visibility: 'public'
+  }).sort({ displayOrder: 1, name: 1 });
+
+  let userPromotions = [];
+  if (req.user) {
+    const now = new Date();
+    const assignments = await UserPromotion.find({
+      user: req.user.id,
+      status: { $in: ['assigned', 'active'] },
+      $or: [{ expiresAt: null }, { expiresAt: { $gte: now } }]
+    })
+      .populate({
+        path: 'promotion',
+        match: { status: { $nin: ['archived', 'inactive'] } }
+      })
+      .sort('-createdAt');
+
+    userPromotions = assignments
+      .filter(item => item.promotion)
+      .map(item => ({
+        id: item.id,
+        code: item.code || item.promotion.code,
+        name: item.promotion.name,
+        description: item.promotion.description,
+        discountType: item.promotion.discountType,
+        discountValue: item.promotion.discountValue,
+        maxDiscountAmount: item.promotion.maxDiscountAmount,
+        minOrderAmount: item.promotion.minOrderAmount,
+        expiresAt: item.expiresAt || item.promotion.endDate,
+        usageLimit: item.usageLimit,
+        usageCount: item.usageCount
+      }));
+  }
 
   res.status(200).render('bookingForm', {
     title: `Đặt tour: ${tour.name}`,
     tour,
-    startDatesWithSlots
+    startDatesWithSlots,
+    services,
+    userPromotions
   });
 });
 
@@ -306,7 +533,8 @@ exports.getManageReviews = catchAsync(async (req, res, next) => {
 
   res.status(200).render('manageReviews', {
     title: 'Quản lý đánh giá',
-    reviews
+    reviews,
+    adminMenuActive: 'reviews'
   });
 });
 
@@ -575,6 +803,7 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
     yearRevenue: yearRevenue.length > 0 ? yearRevenue[0].total : 0,
     formattedDate,
     formattedMonth,
-    currentYear: today.getFullYear()
+    currentYear: today.getFullYear(),
+    adminMenuActive: 'dashboard'
   });
 });

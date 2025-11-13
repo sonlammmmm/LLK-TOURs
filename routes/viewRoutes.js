@@ -25,6 +25,13 @@ router.get(
   messageController.getUserChatView
 );
 
+// Ẩn header/footer cho khối trang admin
+router.use('/admin', (req, res, next) => {
+  res.locals.hideHeader = true;
+  res.locals.hideFooter = true;
+  next();
+});
+
 // -------------------- TRANG ADMIN --------------------
 router.get(
   '/admin/dashboard',
@@ -124,6 +131,55 @@ router.get(
   viewsController.getBookingDetail
 );
 
+router.get(
+  '/admin/services',
+  authController.protect,
+  authController.restrictTo('admin'),
+  viewsController.getManageServices
+);
+
+router.get(
+  '/admin/services/new',
+  authController.protect,
+  authController.restrictTo('admin'),
+  viewsController.getServiceForm
+);
+
+router.get(
+  '/admin/services/:id/edit',
+  authController.protect,
+  authController.restrictTo('admin'),
+  viewsController.getServiceForm
+);
+
+router.get(
+  '/admin/promotions',
+  authController.protect,
+  authController.restrictTo('admin'),
+  viewsController.getManagePromotions
+);
+
+router.get(
+  '/admin/promotions/new',
+  authController.protect,
+  authController.restrictTo('admin'),
+  viewsController.getPromotionForm
+);
+
+router.get(
+  '/admin/promotions/:id/edit',
+  authController.protect,
+  authController.restrictTo('admin'),
+  viewsController.getPromotionForm
+);
+
+router.get(
+  '/admin/promotions/:id/assign',
+  authController.protect,
+  authController.restrictTo('admin'),
+  viewsController.getPromotionAssignForm
+);
+
 // -------------------- QUẢN LÝ REVIEW --------------------
 router.get(
   '/admin/reviews',
@@ -135,6 +191,11 @@ router.get(
 // -------------------- CÁ NHÂN --------------------
 router.get('/my-billing', authController.protect, viewsController.getMyBilling);
 router.get('/my-reviews', authController.protect, viewsController.getMyReviews);
+router.get(
+  '/my-promotions',
+  authController.protect,
+  viewsController.getMyPromotionsView
+);
 
 router.get(
   '/book-tour/:tourId',
