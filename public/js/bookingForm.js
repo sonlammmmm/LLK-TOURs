@@ -21,7 +21,54 @@ const readBookingData = () => {
 const bookingData = readBookingData();
 const availableServices = bookingData.services || [];
 
-const getServiceById = id => availableServices.find(s => s.id === id);
+const matchId = value => (value ? String(value) : '');
+const getServiceById = id =>
+  availableServices.find(
+    service =>
+      matchId(service.id) === matchId(id) ||
+      matchId(service._id) === matchId(id)
+  );
+
+const ensureServiceRecord = (serviceId, sourceEl) => {
+  let service = getServiceById(serviceId);
+  if (service) return service;
+
+  const fallbackEl =
+    sourceEl ||
+    document.querySelector(
+      `.service-checkbox[data-service-id="${matchId(serviceId)}"]`
+    );
+  if (!fallbackEl) return null;
+
+  const ds = fallbackEl.dataset || {};
+  service = {
+    id: matchId(serviceId),
+    price: Number(ds.price || 0) || 0,
+    chargeType: ds.chargeType || "per-person",
+    allowMultiple:
+      String(ds.allowMultiple || "").toLowerCase() === "true",
+    minQuantity: parseInt(ds.minQuantity || "1", 10) || 1,
+    maxQuantity:
+      parseInt(ds.maxQuantity || ds.minQuantity || "1", 10) || 1,
+    name: ds.name || "Dịch vụ bổ sung"
+  };
+  availableServices.push(service);
+  return service;
+};
+
+const formatSelectedDate = value => {
+  if (!value) return "";
+  try {
+    return new Date(value).toLocaleDateString("vi-VN", {
+      weekday: "long",
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+  } catch {
+    return "";
+  }
+};
 
 export const bookTour = async (
   tourId,
@@ -66,6 +113,9 @@ export const initBookingForm = () => {
   const applyPromoBtn = document.getElementById("apply-promo");
   const removePromoBtn = document.getElementById("remove-promo");
   const promotionMessage = document.getElementById("promotion-message");
+  const selectedDateLabel = document.getElementById("selected-date-label");
+  const selectedDateSlots = document.getElementById("selected-date-slots");
+  const participantsRemaining = document.getElementById("participants-remaining");
 
   if (
     !bookTourBtn ||
@@ -91,6 +141,32 @@ export const initBookingForm = () => {
     discountAmount: 0,
     promotionCode: null
   };
+
+  const setSelectedDateMeta = (value, slots) => {
+    if (selectedDateLabel) {
+      selectedDateLabel.textContent = value
+        ? formatSelectedDate(value)
+        : "Chưa chọn";
+    }
+    if (selectedDateSlots) {
+      if (typeof slots === "number" && !Number.isNaN(slots)) {
+        selectedDateSlots.textContent =
+          slots > 1 ? `${slots} chỗ còn trống` : "1 chỗ cuối";
+      } else {
+        selectedDateSlots.textContent = "Chưa xác định";
+      }
+    }
+  };
+
+  const updateParticipantMeta = () => {
+    if (participantsRemaining) {
+      const remaining = Math.max(maxSize - currentParticipants, 0);
+      participantsRemaining.textContent =
+        remaining === 0 ? "0 chỗ" : `${remaining} chỗ`;
+    }
+  };
+
+  setSelectedDateMeta(null);
 
   const getSelectedServicesPayload = () =>
     Array.from(state.selectedServices.values()).map(item => ({
@@ -124,7 +200,7 @@ export const initBookingForm = () => {
         service.chargeType === "per-person"
           ? currentParticipants
           : selection.quantity || 1;
-      servicesTotal += service.price * quantity;
+      servicesTotal += Number(service.price || 0) * quantity;
     });
 
     state.servicesTotal = servicesTotal;
@@ -138,6 +214,7 @@ export const initBookingForm = () => {
     grandTotalEl.textContent = formatCurrency(grandTotal);
   };
 
+
   const refreshPromotionIfNeeded = async () => {
     if (!state.promotionCode) {
       updateTotals();
@@ -146,14 +223,14 @@ export const initBookingForm = () => {
     try {
       await applyPromotion(state.promotionCode, { silent: true });
     } catch {
-      resetPromotion("Mã khuyến mãi đã được bỏ do thay đổi giỏ dịch vụ.");
+      resetPromotion('Mã khuyến mãi đã được gỡ do thay đổi giá dịch vụ.');
       updateTotals();
     }
   };
 
   const handleServiceSelection = checkbox => {
     const { serviceId } = checkbox.dataset;
-    const service = getServiceById(serviceId);
+    const service = ensureServiceRecord(serviceId, checkbox);
     if (!service) return;
 
     const quantityInput = document.querySelector(
@@ -162,11 +239,11 @@ export const initBookingForm = () => {
 
     if (checkbox.checked) {
       const quantity =
-        service.chargeType === "per-person"
+        service.chargeType === 'per-person'
           ? currentParticipants
           : service.allowMultiple && quantityInput
             ? Math.max(
-                parseInt(quantityInput.value || "1", 10) ||
+                parseInt(quantityInput.value || '1', 10) ||
                   service.minQuantity ||
                   1,
                 service.minQuantity || 1
@@ -187,13 +264,13 @@ export const initBookingForm = () => {
   };
 
   const handleQuantityChange = (input, serviceId) => {
-    const service = getServiceById(serviceId);
+    const service = ensureServiceRecord(serviceId);
     if (!service) return;
-    const min = parseInt(input.min || "1", 10) || 1;
+    const min = parseInt(input.min || '1', 10) || 1;
     const max =
-      parseInt(input.max || `${Number.MAX_SAFE_INTEGER}`, 10) ||
+      parseInt(input.max || String(Number.MAX_SAFE_INTEGER), 10) ||
       Number.MAX_SAFE_INTEGER;
-    let value = parseInt(input.value || "1", 10) || min;
+    let value = parseInt(input.value || '1', 10) || min;
     value = Math.min(Math.max(value, min), max);
     input.value = value;
     if (state.selectedServices.has(serviceId)) {
@@ -202,6 +279,7 @@ export const initBookingForm = () => {
       refreshPromotionIfNeeded();
     }
   };
+
 
   const applyPromotion = async (code, { silent } = {}) => {
     const trimmed = (code || "").trim().toUpperCase();
@@ -268,6 +346,11 @@ export const initBookingForm = () => {
         dateButtons.forEach(b => b.classList.remove("selected"));
         btn.classList.add("selected");
         selectedDate = btn.dataset.date;
+        const slots = parseInt(btn.dataset.slots || "0", 10);
+        setSelectedDateMeta(
+          selectedDate,
+          Number.isNaN(slots) ? undefined : slots
+        );
         bookTourBtn.disabled = false;
         showAlert("success", "Đã chọn ngày khởi hành");
       });
@@ -281,11 +364,12 @@ export const initBookingForm = () => {
     participantNumber.textContent = currentParticipants;
     participantsDisplay.textContent = currentParticipants;
     participantInput.value = currentParticipants;
+    updateParticipantMeta();
   };
 
   const updatePerPersonServices = () => {
     state.selectedServices.forEach(selection => {
-      const service = getServiceById(selection.serviceId);
+      const service = ensureServiceRecord(selection.serviceId);
       if (service && service.chargeType === "per-person") {
         state.selectedServices.set(selection.serviceId, {
           serviceId: selection.serviceId,

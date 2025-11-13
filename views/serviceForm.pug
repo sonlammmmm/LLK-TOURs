@@ -62,6 +62,3 @@ block adminContent
             input#displayOrder.form__input(type='number', value=service ? service.displayOrder : 0)
       .form__group.right
         button.btn.btn--green.btn-save-service(type='submit')= service ? 'Cập nhật dịch vụ' : 'Tạo dịch vụ'
-
-block append scripts
-  script(src='/js/serviceManagement.js', type='module')

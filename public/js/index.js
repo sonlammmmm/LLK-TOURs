@@ -22,6 +22,12 @@ import { initMyReviews } from "./myReviews"
 import { initFileInputs } from "./updateSettings"
 import { forgotPassword, resetPassword } from "./forgotPassword"
 import { displayMap } from './mapbox';
+import {
+  handlePromotionForm,
+  handlePromotionAssignForm,
+  initPromotionListActions,
+} from "./promotionManagement"
+import { handleServiceForm, initServiceListActions } from "./serviceManagement"
 
 // DOM ELEMENTS
 const loginForm = document.querySelector(".form--login")
@@ -39,6 +45,11 @@ const userManagementList = document.querySelector(".user-management__list")
 const bookingManagementList = document.querySelector(".booking-management__list")
 const forgotPasswordForm = document.querySelector(".form--forgot-password")
 const resetPasswordForm = document.querySelector(".form--reset-password")
+const promotionFormEl = document.querySelector(".form-promotion")
+const promotionAssignForm = document.querySelector(".form-assign-promotion")
+const promotionTable = document.querySelector(".promotion-table")
+const serviceFormEl = document.querySelector(".form-service")
+const serviceTable = document.querySelector(".service-table")
 
 // Khởi tạo hiển thị tên file sau khi chọn
 initFileInputs()
@@ -225,6 +236,28 @@ if (bookingManagementList) {
 if (document.querySelector(".booking-detail")) {
   handleDeleteBooking()
   handleUpdateBookingPaymentStatus()
+}
+
+// Promotion Management
+if (promotionFormEl) {
+  handlePromotionForm()
+}
+
+if (promotionAssignForm) {
+  handlePromotionAssignForm()
+}
+
+if (promotionTable) {
+  initPromotionListActions()
+}
+
+// Service Management
+if (serviceFormEl) {
+  handleServiceForm()
+}
+
+if (serviceTable) {
+  initServiceListActions()
 }
 
 // Initialize view toggle and search functionality

@@ -3,49 +3,45 @@ extends adminLayout
 block adminContent
   .llk-admin-topbar
     .llk-admin-topbar__left
-      h1.llk-admin-topbar__title Quản lý khuyến mãi
-      p.llk-admin-topbar__subtitle Theo dõi mã giảm giá và ưu đãi đang chạy.
+      h1.llk-admin-topbar__title Quan ly khuyen mai
+      p.llk-admin-topbar__subtitle Theo doi ma giam gia va uu dai dang chay.
     .llk-admin-topbar__right
-      a.btn.btn--small.btn--green(href='/admin/promotions/new') Tạo khuyến mãi mới
+      a.btn.btn--small.btn--green(href='/admin/promotions/new') Tao khuyen mai moi
 
   section.llk-admin-panel
     if !promotions || promotions.length === 0
-      p.llk-admin-empty Chưa có chương trình khuyến mãi nào.
+      p.llk-admin-empty Chua co chuong trinh khuyen mai nao.
     else
-      .promotion-table
-        table
-          thead
-            tr
-              th Tên / Mã
-              th Ưu đãi
-              th Hiệu lực
-              th Trạng thái
-              th Thao tác
-          tbody
-            each promo in promotions
-              tr
-                td
-                  strong= `${promo.name} (${promo.code})`
-                  if promo.description
-                    p.table-desc= promo.description
-                td
-                  if promo.discountType === 'percent'
-                    span= `${promo.discountValue}%`
-                  else
-                    span= `${promo.discountValue.toLocaleString('vi-VN')} ₫`
-                  if promo.maxDiscountAmount
-                    span.badge.badge--neutral= `Tối đa ${promo.maxDiscountAmount.toLocaleString('vi-VN')} ₫`
-                td
-                  span= promo.startDate ? new Date(promo.startDate).toLocaleDateString('vi-VN') : 'N/A'
-                  |  -
-                  span= promo.endDate ? new Date(promo.endDate).toLocaleDateString('vi-VN') : 'Không giới hạn'
-                td
-                  span(class=`badge ${promo.status === 'active' ? 'badge--green' : 'badge--gray'}`)= promo.status
-                td
-                  .table-actions
-                    a.btn.btn--small.btn--blue(href=`/admin/promotions/${promo.id}/edit`) Chỉnh sửa
-                    a.btn.btn--small.btn--orange(href=`/admin/promotions/${promo.id}/assign`) Gán mã
-                    button.btn.btn--small.btn--red.btn-delete-promotion(data-promo-id=`${promo.id}`) Xóa
+      .promo-card-grid
+        each promo in promotions
+          - const isActive = promo.status === 'active';
+          - const discountLabel = promo.discountType === 'percent' ? `${promo.discountValue}%` : `${promo.discountValue.toLocaleString('vi-VN')} VND`;
+          - const startLabel = promo.startDate ? new Date(promo.startDate).toLocaleDateString('vi-VN') : 'Khong xac dinh';
+          - const endLabel = promo.endDate ? new Date(promo.endDate).toLocaleDateString('vi-VN') : 'Khong gioi han';
+          article.promo-card
+            .promo-card__head
+              .promo-card__title
+                span.promo-card__code= promo.code
+                h3.promo-card__name= promo.name
+                if promo.description
+                  p.promo-card__desc= promo.description
+              span(class=`promo-card__badge ${isActive ? 'promo-card__badge--active' : 'promo-card__badge--inactive'}`)= promo.status
+            .promo-card__meta
+              p
+                strong Uu dai:
+                |  #{discountLabel}
+                if promo.maxDiscountAmount
+                  span.promo-card__chip= `Toi da ${promo.maxDiscountAmount.toLocaleString('vi-VN')} VND`
+              p
+                strong Hieu luc:
+                |  #{startLabel} - #{endLabel}
+              p
+                strong Gioi han:
+                |  #{promo.usageLimit ? promo.usageLimit : 'Khong gioi han'} luot
+            .promo-card__actions
+              a.btn.btn--small.btn--blue(href=`/admin/promotions/${promo.id}/edit`) Chinh sua
+              a.btn.btn--small.btn--orange(href=`/admin/promotions/${promo.id}/assign`) Gan ma
+              button.btn.btn--small.btn--red.btn-delete-promotion(data-promo-id=`${promo.id}`) Xoa
 
-block append scripts
-  script(src='/js/promotionManagement.js', type='module')
+
+

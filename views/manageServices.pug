@@ -3,43 +3,48 @@ extends adminLayout
 block adminContent
   .llk-admin-topbar
     .llk-admin-topbar__left
-      h1.llk-admin-topbar__title Quản lý dịch vụ
-      p.llk-admin-topbar__subtitle Cấu hình dịch vụ bổ sung cho tour.
+      h1.llk-admin-topbar__title Quan ly dich vu
+      p.llk-admin-topbar__subtitle Cau hinh dich vu bo sung cho tour.
     .llk-admin-topbar__right
-      a.btn.btn--small.btn--green(href='/admin/services/new') Tạo dịch vụ mới
+      a.btn.btn--small.btn--green(href='/admin/services/new') Tao dich vu moi
 
   section.llk-admin-panel
     if !services || services.length === 0
-      p.llk-admin-empty Chưa có dịch vụ nào được cấu hình.
+      p.llk-admin-empty Chua co dich vu nao duoc cau hinh.
     else
-      .service-table
-        table
-          thead
-            tr
-              th Tên dịch vụ
-              th Giá (VND)
-              th Loại tính phí
-              th Trạng thái
-              th Thao tác
-          tbody
-            each service in services
-              tr
-                td
-                  strong= service.name
-                  if service.shortDescription
-                    p.table-desc= service.shortDescription
-                td= `${service.price.toLocaleString('vi-VN')} ₫`
-                td= service.chargeType === 'per-person' ? 'Theo người' : 'Theo lượt'
-                td
-                  span(class=`badge ${service.status === 'active' ? 'badge--green' : 'badge--gray'}`)= service.status === 'active' ? 'Đang hiển thị' : 'Đã ẩn'
-                td
-                  .table-actions
-                    button.btn.btn--small.btn--orange.btn-toggle-service(
-                      data-service-id=`${service.id}`,
-                      data-next-status=`${service.status === 'active' ? 'inactive' : 'active'}`
-                    )= service.status === 'active' ? 'Ẩn dịch vụ' : 'Hiển thị'
-                    a.btn.btn--small.btn--blue(href=`/admin/services/${service.id}/edit`) Chỉnh sửa
-                    button.btn.btn--small.btn--red.btn-delete-service(data-service-id=`${service.id}`) Xóa
+      .service-card-grid
+        each service in services
+          - const isActive = service.status === 'active';
+          - const billingLabel = service.chargeType === 'per-person' ? 'Theo nguoi' : 'Theo luot/booking';
+          article.service-admin-card
+            .service-admin-card__head
+              .service-admin-card__title
+                h3.service-admin-card__name= service.name
+                if service.shortDescription
+                  p.service-admin-card__desc= service.shortDescription
+              span(class=`promo-card__badge ${isActive ? 'promo-card__badge--active' : 'promo-card__badge--inactive'}`)= isActive ? 'Dang hien thi' : 'Da an'
+            .service-admin-card__price= `${service.price.toLocaleString('vi-VN')} VND`
+            .service-admin-card__meta
+              p
+                strong Loai tinh phi:
+                |  #{billingLabel}
+              p
+                strong Hien thi:
+                |  #{service.visibility === 'public' ? 'Cong khai' : 'Noi bo'}
+              p
+                strong Thu tu:
+                |  #{service.displayOrder || 0}
+            if service.allowMultiple || service.chargeType === 'per-person'
+              .service-admin-card__chips
+                if service.chargeType === 'per-person'
+                  span.service-admin-card__chip Ap dung theo so nguoi
+                if service.allowMultiple && service.chargeType === 'per-booking'
+                  span.service-admin-card__chip Cho phep chon nhieu lan
+            .service-admin-card__actions
+              button.btn.btn--small.btn--orange.btn-toggle-service(
+                data-service-id=`${service.id}`,
+                data-next-status=`${service.status === 'active' ? 'inactive' : 'active'}`
+              )= service.status === 'active' ? 'An dich vu' : 'Hien thi'
+              a.btn.btn--small.btn--blue(href=`/admin/services/${service.id}/edit`) Chinh sua
+              button.btn.btn--small.btn--red.btn-delete-service(data-service-id=`${service.id}`) Xoa
 
-block append scripts
-  script(src="/js/serviceManagement.js", type="module")

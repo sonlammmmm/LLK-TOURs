@@ -62,6 +62,3 @@ block adminContent
               input#perUserLimit.form__input(type='number', min='1', value=promotion ? promotion.perUserLimit : 1)
       .form__group.right
         button.btn.btn--green.btn-save-promotion(type='submit')= promotion ? 'Cập nhật khuyến mãi' : 'Tạo khuyến mãi'
-
-block append scripts
-  script(src='/js/promotionManagement.js', type='module')
