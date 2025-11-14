@@ -7,6 +7,132 @@ const AppError = require('../utils/appError');
 const { buildBookingFinancials } = require('../utils/bookingPricing');
 const { recordPromotionUsage } = require('../utils/promotionEngine');
 
+const bookingSessionPopulate = [
+  { path: 'tour', select: 'name startDates duration' },
+  { path: 'user', select: 'name email' }
+];
+
+const parseServicesFromMetadata = metadata => {
+  if (!metadata || !metadata.services) return [];
+
+  try {
+    const payload = JSON.parse(metadata.services);
+    if (!Array.isArray(payload)) return [];
+
+    return payload
+      .filter(item => item && item.quantity)
+      .map(item => ({
+        service: item.serviceId,
+        name: item.name,
+        chargeType: item.chargeType,
+        price: Number(item.price || 0),
+        quantity: Number(item.quantity || 1),
+        total: Number(item.total || 0)
+      }));
+  } catch (err) {
+    console.error('[STRIPE] Unable to parse services metadata:', err.message);
+    return [];
+  }
+};
+
+const normalizeStartDate = value => {
+  if (!value) return new Date();
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+};
+
+const buildPromotionSnapshot = metadata =>
+  metadata && metadata.promotionCode
+    ? {
+        promotion: metadata.promotionId || undefined,
+        userPromotion: metadata.userPromotionId || undefined,
+        code: metadata.promotionCode,
+        name: metadata.promotionName || '',
+        discountType: metadata.promotionType || 'fixed',
+        discountValue: Number(metadata.promotionValue || 0)
+      }
+    : undefined;
+
+const findBookingBySessionId = sessionId =>
+  Booking.findOne({
+    paymentMethod: 'stripe',
+    providerSessionId: sessionId
+  });
+
+const createBookingFromStripeSession = async sessionId => {
+  if (!sessionId) return null;
+
+  const existing = await findBookingBySessionId(sessionId);
+  if (existing) return existing;
+
+  let session;
+  try {
+    session = await stripe.checkout.sessions.retrieve(sessionId);
+  } catch (err) {
+    console.error('[STRIPE] Cannot retrieve session:', sessionId, err.message);
+    return null;
+  }
+
+  if (!session || session.payment_status !== 'paid') {
+    return null;
+  }
+
+  const metadata = session.metadata || {};
+  if (!metadata.tourId || !metadata.userId) {
+    console.warn('[STRIPE] Missing metadata for session:', sessionId);
+    return null;
+  }
+
+  const participantsRaw = Number.parseInt(metadata.participants, 10);
+  const participants =
+    Number.isNaN(participantsRaw) || participantsRaw < 1
+      ? 1
+      : participantsRaw;
+
+  const bookingPayload = {
+    tour: metadata.tourId,
+    user: metadata.userId,
+    participants,
+    startDate: normalizeStartDate(metadata.startDate),
+    price: Number(metadata.grandTotal || session.amount_total || 0),
+    paymentMethod: 'stripe',
+    providerSessionId: session.id,
+    paid: true,
+    currency: (session.currency || 'vnd').toUpperCase(),
+    basePrice: Number(metadata.basePrice || 0),
+    services: parseServicesFromMetadata(metadata),
+    servicesTotal: Number(metadata.servicesTotal || 0),
+    subtotal: Number(metadata.subtotal || 0),
+    discountAmount: Number(metadata.discountAmount || 0),
+    promotionSnapshot: buildPromotionSnapshot(metadata)
+  };
+
+  let booking;
+  let isNew = false;
+  try {
+    booking = await Booking.create(bookingPayload);
+    isNew = true;
+  } catch (err) {
+    if (err.code === 11000) {
+      booking = await findBookingBySessionId(session.id);
+    } else {
+      throw err;
+    }
+  }
+
+  if (isNew && booking && (metadata.promotionId || metadata.promotionCode)) {
+    await recordPromotionUsage({
+      promotionId: metadata.promotionId,
+      userPromotionId: metadata.userPromotionId,
+      userId: metadata.userId,
+      discountAmount: Number(metadata.discountAmount || 0),
+      code: metadata.promotionCode || ''
+    });
+  }
+
+  return booking;
+};
+
 exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   if (!req.user || !req.user.id || !req.user.email) {
     return next(new AppError('Bạn cần đăng nhập trước khi thanh toán.', 401));
@@ -208,134 +334,33 @@ exports.getMyBookings = catchAsync(async (req, res, next) => {
     data: items
   });
 });
+exports.getByStripeSession = catchAsync(async (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
 
-// ✅ SỬA WEBHOOK - DÙNG CREATE THAY VÌ UPSERT
-exports.stripeWebhook = async (req, res) => {
-  console.log('[WEBHOOK] hit');
-  let event;
-  try {
-    const sig = req.headers['stripe-signature'];
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (err) {
-    console.error('[WEBHOOK] verify failed:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+  const { sid } = req.params;
+  if (!sid) {
+    return res.status(200).json({ status: 'pending' });
   }
 
-  console.log('[WEBHOOK] event:', event.type);
+  let booking = await Booking.findOne({
+    paymentMethod: 'stripe',
+    providerSessionId: sid
+  }).populate(bookingSessionPopulate);
 
-  if (event.type === 'checkout.session.completed') {
-    const s = event.data.object;
-
-    try {
-      const existing = await Booking.findOne({
-        paymentMethod: 'stripe',
-        providerSessionId: s.id
-      });
-
-      if (existing) {
-        console.log('[WEBHOOK] booking already exists:', s.id);
-        return res.json({ received: true });
-      }
-
-      // ✅ TẠO MỚI BOOKING - SẼ KÍCH HOẠT MIDDLEWARE post('save')
-      const metadata = s.metadata || {};
-      let servicesPayload = [];
-      if (metadata.services) {
-        try {
-          servicesPayload = JSON.parse(metadata.services);
-        } catch {
-          servicesPayload = [];
-        }
-      }
-
-      const services = servicesPayload
-        .filter(item => item && item.quantity)
-        .map(item => ({
-          service: item.serviceId,
-          name: item.name,
-          chargeType: item.chargeType,
-          price: Number(item.price || 0),
-          quantity: Number(item.quantity || 1),
-          total: Number(item.total || 0)
-        }));
-
-      const parsedStartDate = metadata.startDate
-        ? new Date(metadata.startDate)
-        : null;
-
-      const bookingPayload = {
-        tour: metadata.tourId,
-        user: metadata.userId,
-        participants: Number(metadata.participants || 1),
-        startDate:
-          parsedStartDate && !Number.isNaN(parsedStartDate.getTime())
-            ? parsedStartDate
-            : new Date(),
-        price: Number(metadata.grandTotal || s.amount_total || 0),
-        paymentMethod: 'stripe',
-        providerSessionId: s.id,
-        paid: true,
-        currency: (s.currency || 'vnd').toUpperCase(),
-        basePrice: Number(metadata.basePrice || 0),
-        services,
-        servicesTotal: Number(metadata.servicesTotal || 0),
-        subtotal: Number(metadata.subtotal || 0),
-        discountAmount: Number(metadata.discountAmount || 0),
-        promotionSnapshot: metadata.promotionCode
-          ? {
-              promotion: metadata.promotionId || undefined,
-              userPromotion: metadata.userPromotionId || undefined,
-              code: metadata.promotionCode,
-              name: metadata.promotionName || '',
-              discountType: metadata.promotionType || 'fixed',
-              discountValue: Number(metadata.promotionValue || 0)
-            }
-          : undefined
-      };
-
-      const newBooking = await Booking.create(bookingPayload);
-
-      if (metadata.promotionId || metadata.promotionCode) {
-        await recordPromotionUsage({
-          promotionId: metadata.promotionId,
-          userPromotionId: metadata.userPromotionId,
-          userId: metadata.userId,
-          discountAmount: Number(metadata.discountAmount || 0),
-          code: metadata.promotionCode || ''
-        });
-      }
-
-      console.log('[WEBHOOK] ✅ booking created:', newBooking._id);
-    } catch (e) {
-      console.error('[WEBHOOK] ❌ create error:', e);
-      // ✅ KIỂM TRA LỖI DUPLICATE KEY
-      if (e.code === 11000) {
-        console.log('[WEBHOOK] duplicate key - booking already exists');
-        return res.json({ received: true });
-      }
+  if (!booking) {
+    const created = await createBookingFromStripeSession(sid);
+    if (created) {
+      booking = await Booking.findById(created._id).populate(
+        bookingSessionPopulate
+      );
     }
   }
 
-  return res.json({ received: true });
-};
+  if (!booking) {
+    return res.status(200).json({ status: 'pending' });
+  }
 
-exports.getByStripeSession = catchAsync(async (req, res, next) => {
-  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-
-  const b = await Booking.findOne({
-    paymentMethod: 'stripe',
-    providerSessionId: req.params.sid
-  }).populate([
-    { path: 'tour', select: 'name startDates duration' },
-    { path: 'user', select: 'name email' }
-  ]);
-
-  if (!b) return res.status(200).json({ status: 'pending' });
-  return res.status(200).json({ status: 'success', data: b });
+  return res.status(200).json({ status: 'success', data: booking });
 });
 
 exports.updateBooking = factory.updateOne(Booking);

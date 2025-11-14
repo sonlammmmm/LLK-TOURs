@@ -149,7 +149,7 @@
 }
 
 .booking-block-desc {
-  margin: 0;
+    margin: 0;
   color: var(--booking-muted);
   font-size: 1.1rem;
   line-height: 1.35;

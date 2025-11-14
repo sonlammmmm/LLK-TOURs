@@ -10,7 +10,6 @@ const cookieParser = require('cookie-parser');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
-const bookingController = require('./controllers/bookingController');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
@@ -92,12 +91,6 @@ const limiter = rateLimit({
     req.ip === '::1' || req.ip === '127.0.0.1' || req.ip === '10.0.2.2'
 });
 app.use('/api', limiter);
-
-app.post(
-  '/api/v1/bookings/stripe-webhook',
-  express.raw({ type: 'application/json' }),
-  bookingController.stripeWebhook
-);
 
 // Phân tích dữ liệu body, đọc dữ liệu từ body vào req.body
 app.use(express.json({ limit: '10kb' }));
