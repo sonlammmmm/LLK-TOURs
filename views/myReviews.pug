@@ -1,49 +1,30 @@
 extends base
+include _userPortalMenu
 
 block content
-  main.main
-    .user-view
-      nav.user-view__menu
-        ul.side-nav
-          li
-            a(href='/me')
-              svg
-                use(xlink:href='/img/icons.svg#icon-user')
-              | Hồ sơ
-          li
-            a(href='/my-tours')
-              svg
-                use(xlink:href='/img/icons.svg#icon-briefcase')
-              | Tour của tôi
-          li.side-nav--active
-            a(href='/my-reviews')
-              svg
-                use(xlink:href='/img/icons.svg#icon-star')
-              | Đánh giá của tôi
-          li
-            a(href='/my-billing')
-              svg
-                use(xlink:href='/img/icons.svg#icon-credit-card')
-              | Hóa đơn của tôi
+  main.main.user-portal-instance
+    section.user-portal
+      +userPortalMenu('reviews')
+      .user-portal__content
+        .user-portal__content-heading
+          h2.heading-secondary Đánh giá của tôi
+          p Chia sẻ cảm nhận từng chuyến đi để giúp cộng đồng LLK tin tưởng hơn.
 
-      .user-view__content
-        .user-view__form-container
-          h2.heading-secondary.ma-bt-md Đánh giá của tôi
-          
+        .reviews-panel
           .reviews-filter
-            input.reviews-search(type='text', placeholder='Tìm kiếm đánh giá...')
+            input.reviews-search(type='text', placeholder='Tìm đánh giá...')
             select.reviews-rating
-              option(value='') Tất cả đánh giá
-              option(value='5') 5 ★
-              option(value='4') 4 ★
-              option(value='3') 3 ★
-              option(value='2') 2 ★
-              option(value='1') 1 ★
-          
+              option(value='') Tất cả số sao
+              option(value='5') 5 sao
+              option(value='4') 4 sao
+              option(value='3') 3 sao
+              option(value='2') 2 sao
+              option(value='1') 1 sao
+
           .reviews-list
             if reviews.length === 0
               .reviews-empty
-                p Bạn chưa có đánh giá nào.
+                p Bạn chưa có đánh giá nào. Khám phá tour và để lại cảm nhận.
                 a.btn.btn--green(href='/') Khám phá tour
             else
               each review in reviews
@@ -58,34 +39,34 @@ block content
                           span.review-item__star.review-item__star--active ★
                         else
                           span.review-item__star ★
-                  
                   .review-item__content
                     p= review.review
-                  
                   .review-item__footer
                     .review-item__date= new Date(review.createdAt).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })
                     .review-item__actions
-                      button.btn.btn--small.btn--blue.btn-edit-my-review(data-review-id=`${review.id}`, data-tour-id=`${review.tour.id}`, data-review-text=`${review.review}`, data-review-rating=`${review.rating}`) Chỉnh sửa
-                      button.btn.btn--small.btn--red.btn-delete-my-review(data-review-id=`${review.id}`) Xóa
-          
-          .modal.hidden#review-modal
-            .modal__content
-              span.modal__close &times;
-              h2.modal__title Chỉnh sửa đánh giá
-              form.form.form-edit-review
-                input#review-id(type='hidden')
-                input#review-tour-id(type='hidden')
-                
-                .form__group
-                  label.form__label(for='review-text') Nội dung đánh giá
-                  textarea#review-text.form__input(rows='5', required)
-                
-                .form__group
-                  label.form__label(for='review-rating') Xếp hạng
-                  .rating-input
-                    - for (let i = 5; i >= 1; i--)
-                      input(type='radio', id=`star${i}`, name='rating', value=i)
-                      label(for=`star${i}`) ★
-                
-                .form__group.right
-                  button.btn.btn--small.btn--green.btn-save-review Cập nhật đánh giá
+                      button.btn.btn--small.btn--blue.btn-edit-my-review(
+                        data-review-id=`${review.id}`,
+                        data-tour-id=`${review.tour.id}`,
+                        data-review-text=`${review.review}`,
+                        data-review-rating=`${review.rating}`
+                      ) Chỉnh sửa
+                      button.btn.btn--small.btn--red.btn-delete-my-review(data-review-id=`${review.id}`) Xoá
+
+        .modal.hidden#review-modal
+          .modal__content
+            span.modal__close &times;
+            h2.modal__title Chỉnh sửa đánh giá
+            form.form.form-edit-review
+              input#review-id(type='hidden')
+              input#review-tour-id(type='hidden')
+              .form__group
+                label.form__label(for='review-text') Nội dung đánh giá
+                textarea#review-text.form__input(rows='5', required)
+              .form__group
+                label.form__label(for='review-rating') Xếp hạng
+                .rating-input
+                  - for (let i = 5; i >= 1; i--)
+                    input(type='radio', id=`star${i}`, name='rating', value=i)
+                    label(for=`star${i}`) ★
+              .form__group.form__group--actions
+                button.btn.btn--small.btn--green.btn-save-review Cập nhật đánh giá

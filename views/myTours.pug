@@ -1,141 +1,119 @@
 extends base
+include _userPortalMenu
 
 block content
-  main.main
-    .user-view
-      nav.user-view__menu
-        ul.side-nav
-          li
-            a(href='/me')
-              svg
-                use(xlink:href='/img/icons.svg#icon-user')
-              | Hồ sơ
-          li
-            a(href='/my-tours')
-              svg
-                use(xlink:href='/img/icons.svg#icon-briefcase')
-              | Tour của tôi
-          li.side-nav--active
-            a(href='/my-reviews')
-              svg
-                use(xlink:href='/img/icons.svg#icon-star')
-              | Đánh giá của tôi
-          li
-            a(href='/my-billing')
-              svg
-                use(xlink:href='/img/icons.svg#icon-credit-card')
-              | Hóa đơn của tôi
+  main.main.user-portal-instance
+    section.user-portal
+      +userPortalMenu('tours')
+      .user-portal__content
+        .user-portal__content-heading
+          h2.heading-secondary Tour của tôi
+          p Tập hợp các chuyến đi, hóa đơn và đánh giá để bạn nắm rõ hành trình của mình.
 
-      .user-view__content
-        .card-container
-          if tours.length === 0
+        .my-tour-collection
+          if !tours || tours.length === 0
             .empty-tours
               h2.heading-secondary Bạn chưa có tour nào
-              p.empty-tours-text Hãy khám phá các tour của chúng tôi và đặt ngay!
-              a.btn.btn--green(href='/') Khám phá ngay
+              p.empty-tours-text Hãy chọn tour đầu tiên và lên lịch cho mình!
+              a.my-tour-link(href='/') Khám phá tour
           else
+            - const bookingRecords = Array.isArray(bookings) ? bookings : []
+            - const reviewsList = Array.isArray(reviews) ? reviews : []
             each tour in tours
-              - const bookingsForTour = bookings.filter(b => b.tour.id === tour.id)
-              each booking in bookingsForTour
-                - const today = new Date()
-                - const bookingStartDate = new Date(booking.startDate)
-                - const tourEndDate = new Date(bookingStartDate)
-                - tourEndDate.setDate(tourEndDate.getDate() + tour.duration)
-                
-                - tourEndDate.setHours(23, 59, 59, 999)
-                
-                - const canReview = today > tourEndDate
-                
-                - const hasReviewed = reviews.some(r => r.tour.id === tour.id && r.user.id === user.id)
-                - const userReview = reviews.find(r => r.tour.id === tour.id && r.user.id === user.id)
-                
-                .card
-                  .card__header
-                    .card__picture
-                      img.card__picture-img(src=`/img/tours/${tour.imageCover}`, alt=`${tour.name}`)
-                    h3.heading-tertirary
-                      span= tour.name
+              - const matchedBookings = bookingRecords.filter(b => b.tour.id === tour.id)
+              if matchedBookings.length === 0
+                .empty-tours
+                  p Chưa có đặt chỗ cho tour #{tour.name}.
+              else
+                each booking in matchedBookings
+                  - const startDate = booking.startDate ? new Date(booking.startDate) : null
+                  - const fallbackDate = tour.startDates && tour.startDates.length ? new Date(tour.startDates[0]) : null
+                  - const displayDate = startDate ? startDate : fallbackDate
+                  - const bookingDateLabel = displayDate ? displayDate.toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Chưa xác định'
+                  - const today = new Date()
+                  - const tourEndDate = startDate ? new Date(startDate) : null
+                  - if (tourEndDate) tourEndDate.setDate(tourEndDate.getDate() + tour.duration)
+                  - const canReview = tourEndDate ? today > tourEndDate : false
+                  - const hasReviewed = reviewsList.some(r => r.tour.id === tour.id && r.user.id === user.id)
+                  - const userReview = reviewsList.find(r => r.tour.id === tour.id && r.user.id === user.id)
 
-                  .card__details
-                    h4.card__sub-heading= `Tổng thời gian: ${tour.duration}-ngày`
-                    p.card__text= tour.summary
-                    .card__data
-                      svg.card__icon
-                        use(xlink:href='/img/icons.svg#icon-map-pin')
-                      span= tour.startLocation.description
-                    .card__data
-                      svg.card__icon
-                        use(xlink:href='/img/icons.svg#icon-calendar')
-                      span= booking.startDate ? new Date(booking.startDate).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' }) : tour.startDates[0].toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })
-                    .card__data
-                      svg.card__icon
-                        use(xlink:href='/img/icons.svg#icon-flag')
-                      span= `${tour.locations.length} điểm tham quan`
-                    .card__data
-                      svg.card__icon
-                        use(xlink:href='/img/icons.svg#icon-user')
-                      span= `${booking.participants || 1} người`
+                  article.my-tour-entry
+                    .my-tour-entry__hero
+                      .my-tour-entry__hero-media(style=`background-image: url('/img/tours/${tour.imageCover}')`)
+                      .my-tour-entry__hero-overlay
+                        span.my-tour-entry__duration= `${tour.duration} ngày`
+                        span.my-tour-entry__date= bookingDateLabel
+                        span.my-tour-entry__code= `Mã tour: #${booking.id.slice(-8).toUpperCase()}`
 
-                  .card__footer
-                    p
-                      span.card__footer-value= `${booking.price.toLocaleString('vi-VN')}`
-                      | 
-                      span.card__footer-text VNĐ
-                    p.card__ratings
-                      span.card__footer-value= tour.ratingsAverage
-                      | 
-                      span.card__footer-text= `đánh giá (${tour.ratingsQuantity})`
-                    
-                    .mytour-actions
-                      a.btn-mytour.btn-mytour--blue(href=`/tour/${tour.slug}`) 
+                    .my-tour-entry__body
+                      h3.my-tour-entry__title= tour.name
+                      p.my-tour-entry__location
                         svg
-                          use(xlink:href='/img/icons.svg#icon-eye')
-                        span CHI TIẾT
-                      
-                      if booking
-                        a.btn-mytour.btn-mytour--green(href=`/booking-invoice/${booking.id}`)
-                          svg
-                            use(xlink:href='/img/icons.svg#icon-credit-card')
-                          span XEM HÓA ĐƠN
-                      
-                      if canReview
-                        if !hasReviewed
-                          button.btn-mytour.btn-mytour--orange.btn-add-review(data-tour-id=tour.id)
-                            svg
-                              use(xlink:href='/img/icons.svg#icon-star')
-                            span ĐÁNH GIÁ
-                        else if userReview
-                          button.btn-mytour.btn-mytour--orange.btn-edit-my-review(
-                            data-review-id=userReview.id,
-                            data-tour-id=tour.id,
-                            data-review-text=userReview.review,
-                            data-review-rating=userReview.rating
-                          )
-                            svg
-                              use(xlink:href='/img/icons.svg#icon-edit-2')
-                            span SỬA ĐÁNH GIÁ
+                          use(xlink:href='/img/icons.svg#icon-map-pin')
+                        span= tour.startLocation.description
+                      p.my-tour-entry__summary= tour.summary
 
-                  .card__booking-id Mã đặt tour: ##{booking.id.slice(-8).toUpperCase()}
-            
-            .modal.hidden#review-modal
-              .modal__content
-                span.modal__close &times;
-                h2.modal__title Đánh giá tour
-                form.form.form-add-review
-                  input#review-tour-id(type='hidden')
-                  input#review-id(type='hidden')
-                  input#is-edit(type='hidden', value='false')
-                  
-                  .form__group
-                    label.form__label(for='review-text') Nội dung đánh giá
-                    textarea#review-text.form__input(rows='5', required)
-                  
-                  .form__group
-                    label.form__label(for='review-rating') Xếp hạng
-                    .rating-input
-                      - for (let i = 5; i >= 1; i--)
-                        input(type='radio', id=`star${i}`, name='rating', value=i)
-                        label(for=`star${i}`) ★
-                  
-                  .form__group.right
-                    button.btn.btn--small.btn--green.btn-save-review Gửi đánh giá
+                      .my-tour-entry__meta
+                        span
+                          svg
+                            use(xlink:href='/img/icons.svg#icon-flag')
+                          | #{tour.locations.length} địa điểm
+                        span
+                          svg
+                            use(xlink:href='/img/icons.svg#icon-user')
+                          | #{booking.participants || 1} khách
+
+                      .my-tour-entry__prices
+                        .my-tour-entry__price
+                          strong= `${booking.price.toLocaleString('vi-VN')} VNĐ`
+                          small Giá thanh toán
+                        .my-tour-entry__rating
+                          strong= tour.ratingsAverage.toFixed(1)
+                          small Đánh giá (#{tour.ratingsQuantity})
+
+                      .my-tour-entry__actions
+                        a.my-tour-entry__btn(href=`/tour/${tour.slug}`)
+                          svg
+                            use(xlink:href='/img/icons.svg#icon-eye')
+                          span Xem chi tiết
+                        if booking
+                          a.my-tour-entry__btn.my-tour-entry__btn--outline(href=`/booking-invoice/${booking.id}`)
+                            svg
+                              use(xlink:href='/img/icons.svg#icon-credit-card')
+                            span Hoá đơn
+                        if canReview
+                          if !hasReviewed
+                            button.my-tour-entry__btn.my-tour-entry__btn--accent(type='button', data-tour-id=tour.id)
+                              svg
+                                use(xlink:href='/img/icons.svg#icon-star')
+                              span Đánh giá
+                          else if userReview
+                            button.my-tour-entry__btn.my-tour-entry__btn--accent(type='button',
+                              data-review-id=userReview.id,
+                              data-tour-id=tour.id,
+                              data-review-text=userReview.review,
+                              data-review-rating=userReview.rating
+                            )
+                              svg
+                                use(xlink:href='/img/icons.svg#icon-edit-2')
+                              span Sửa đánh giá
+
+        .modal.hidden#review-modal
+          .modal__content
+            span.modal__close &times;
+            h2.modal__title Đánh giá tour
+            form.form.form-add-review
+              input#review-tour-id(type='hidden')
+              input#review-id(type='hidden')
+              input#is-edit(type='hidden', value='false')
+              .form__group
+                label.form__label(for='review-text') Nội dung đánh giá
+                textarea#review-text.form__input(rows='5', required)
+              .form__group
+                label.form__label(for='review-rating') Xếp hạng
+                .rating-input
+                  - for (let i = 5; i >= 1; i--)
+                    input(type='radio', id=`star${i}`, name='rating', value=i)
+                    label(for=`star${i}`) ★
+              .form__group.form__group--actions
+                button.btn.btn--small.btn--green.btn-save-review Gửi đánh giá

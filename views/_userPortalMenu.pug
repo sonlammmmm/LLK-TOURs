@@ -1,0 +1,54 @@
+mixin userPortalMenu(activeMenu = 'account')
+  nav.user-portal__menu
+    .user-portal__menu-header
+      .user-portal__menu-avatar
+        if user && user.photo
+          img(src=`/img/users/${user.photo}` alt='User avatar')
+        else
+          span.user-portal__menu-avatar-placeholder= user && user.name ? user.name.charAt(0).toUpperCase() : '?'
+      .user-portal__menu-meta
+        if user
+          strong= user.name
+          span= user.email
+        else
+          strong Khách hàng LLK
+          span Đăng nhập để xem thêm
+      if user && user.role
+        span.user-portal__menu-tag= user.role === 'user' ? 'Người dùng' : 'Đội ngũ'
+    ul.user-portal__menu-list
+      li(class=`user-portal__menu-list-item ${activeMenu === 'account' ? 'user-portal__menu-list-item--active' : ''}`)
+        a.user-portal__menu-link(href='/me')
+          svg
+            use(xlink:href='/img/icons.svg#icon-user')
+          span
+            | Hồ sơ của tôi
+      li(class=`user-portal__menu-list-item ${activeMenu === 'tours' ? 'user-portal__menu-list-item--active' : ''}`)
+        a.user-portal__menu-link(href='/my-tours')
+          svg
+            use(xlink:href='/img/icons.svg#icon-briefcase')
+          span
+            | Tour của tôi
+      li(class=`user-portal__menu-list-item ${activeMenu === 'reviews' ? 'user-portal__menu-list-item--active' : ''}`)
+        a.user-portal__menu-link(href='/my-reviews')
+          svg
+            use(xlink:href='/img/icons.svg#icon-star')
+          span
+            | Đánh giá
+      li(class=`user-portal__menu-list-item ${activeMenu === 'billing' ? 'user-portal__menu-list-item--active' : ''}`)
+        a.user-portal__menu-link(href='/my-billing')
+          svg
+            use(xlink:href='/img/icons.svg#icon-credit-card')
+          span
+            | Hoá đơn & thanh toán
+      li(class=`user-portal__menu-list-item ${activeMenu === 'promotions' ? 'user-portal__menu-list-item--active' : ''}`)
+        a.user-portal__menu-link(href='/my-promotions')
+          svg
+            use(xlink:href='/img/icons.svg#icon-gift')
+          span
+            | Khuyến mãi
+      li(class=`user-portal__menu-list-item ${activeMenu === 'chat' ? 'user-portal__menu-list-item--active' : ''}`)
+        a.user-portal__menu-link(href='/chat')
+          svg
+            use(xlink:href='/img/icons.svg#icon-message-square')
+          span
+            | Chat Admin

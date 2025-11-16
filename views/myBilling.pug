@@ -1,46 +1,27 @@
 extends base
+include _userPortalMenu
 
 block content
-  main.main
-    .user-view
-      nav.user-view__menu
-        ul.side-nav
-          li
-            a(href='/me')
-              svg
-                use(xlink:href='/img/icons.svg#icon-user')
-              | Hồ sơ
-          li
-            a(href='/my-tours')
-              svg
-                use(xlink:href='/img/icons.svg#icon-briefcase')
-              | Tour của tôi
-          li.side-nav--active
-            a(href='/my-reviews')
-              svg
-                use(xlink:href='/img/icons.svg#icon-star')
-              | Đánh giá của tôi
-          li
-            a(href='/my-billing')
-              svg
-                use(xlink:href='/img/icons.svg#icon-credit-card')
-              | Hóa đơn của tôi
+  main.main.user-portal-instance
+    section.user-portal
+      +userPortalMenu('billing')
+      .user-portal__content
+        .user-portal__content-heading
+          h2.heading-secondary Hoá đơn & thanh toán
+          p Theo dõi mọi giao dịch, trạng thái và in hoá đơn cần thiết chỉ trong vài thao tác.
 
-      .user-view__content
-        .user-view__form-container
-          h2.heading-secondary.ma-bt-md Hóa đơn của tôi
-          
+        .billing-panel
           .billing-filter
-            input.billing-search(type='text', placeholder='Tìm kiếm hóa đơn...')
+            input.billing-search(type='text', placeholder='Tìm hoá đơn...')
             select.billing-status
               option(value='') Tất cả trạng thái
               option(value='paid') Đã thanh toán
               option(value='unpaid') Chưa thanh toán
-          
+
           .billing-list
             if bookings.length === 0
               .billing-empty
-                p Bạn chưa có hóa đơn nào.
+                p Bạn chưa có hoá đơn nào.
             else
               each booking in bookings
                 .billing-item
@@ -49,20 +30,18 @@ block content
                     .billing-item__date
                       span= new Date(booking.createdAt).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })
                       span.billing-item__id ##{booking.id.slice(-8).toUpperCase()}
-                  
+
                   .billing-item__details
                     .billing-item__info
                       .billing-item__label Số lượng người:
                       .billing-item__value= booking.participants
-                    
                     .billing-item__info
                       .billing-item__label Tổng tiền:
                       .billing-item__value= `${booking.price.toLocaleString('vi-VN')} VND`
-                    
                     .billing-item__info
                       .billing-item__label Trạng thái:
                       .billing-item__value
                         span(class=`billing-status billing-status--${booking.paid ? 'paid' : 'unpaid'}`)= booking.paid ? 'Đã thanh toán' : 'Chưa thanh toán'
-                  
+
                   .billing-item__actions
-                    a.btn.btn--small.btn--green(href=`/booking-invoice/${booking.id}`) Xem hóa đơn
+                    a.btn.btn--small.btn--green(href=`/booking-invoice/${booking.id}`) Xem hoá đơn

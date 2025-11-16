@@ -1,69 +1,48 @@
 extends base
+include _userPortalMenu
 
 block content
-  main.main
-    .user-view
-      nav.user-view__menu
-        ul.side-nav
-          li
-            a(href='/me')
-              svg
-                use(xlink:href='/img/icons.svg#icon-user')
-              | Hồ sơ
-          if user.role == 'user'
-            li
-              a(href='/my-tours')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-briefcase')
-                | Tour của tôi
-            li
-              a(href='/my-reviews')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-star')
-                | Đánh giá của tôi
-            li
-              a(href='/my-billing')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-credit-card')
-                | Hóa đơn của tôi
-            // 👇 Thêm liên kết chat
-            li
-              a(href='/chat')
-                svg
-                  use(xlink:href='/img/icons.svg#icon-message-square')
-                | Chat với Admin
+  main.main.user-portal-instance
+    section.user-portal
+      +userPortalMenu('account')
+      .user-portal__content
+        .user-portal__content-heading
+          h1= `Xin chào, ${user.name || 'Khách hàng'}`
+          p Cập nhật thông tin cá nhân và bảo mật tài khoản để chuyến đi của bạn luôn trong tầm kiểm soát.
 
-      .user-view__content
-        .user-view__form-container
-          h2.heading-secondary.ma-bt-md Thông tin tài khoản
-          form.form.form-user-data
-            .form__group
-              label.form__label(for='name') Tên
-              input#name.form__input(type='text', value=`${user.name}`, required, name='name')
-            .form__group.ma-bt-md
-              label.form__label(for='email') Email
-              p.form__input #{user.email}
-              input#email(type='hidden', name='email', value=`${user.email}`)
-            .form__group.form__photo-upload
-              img.form__user-photo(src=`/img/users/${user.photo}`, alt='User photo')
-              input.form__upload(type='file', accept='image/*', id='photo', name='photo')
-              label(for='photo') Chọn ảnh mới
-            .form__group.right
-              button.btn.btn--small.btn--blue Lưu thông tin
-              
-        .line &nbsp;
-        
-        .user-view__form-container
-          h2.heading-secondary.ma-bt-md Đổi mật khẩu
-          form.form.form-user-password
-            .form__group
-              label.form__label(for='password-current') Mật khẩu hiện tại
-              input#password-current.form__input(type='password', placeholder='••••••••', required, minlength='8')
-            .form__group
-              label.form__label(for='password') Mật khẩu mới
-              input#password.form__input(type='password', placeholder='••••••••', required, minlength='8')
-            .form__group.ma-bt-lg
-              label.form__label(for='password-confirm') Xác nhận mật khẩu mới
-              input#password-confirm.form__input(type='password', placeholder='••••••••', required, minlength='8')
-            .form__group.right
-              button.btn.btn--small.btn--blue.btn--save-password Lưu
+        .user-portal__grid
+          article.user-portal__card.user-portal__card--highlight
+            .user-portal__card-title
+              h2.heading-secondary Cập nhật hồ sơ
+              p Chỉnh sửa tên, ảnh đại diện và thông tin liên hệ nhanh chóng.
+            form.form.form-user-data
+              .form__group
+                label.form__label(for='name') Tên
+                input#name.form__input(type='text', value=`${user.name}`, required, name='name')
+              .form__group.ma-bt-md
+                label.form__label(for='email') Email
+                p.form__input #{user.email}
+                input#email(type='hidden', name='email', value=`${user.email}`)
+              .form__group.form__photo-upload
+                img.form__user-photo(src=`/img/users/${user.photo}`, alt='User photo')
+                input.form__upload(type='file', accept='image/*', id='photo', name='photo')
+                label(for='photo') Chọn ảnh mới
+              .form__group.form__group--actions
+                button.btn.btn--small.btn--blue Cập nhật thông tin
+
+          article.user-portal__card
+            .user-portal__card-title
+              h2.heading-secondary Bảo mật tài khoản
+              p Đổi mật khẩu định kỳ giúp bạn yên tâm khi giao dịch trực tuyến.
+            form.form.form-user-password
+              .form__group
+                label.form__label(for='password-current') Mật khẩu hiện tại
+                input#password-current.form__input(type='password', placeholder='********', required, minlength='8')
+              .form__group
+                label.form__label(for='password') Mật khẩu mới
+                input#password.form__input(type='password', placeholder='********', required, minlength='8')
+              .form__group.ma-bt-lg
+                label.form__label(for='password-confirm') Xác nhận mật khẩu mới
+                input#password-confirm.form__input(type='password', placeholder='********', required, minlength='8')
+              .form__group.form__group--actions
+                button.btn.btn--small.btn--blue.btn--save-password Lưu mật khẩu mới
