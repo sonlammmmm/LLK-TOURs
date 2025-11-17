@@ -5,120 +5,265 @@ block append head
   script(src='https://api.mapbox.com/mapbox-gl-js/v3.12.0/mapbox-gl.js')
   link(href='https://api.mapbox.com/mapbox-gl-js/v3.12.0/mapbox-gl.css' rel='stylesheet')
 
-mixin overviewBox(label, text, icon)
-  .overview-box__detail
-    svg.overview-box__icon
-      use(xlink:href=`/img/icons.svg#icon-${icon}`)
-    span.overview-box__label= label
-    span.overview-box__text= text
-
 block content
-  section.section-header
-    .header__hero
-      .header__hero-overlay &nbsp;
-      img.header__hero-img(src=`/img/tours/${tour.imageCover}`, alt=`${tour.name}`)
+  - const startDateItems = (tour.startDates || []).map(item => {
+  -   const candidate = item && typeof item === 'object' && item.date ? item.date : item
+  -   const extracted = candidate && candidate.$date ? candidate.$date : candidate
+  -   const dateObj = extracted ? new Date(extracted) : null
+  -   return { original: item, value: extracted, dateObj }
+  - }).filter(entry => entry.dateObj && !Number.isNaN(entry.dateObj.getTime()))
+  - const upcomingDates = startDateItems.filter(entry => entry.dateObj > new Date()).sort((a, b) => a.dateObj - b.dateObj)
+  - const nextDateEntry = upcomingDates[0]
+  - const hasStartDate = Boolean(nextDateEntry)
+  - const nextDateDisplay = hasStartDate ? nextDateEntry.dateObj.toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Đang cập nhật'
+  - const bookingHref = user && user.role === 'user' ? `/book-tour/${tour._id}` : '/login'
+  - const contactMessage = `Tôi muốn hỏi về Tour ${tour.name}`
+  - const userContactHref = user && user.role === 'user' ? `/chat?prefill=${encodeURIComponent(contactMessage)}` : '/login'
+  - const totalStops = tour.locations && tour.locations.length ? tour.locations.length : 0
+  - const galleryImages = Array.isArray(tour.images) ? tour.images : []
+  - const ratingLabel = `${tour.ratingsAverage} / 5⭐ (${tour.ratingsQuantity} đánh giá)`
+  - const allReviews = Array.isArray(tour.reviews) ? tour.reviews.slice() : []
+  - const sortedReviews = allReviews.sort((a, b) => (b.rating || 0) - (a.rating || 0))
+  - const maxInitialReviews = 9
+  - const initialReviews = sortedReviews.slice(0, maxInitialReviews)
+  - const extraReviews = sortedReviews.slice(maxInitialReviews)
 
-    .heading-box
-      h1.heading-primary
-        span= `${tour.name}`
-      .heading-box__group
-        .heading-box__detail
-          svg.heading-box__icon
-            use(xlink:href='/img/icons.svg#icon-clock')
-          span.heading-box__text= `${tour.duration} ngày`
-        .heading-box__detail
-          svg.heading-box__icon
-            use(xlink:href='/img/icons.svg#icon-map-pin')
-          span.heading-box__text= tour.startLocation.description
+  section.tour-hero
+    .tour-hero__media
+      img.tour-hero__img(src=`/img/tours/${tour.imageCover}`, alt=`${tour.name}`)
+      .tour-hero__overlay
+    .tour-hero__content
+      span.tour-hero__eyebrow= tour.startLocation.description
+      h1.tour-hero__title= tour.name
+      p.tour-hero__summary= tour.summary
+      .tour-hero__meta
+        .tour-pill
+          i.fas.fa-clock
+          span= `${tour.duration} ngày`
+        if hasStartDate
+          .tour-pill
+            i.fas.fa-calendar-alt
+            span= `Khởi hành: ${nextDateDisplay}`
+        .tour-pill
+          i.fas.fa-users
+          span= `${tour.maxGroupSize} khách`
+        .tour-pill
+          i.fas.fa-star
+          span= ratingLabel
 
-  if user && user.role === 'user'
-    .floating-button
-      a.btn.btn--blue.btn--circle(href=`/book-tour/${tour._id}`)
-        span ĐẶT TOUR
-  else if !user
-    .floating-button
-      a.btn.btn--blue.btn--circle(href='/login', onclick='showLoginAlert(event)')
-        span ĐẶT TOUR
+  .quick-booking-floating
+    .quick-booking
+      span.quick-booking__eyebrow Đặt tour nhanh
+      h3.quick-booking__price= `${tour.price.toLocaleString('vi-VN')} VNĐ/người`
+      p.quick-booking__note= hasStartDate ? 'Giữ chỗ ngay để đồng hành trong chuyến đi sắp tới.' : 'Hiện chưa có lịch khởi hành, hãy liên hệ để được cập nhật.'
+      if hasStartDate
+        label.quick-booking__label(for='quickBookingDate') Chọn ngày khởi hành
+        div.quick-booking__control
+          i.fas.fa-calendar-day
+          select#quickBookingDate.quick-booking__select
+            each dateOption in upcomingDates
+              - const readable = dateOption.dateObj.toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })
+              option(value=dateOption.value selected=dateOption === nextDateEntry)= readable
+        a.btn.btn--green.quick-booking__btn(href=bookingHref) Đăng ký ngay
+      else
+        p.quick-booking__empty Chúng tôi sẽ gửi thông tin lịch mới ngay khi có. Liên hệ với admin để được hỗ trợ thêm.
+        a.btn.btn--contact.quick-booking__btn(href=userContactHref)
+          i.fas.fa-headset
+          span Liên hệ với admin
+      ul.quick-booking__info
+        li
+          i.fas.fa-check
+          span Miễn phí huỷ trong 48h đầu tiên
+        li
+          i.fas.fa-shield
+          span Thanh toán an toàn, bảo mật
+        li
+          i.fas.fa-phone
+          span Hotline hỗ trợ 24/7
 
-  section.section-description
-    .overview-box
-      div
-        .overview-box__group
-          h2.heading-secondary.ma-bt-lg Thông tin tóm tắt
+  main.tour-main
+    .tour-layout
+      section.tour-section
+        span.tour-section__eyebrow Bản tin nhanh
+        h2.heading-secondary Tinh tuý từ hành trình này
+        .tour-metrics
+          .tour-metric
+            span.tour-metric__label Thời lượng
+            strong.tour-metric__value= `${tour.duration} ngày`
+            span.tour-metric__meta= `${tour.duration - 1 || 1} đêm nghỉ dưỡng`
+          .tour-metric
+            span.tour-metric__label Khởi hành tiếp theo
+            strong.tour-metric__value= nextDateDisplay
+            span.tour-metric__meta= hasStartDate ? 'Sẵn sàng nhận chỗ' : 'Đang cập nhật lịch trình'
+          .tour-metric
+            span.tour-metric__label Số chỗ
+            strong.tour-metric__value= `${tour.maxGroupSize} khách`
+            span.tour-metric__meta= 'Nhóm nhỏ đẳng cấp'
+          .tour-metric
+            span.tour-metric__label Đánh giá
+            strong.tour-metric__value= `${tour.ratingsAverage}/5`
+            span.tour-metric__meta= `${tour.ratingsQuantity} lượt đánh giá`
 
-          - const nextDate = tour.startDates.filter(date => new Date(date) > new Date()).sort((a, b) => new Date(a) - new Date(b))[0]
-          - const date = nextDate ? new Date(nextDate).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Chưa có lịch khởi hành'
-          +overviewBox('Ngày khởi hành tiếp theo', date, 'calendar')
-          +overviewBox('Số lượng', `${tour.maxGroupSize} khách`, 'user')
-          +overviewBox('Đánh giá trung bình', `${tour.ratingsAverage} / 5`, 'star')
+      section.tour-section
+        h3.tour-section__title Về tour này
+        - const paragraphs = tour.description ? tour.description.split('\n') : ['Chưa có mô tả cho tour này.']
+        each paragraph in paragraphs
+          p.tour-section__text= paragraph
+        ul.tour-checklist
+          li
+            i.fas.fa-location-dot
+            span= `Điểm khởi hành: ${tour.startLocation.description}`
+          li
+            i.fas.fa-mountain
+            span= `Tổng số điểm tham quan: ${totalStops || 'Đang cập nhật'}`
+          li
+            i.fas.fa-user-tie
+            span Hướng dẫn viên địa phương giàu kinh nghiệm đồng hành
+          li
+            i.fas.fa-shield-heart
+            span Bảo hiểm du lịch & hỗ trợ 24/7
 
-        .overview-box__group
-          h2.heading-secondary.ma-bt-lg Lịch trình
-          
-          .overview-box__detail
-            svg.overview-box__icon
-              use(xlink:href='/img/icons.svg#icon-map-pin')
-            span.overview-box__label Điểm khởi hành
-            .overview-box__text-container
-              span.overview-box__text= tour.startLocation.description
-              if tour.startLocation.address
-                span.overview-box__address= tour.startLocation.address
-            
-          if tour.locations && tour.locations.length > 0
-            each location in tour.locations
-              .overview-box__detail
-                svg.overview-box__icon
-                  use(xlink:href='/img/icons.svg#icon-map-pin')
-                span.overview-box__label= `Ngày ${location.day}`
-                .overview-box__text-container
-                  span.overview-box__text= location.description
-                  if location.address
-                    span.overview-box__address= location.address
+      section.tour-section.tour-map-wrapper
+        h3.tour-section__title Bản đồ & lộ trình
+        .tour-map-card
+          .tour-map-card__map
+            #map(data-locations=`${JSON.stringify(tour.locations || [])}`)
+            .map-panel__legend
+              span.map-badge
+                i.fas.fa-map-marker-alt
+                span= `${totalStops} điểm dừng`
+              span.map-badge
+                i.fas.fa-clock
+                span= `${tour.duration} ngày`
+              if hasStartDate
+                span.map-badge.map-badge--accent
+                  i.fas.fa-calendar-day
+                  span= nextDateDisplay
+          .tour-map-card__details
+            ul.tour-map-info
+              li
+                span.tour-map-info__label Điểm khởi hành
+                strong.tour-map-info__value= tour.startLocation.description
+                if tour.startLocation.address
+                  span.tour-map-info__meta= tour.startLocation.address
+              li
+                span.tour-map-info__label Thời lượng
+                strong.tour-map-info__value= `${tour.duration} ngày`
+              li
+                span.tour-map-info__label Tổng điểm dừng
+                strong.tour-map-info__value= totalStops ? `${totalStops} điểm` : 'Đang cập nhật'
+            if totalStops
+              ul.tour-map-info__timeline
+                each location in tour.locations
+                  li
+                    span.tour-map-info__badge= location.day ? `Ngày ${location.day}` : 'Điểm dừng'
+                    div
+                      p.tour-map-info__title= location.description
+                      if location.address
+                        span.tour-map-info__address= location.address
+            else
+              p.map-timeline__empty Lộ trình chi tiết đang được cập nhật. Liên hệ admin để biết thêm.
 
-        .overview-box__group
-          h2.heading-secondary.ma-bt-lg Hướng dẫn viên:
+      section.tour-section
+        h3.tour-section__title Đội ngũ hướng dẫn
+        if tour.guides && tour.guides.length
+          .tour-guides
+            each guide in tour.guides
+              .tour-guide
+                img(src=`/img/users/${guide.photo}`, alt=`${guide.name}`)
+                div
+                  span.tour-guide__role= guide.role === 'lead-guide' ? 'Hướng dẫn viên chính' : 'Hướng dẫn viên'
+                  h4.tour-guide__name= guide.name
+        else
+          p.tour-section__text Danh sách hướng dẫn viên đang được cập nhật.
 
-          each guide in tour.guides
-            .overview-box__detail
-              img.overview-box__img(src=`/img/users/${guide.photo}`, alt=`${guide.name}`)
+  section.tour-gallery
+    .tour-gallery__header
+      span.tour-section__eyebrow Bộ sưu tập
+      h2.heading-secondary Hình ảnh từ chuyến đi
+    if galleryImages.length
+      .tour-gallery__grid
+        each image, idx in galleryImages
+          figure.tour-gallery__item
+            img(src=`/img/tours/${image}`, alt=`${tour.name} - ảnh ${idx + 1}`)
+    else
+      p.tour-section__text Thư viện hình ảnh đang được cập nhật.
 
-              - if (guide.role === 'lead-guide')
-                span.overview-box__label Hướng dẫn viên chính
-              - if (guide.role === 'guide')
-                span.overview-box__label Hướng dẫn viên
-              span.overview-box__text= guide.name
-
-    .description-box
-      h2.heading-secondary.ma-bt-lg= `Miêu tả về chuyến đi ${tour.name}`
-      - const parapraphs = tour.description ? tour.description.split('\n') : ['Chưa có mô tả cho tour này.']
-      each p in parapraphs
-        p.description__text= p
-
-  section.section-pictures
-    each img, i in tour.images
-      .picture-box
-        img.picture-box__img(src=`/img/tours/${img}`, alt=`${i + 1}`, class=`picture-box__img--${i + 1}`)
-  
-  section.section-map
-    #map(data-locations=`${JSON.stringify(tour.locations)}`)
-
-  section.section-reviews
-    .reviews
-      each review in tour.reviews
-        +reviewCard(review)
+  section.tour-reviews
+    .tour-reviews__inner
+      .tour-reviews__summary
+        span.tour-reviews__eyebrow Khách hàng nói gì?
+        h3= `Điểm trung bình ${tour.ratingsAverage}/5`
+        p= `${tour.ratingsQuantity} khách đã trải nghiệm tour này`
+        if hasStartDate
+          a.btn.btn--green(href=bookingHref) Đăng ký ngay
+        else
+          a.btn.btn--contact(href=userContactHref)
+            i.fas.fa-headset
+            span Liên hệ với admin
+      .tour-reviews__grid
+        if initialReviews.length
+          each review in initialReviews
+            article.tour-review
+              header.tour-review__header
+                .tour-review__avatar
+                  img(src=`/img/users/${review.user.photo || 'default.jpg'}`, alt=review.user.name)
+                .tour-review__info
+                  strong.tour-review__name= review.user.name
+                  span.tour-review__date= new Date(review.createdAt || Date.now()).toLocaleDateString('vi-VN')
+              p.tour-review__text= review.review
+              .tour-review__rating
+                span.tour-review__score= `${review.rating}/5`
+                .tour-review__stars
+                  each star in [1,2,3,4,5]
+                    i(class=star <= review.rating ? 'fas fa-star' : 'far fa-star')
+          each review in extraReviews
+            article.tour-review.tour-review--extra.is-hidden
+              header.tour-review__header
+                .tour-review__avatar
+                  img(src=`/img/users/${review.user.photo || 'default.jpg'}`, alt=review.user.name)
+                .tour-review__info
+                  strong.tour-review__name= review.user.name
+                  span.tour-review__date= new Date(review.createdAt || Date.now()).toLocaleDateString('vi-VN')
+              p.tour-review__text= review.review
+              .tour-review__rating
+                span.tour-review__score= `${review.rating}/5`
+                .tour-review__stars
+                  each star in [1,2,3,4,5]
+                    i(class=star <= review.rating ? 'fas fa-star' : 'far fa-star')
+        else
+          p.tour-section__text Chưa có đánh giá nào cho tour này.
+      if extraReviews.length
+        button.tour-reviews__more(type='button' data-action='reviews-more') Xem thêm đánh giá
 
   section.section-cta
-    .cta
-      .form_group
-        .cta__img.cta__img--logo
-          img(src='/img/logo-white.png', alt='LLK logo')
-        img.cta__img.cta__img--1(src=`/img/tours/${tour.images[1]}`, alt='Tour picture')
-        img.cta__img.cta__img--2(src=`/img/tours/${tour.images[2]}`, alt='Tour picture')
-        .cta__content
-          h2.heading-secondary Bạn đang chờ điều gì nữa?
-          p.cta__text= `Chỉ với ${tour.price.toLocaleString('vi-VN')}đ bạn sẽ có ${tour.duration} ngày cho một hành trình tuyệt vời cùng với Tour "${tour.name}". Hãy biến nó thành của bạn`
-      .form_group.right
-        if user && user.role === 'user'
-          a.btn.btn--blue.span-all-rows(href=`/book-tour/${tour._id}`) Đăng ký ngay!
-        else if !user
-          a.btn.btn--blue.span-all-rows(href='/login', onclick='showLoginAlert(event)') Đăng nhập để đặt tour
+    .cta-modern
+      .cta-modern__copy
+        span.cta-modern__eyebrow Sẵn sàng khám phá
+        h2= `Chốt lịch tour "${tour.name}" ngay hôm nay`
+        p= `Chỉ từ ${tour.price.toLocaleString('vi-VN')} VNĐ cho ${tour.duration} ngày trải nghiệm cùng LLK Travel.`
+      .cta-modern__actions
+        if hasStartDate
+          if user && user.role === 'user'
+            a.btn.btn--green(href=`/book-tour/${tour._id}`) Đăng ký ngay
+          else
+            a.btn.btn--blue(href='/login') Đăng nhập để đặt tour
+        else
+          a.btn.btn--contact(href=userContactHref)
+            i.fas.fa-headset
+            span Liên hệ với admin
+        a.btn.btn--white(href='/tours') Xem thêm tour khác
+
+block append scripts
+  script.
+    (() => {
+      const moreBtn = document.querySelector('[data-action="reviews-more"]');
+      if (moreBtn) {
+        moreBtn.addEventListener('click', () => {
+          document.querySelectorAll('.tour-review--extra').forEach(card => {
+            card.classList.remove('is-hidden');
+          });
+          moreBtn.remove();
+        });
+      }
+    })();

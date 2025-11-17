@@ -6,13 +6,22 @@ block content
     section.user-portal
       +userPortalMenu('chat')
       .user-portal__content
-        section.chat-panel
+        - const partner = chatPartner || { name: 'Admin LLK', avatar: '/img/users/default.jpg', status: 'Sẵn sàng hỗ trợ' }
+        section.chat-panel.chat-panel--conversation
           .chat-panel__heading
-            h2.heading-secondary Chat với Admin
-            p Gửi tin nhắn bất cứ lúc nào để được hỗ trợ nhanh chóng trước và trong chuyến đi.
-          #chat-box.llk-chat-box
-            if (!messages || messages.length === 0)
-              .chat-panel__empty Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!
+            .chat-partner
+              img.chat-partner__avatar(src=partner.avatar, alt=`${partner.name}`)
+              .chat-partner__meta
+                span.chat-partner__label Hỗ trợ khách hàng  
+                span.chat-partner__name= partner.name
+                span.chat-partner__status= partner.status || 'Trực tuyến'
+            .chat-panel__heading-copy
+              h2.heading-secondary Chat với Admin
+              p Gửi tin nhắn bất cứ lúc nào để được hỗ trợ nhanh chóng trước và trong chuyến đi.
+          .chat-conversation-wrapper
+            #chat-box.chat-conversation
+              if (!messages || messages.length === 0)
+                .chat-panel__empty Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!
           form#chat-user-form.llk-chat-form
             input#chat-user-input(type='text', placeholder='Nhập tin nhắn...', autocomplete='off')
             button.llk-send-btn(type='submit')
@@ -23,5 +32,9 @@ append scripts
   script.
     window.userId = '#{user._id}';
     window.userName = '#{user.name}';
+    window.userAvatar = "#{userAvatar || '/img/users/default.jpg'}";
+    window.chatPartner = !{JSON.stringify(chatPartner || null)};
     window.chatMessages = !{JSON.stringify(messages || [])};
+    window.chatAdminAvatars = !{JSON.stringify(adminAvatarMap || {})};
+    window.chatFallbackAdminAvatar = "#{fallbackAdminAvatar || '/img/users/default.jpg'}";
   script(defer src='/js/chatUser.js')

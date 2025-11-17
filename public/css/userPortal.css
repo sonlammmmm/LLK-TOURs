@@ -10,20 +10,22 @@
   --portal-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
 }
 
-main.main.user-portal-instance {
-  padding: clamp(2rem, 2vw, 3.4rem);
-  max-width: 1380px;
-  margin: 0 auto 3rem;
+.main.user-portal-instance {
+  padding: clamp(2.2rem, 2.6vw, 3.5rem);
+  margin: clamp(1.5rem, 2vw, 3.5rem) auto;
+  max-width: clamp(1100px, 96vw, 1860px);
+  width: min(100%, 1860px);
+  display: block;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 40px;
+  box-shadow: 0 35px 70px rgba(15, 23, 42, 0.15);
 }
 
 .user-portal {
   display: grid;
-  grid-template-columns: minmax(260px, 320px) 1fr;
-  gap: clamp(1.5rem, 2vw, 2.5rem);
-  background: var(--portal-bg);
-  border-radius: 34px;
-  padding: clamp(1.5rem, 2vw, 2.2rem);
-  box-shadow: 0 30px 50px rgba(15, 23, 42, 0.18);
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: clamp(1.6rem, 2.5vw, 3.5rem);
+  align-items: flex-start;
 }
 
 .user-portal__menu {
@@ -31,12 +33,16 @@ main.main.user-portal-instance {
   border-radius: 28px;
   padding: 2.4rem 2rem;
   color: #fff;
-  min-height: 100%;
+  min-height: 800px;
+  max-height: calc(100vh - 3rem);
   display: flex;
   flex-direction: column;
   gap: 1.8rem;
   position: sticky;
-  top: 2rem;
+  top: clamp(1.5rem, 3vw, 3rem);
+  align-self: flex-start;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+  overflow-y: auto;
 }
 
 .user-portal__menu-header {
@@ -64,24 +70,24 @@ main.main.user-portal-instance {
 }
 
 .user-portal__menu-avatar-placeholder {
-  font-size: 2.4rem;
+  font-size: 3.6rem;
   font-weight: 600;
   color: #ffffff;
 }
 
 .user-portal__menu-meta strong {
-  font-size: 1.4rem;
+  font-size: 2.1rem;
   display: block;
   letter-spacing: 0.02em;
 }
 
 .user-portal__menu-meta span {
-  font-size: 0.95rem;
+  font-size: 1.425rem;
   color: rgba(255, 255, 255, 0.8);
 }
 
 .user-portal__menu-tag {
-  font-size: 0.8rem;
+  font-size: 1.2rem;
   padding: 0.3rem 0.9rem;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.2);
@@ -114,7 +120,7 @@ main.main.user-portal-instance {
   text-decoration: none;
   color: #fff;
   padding: 0.85rem 1rem;
-  font-size: 1rem;
+  font-size: 1.5rem;
   font-weight: 500;
 }
 
@@ -126,13 +132,33 @@ main.main.user-portal-instance {
 
 .user-portal__content {
   background: var(--portal-panel-bg);
-  border-radius: 28px;
-  padding: clamp(1.6rem, 2vw, 2.4rem);
-  box-shadow: var(--portal-shadow);
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 34px;
+  padding: clamp(2rem, 2.4vw, 3rem);
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.12);
+  border: none;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  min-width: 0;
+}
+
+@media (max-width: 62.5em) {
+  .main.user-portal-instance {
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    margin: clamp(1rem, 3vw, 2.5rem) auto;
+  }
+}
+
+@media (max-width: 56.25em) {
+  .user-portal {
+    grid-template-columns: 1fr;
+  }
+
+  .user-portal__menu {
+    position: relative;
+    top: 0;
+    max-height: none;
+  }
 }
 
 .user-portal__content-heading h1,
@@ -208,6 +234,13 @@ main.main.user-portal-instance {
   background: #f7f9ff;
 }
 
+.form-add-review .form__input {
+  min-height: 140px;
+  max-height: 260px;
+  resize: vertical;
+  overflow-y: auto;
+}
+
 .form__photo-upload {
   display: flex;
   align-items: center;
@@ -236,44 +269,257 @@ main.main.user-portal-instance {
 
 .chat-panel {
   background: #f7f8fe;
-  border-radius: 24px;
-  padding: 1.8rem;
+  border-radius: 28px;
+  padding: clamp(1.4rem, 2.2vw, 2.8rem);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  min-height: 360px;
+  gap: 1.6rem;
+  min-height: 420px;
+  border: 1px solid rgba(15, 23, 42, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
 }
 
-.chat-panel__heading p {
+.chat-panel--conversation {
+  gap: 1.8rem;
+}
+
+.chat-panel__heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.chat-partner {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 0.8rem 1.2rem;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #1a35a3, #3d5afe);
+  color: #fff;
+  box-shadow: 0 20px 35px rgba(15, 23, 42, 0.25);
+}
+
+.chat-partner__avatar {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.7);
+  flex-shrink: 0;
+}
+
+.chat-partner__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.chat-partner__label {
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.chat-partner__name {
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.chat-partner__status {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.chat-panel__heading-copy {
+  flex: 1;
+  min-width: 240px;
+}
+
+.chat-panel__heading-copy p {
   color: var(--portal-muted);
+  margin-top: 0.25rem;
 }
 
-.llk-chat-box {
+.chat-conversation-wrapper {
   background: #fff;
-  border-radius: 1.2rem;
-  min-height: 230px;
-  padding: 1rem;
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  box-shadow: 0 15px 25px rgba(15, 23, 42, 0.08);
+  border-radius: 24px;
+  padding: 1.4rem;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 35px rgba(15, 23, 42, 0.08);
+}
+
+.chat-conversation {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  height: clamp(360px, 60vh, 520px);
   overflow-y: auto;
+  padding-right: 0.5rem;
+  font-size: clamp(1.2rem, 1.5vw, 2.2rem);
+  line-height: 1.8;
+}
+
+.chat-conversation::-webkit-scrollbar {
+  width: 7px;
+}
+
+.chat-conversation::-webkit-scrollbar-thumb {
+  background: rgba(20, 87, 255, 0.3);
+  border-radius: 999px;
+}
+
+.chat-conversation::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.05);
+  border-radius: 999px;
 }
 
 .chat-panel__empty {
   color: var(--portal-muted);
   font-style: italic;
+  text-align: center;
+  padding: 2.4rem 0;
+  font-size: clamp(1.15rem, 1.5vw, 1.8rem);
+}
+
+.chat-date-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--portal-muted);
+}
+
+.chat-date-divider::before,
+.chat-date-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.chat-date-divider span {
+  padding: 0.15rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(20, 87, 255, 0.08);
+}
+
+.chat-message {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.4rem;
+}
+
+.chat-message--admin {
+  flex-direction: row;
+}
+
+.chat-message--me {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.chat-message__avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: none;
+  border: 3px solid rgba(255, 255, 255, 0.65);
+}
+
+.chat-message__bubble {
+  max-width: min(80%, 520px);
+  padding: 1.4rem 1.8rem;
+  border-radius: 30px;
+  background: #f4f6ff;
+  box-shadow: 0 12px 25px rgba(15, 23, 42, 0.08);
+  text-align: left;
+  font-size: 1.1em;
+}
+
+.chat-message--me .chat-message__bubble {
+  background: linear-gradient(135deg, #1a35a3, #4b63ff);
+  color: #fff;
+  border-bottom-right-radius: 6px;
+}
+
+.chat-message--admin .chat-message__bubble {
+  border-bottom-left-radius: 6px;
+}
+
+.chat-message__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1.1rem;
+  margin-bottom: 0.6rem;
+  color: rgba(15, 23, 42, 0.65);
+}
+
+.chat-message--me .chat-message__meta {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.chat-message__name {
+  font-weight: 700;
+  font-size: 1.5em;
+}
+
+.chat-message__time {
+  font-size: 1rem;
+}
+
+.chat-message__text {
+  margin: 0;
+  font-size: 1.6rem;
+  line-height: 1.8;
+  word-break: break-word;
+}
+
+@media (max-width: 48em) {
+  .chat-panel__heading {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .chat-partner {
+    width: 100%;
+    border-radius: 24px;
+    justify-content: flex-start;
+  }
+
+  .chat-message__bubble {
+    max-width: 100%;
+  }
 }
 
 .llk-chat-form {
   display: flex;
-  gap: 0.8rem;
-  margin-top: 0.5rem;
+  gap: 1rem;
+  background: #fff;
+  padding: 1rem 1.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 15px 30px rgba(15, 23, 42, 0.1);
 }
 
 .llk-chat-form input {
   flex: 1;
-  border-radius: 999px;
-  padding: 0.9rem 1.2rem;
-  border: 1px solid rgba(15, 23, 42, 0.15);
+  border: none;
+  padding: 0.6rem 0.5rem;
+  font-size: 1.8rem;
+  background: transparent;
+}
+
+.llk-chat-form input:focus {
+  outline: none;
 }
 
 .llk-send-btn {
@@ -769,7 +1015,8 @@ main.main.user-portal-instance {
   display: flex;
   flex-direction: row-reverse;
   justify-content: flex-end;
-  gap: 0.2rem;
+  gap: 0.35rem;
+  font-size: 0;
 }
 
 .rating-input input {
@@ -777,10 +1024,11 @@ main.main.user-portal-instance {
 }
 
 .rating-input label {
-  font-size: 2.4rem;
+  font-size: 3rem;
   color: #cbd5f5;
   cursor: pointer;
   transition: color 0.2s ease;
+  padding: 0 0.15rem;
 }
 
 .rating-input label:hover,
@@ -796,199 +1044,351 @@ main.main.user-portal-instance {
 }
 
 
-.my-tour-collection {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  margin-top: 1.5rem;
+
+
+.empty-tours {
+  margin-top: 1.8rem;
+  border-radius: 28px;
+  border: 1px dashed rgba(15, 23, 42, 0.2);
+  background: #fff;
+  padding: 2.6rem 2rem;
+  text-align: center;
+  box-shadow: var(--portal-shadow);
+}
+
+.empty-tours h2 {
+  margin-bottom: 1rem;
+}
+
+.empty-tours-text {
+  margin-bottom: 1.2rem;
+  color: var(--portal-muted);
 }
 
 .my-tour-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.8rem 1.2rem;
+  gap: 0.35rem;
+  padding: 0.8rem 1.5rem;
   background: #0b1c74;
   color: #fff;
   text-transform: uppercase;
+  letter-spacing: 0.08em;
   border-radius: 999px;
-  text-decoration: none;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
+  transition: transform 0.2s ease;
 }
 
-.my-tour-entry {
-  background: linear-gradient(180deg, #fff, #f4f5ff);
-  border-radius: 24px;
-  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.15);
+.my-tour-link:hover {
+  transform: translateY(-2px);
+}
+
+.my-tour-link svg {
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+}
+
+.my-tour-dashboard {
+  margin-top: 1.6rem;
+  background: #fff;
+  border-radius: 28px;
+  padding: clamp(1.5rem, 2vw, 2rem);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  box-shadow: var(--portal-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.my-tour-dashboard__intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.intro-text h3 {
+  margin: 0;
+  font-size: 1.45rem;
+}
+
+.intro-text p {
+  margin: 0.2rem 0 0;
+  color: var(--portal-muted);
+}
+
+.intro-actions {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.my-tour-dashboard__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  padding: 1.4rem;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: linear-gradient(180deg, #f8fbff, #ffffff);
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.stat-card__value {
+  font-size: 1.9rem;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.stat-card__label {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.stat-card__detail {
+  color: var(--portal-muted);
+  font-size: 0.85rem;
+}
+
+.my-tour-dashboard__alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 1.2rem;
+  border-radius: 16px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  font-weight: 600;
+}
+
+.my-tour-dashboard__alert svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: currentColor;
+}
+
+.my-tour-grid {
+  margin-top: 1.6rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.my-tour-card {
+  background: #fff;
+  border-radius: 26px;
   border: 1px solid rgba(15, 23, 42, 0.08);
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 35px 70px rgba(15, 23, 42, 0.15);
 }
 
-.my-tour-entry__hero {
+.my-tour-card__hero {
   position: relative;
-  height: 240px;
-  overflow: hidden;
 }
 
-.my-tour-entry__hero-media {
+.my-tour-card__hero-media {
   width: 100%;
-  height: 100%;
+  height: 220px;
   background-size: cover;
   background-position: center;
 }
 
-.my-tour-entry__hero-overlay {
+.my-tour-card__hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.6));
+  padding: 1.2rem;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.25), rgba(15, 23, 42, 0.85));
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 1.2rem;
   gap: 0.5rem;
   color: #fff;
 }
 
-.my-tour-entry__duration,
-.my-tour-entry__code {
-  background: rgba(255, 255, 255, 0.8);
-  color: #0f172a;
-  padding: 0.3rem 0.85rem;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.my-tour-entry__date {
-  font-size: 1rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-
-.my-tour-entry__hero-overlay span {
+.my-tour-card__hero-overlay span {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-start;
+  gap: 0.35rem;
+  padding: 0.15rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.7);
+  font-size: 0.82rem;
+  width: fit-content;
+  max-width: 100%;
+  white-space: nowrap;
 }
 
+.my-tour-card__hero-badge,
+.my-tour-card__hero-date,
+.my-tour-card__hero-code {
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  line-height: 1;
+}
 
-.my-tour-entry__body {
-  padding: 2rem;
+.my-tour-card__hero-date {
+  font-size: 0.92rem;
+}
+
+.my-tour-card__hero-code {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  opacity: 0.9;
+}
+
+.my-tour-card__body {
+  padding: 1.8rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  flex: 1;
 }
 
-.my-tour-entry__title {
-  font-size: 1.75rem;
-  color: #0f172a;
+.my-tour-card__title {
   margin: 0;
+  font-size: 1.5rem;
+  color: #0b1c74;
 }
 
-.my-tour-entry__location {
+.my-tour-card__location {
+  margin: 0;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
   font-size: 0.95rem;
   color: var(--portal-muted);
 }
 
-.my-tour-entry__summary {
-  color: #2f3c55;
+.my-tour-card__location svg {
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+}
+
+.my-tour-card__summary {
+  color: #2e3a55;
   line-height: 1.6;
   margin: 0;
 }
 
-.my-tour-entry__meta {
+.my-tour-card__info {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  border-top: 1px solid rgba(15, 23, 42, 0.05);
-  padding-top: 1rem;
-  color: #0f172a;
-  font-weight: 600;
+  gap: 0.8rem;
+  color: var(--portal-muted);
+  font-size: 0.9rem;
 }
 
-.my-tour-entry__meta svg {
+.my-tour-card__info span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.my-tour-card__info svg {
   width: 1rem;
   height: 1rem;
   fill: var(--portal-accent);
 }
 
-.my-tour-entry__prices {
+.my-tour-card__footer {
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  padding-top: 1rem;
+  margin-top: 0.5rem;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 2rem;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
-.my-tour-entry__price strong,
-.my-tour-entry__rating strong {
-  font-size: 1.7rem;
+.my-tour-card__price strong {
+  font-size: 1.6rem;
+  color: #0b1c74;
 }
 
-.my-tour-entry__price small,
-.my-tour-entry__rating small {
+.my-tour-card__price small {
   display: block;
   color: var(--portal-muted);
 }
 
-.my-tour-entry__actions {
+.my-tour-card__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8rem;
-  margin-top: 1rem;
+  gap: 0.75rem;
 }
 
-.my-tour-entry__btn {
-  flex: 1;
-  min-width: 160px;
-  padding: 0.9rem 1.2rem;
-  border-radius: 14px;
+.my-tour-card__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.75rem 1.15rem;
+  border-radius: 12px;
   border: none;
   background: #0b1c74;
   color: #fff;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
-  font-size: 0.95rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
+  font-size: 0.85rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 15px 30px rgba(11, 28, 116, 0.22);
+  box-shadow: 0 12px 25px rgba(11, 28, 116, 0.25);
+  cursor: pointer;
 }
 
-.my-tour-entry__btn svg {
+.my-tour-card__btn svg {
   width: 1rem;
   height: 1rem;
   fill: currentColor;
 }
 
-.my-tour-entry__btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 18px 35px rgba(11, 28, 116, 0.32);
+.my-tour-card__btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px rgba(11, 28, 116, 0.3);
 }
 
-.my-tour-entry__btn--outline {
+.my-tour-card__btn--outline {
   background: transparent;
   border: 1px solid rgba(11, 28, 116, 0.4);
   color: #0b1c74;
   box-shadow: none;
 }
 
-.my-tour-entry__btn--accent {
+.my-tour-card__btn--accent {
   background: #fb923c;
   color: #fff;
-  box-shadow: 0 15px 30px rgba(251, 146, 0, 0.3);
+  box-shadow: 0 12px 25px rgba(251, 146, 0, 0.35);
+}
+
+@media screen and (max-width: 1024px) {
+  .my-tour-card__footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 @media screen and (max-width: 768px) {
-  .my-tour-entry__actions {
+  .my-tour-dashboard__intro {
     flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .my-tour-dashboard__stats {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+
+  .my-tour-grid {
+    grid-template-columns: 1fr;
   }
 }

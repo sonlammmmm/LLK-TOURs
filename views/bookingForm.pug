@@ -1,76 +1,78 @@
-﻿extends base
+extends base
 
 block content
   -
-    var ratingValue =
+    const ratingValue =
       typeof tour.ratingsAverage === 'number'
         ? tour.ratingsAverage.toFixed(1)
         : '4.5';
-    var reviewCount = tour.ratingsQuantity || 0;
-    var locationDescription =
+    const reviewCount = tour.ratingsQuantity || 0;
+    const locationDescription =
       tour.startLocation && tour.startLocation.description
         ? tour.startLocation.description
         : 'Đang cập nhật';
-    var highlightSummary =
+    const highlightSummary =
       tour.summary ||
       'Lên đường cùng LLK Travel với lịch trình linh hoạt, lưu trú chất lượng và đội ngũ hỗ trợ 24/7.';
-    var maxGroup = tour.maxGroupSize || 1;
-    var basePrice = Number(tour.price) || 0;
-    var formattedPrice = basePrice.toLocaleString('vi-VN');
-    var primaryImage = tour.imageCover || 'tour-default.jpg';
-    var tourDuration = Number(tour.duration) || 0;
-    var availableDates = [];
+    const maxGroup = tour.maxGroupSize || 1;
+    const basePrice = Number(tour.price) || 0;
+    const formattedPrice = basePrice.toLocaleString('vi-VN');
+    const primaryImage = tour.imageCover || 'tour-default.jpg';
+    const tourDuration = Number(tour.duration) || 0;
+    let availableDates = [];
     if (tour.startDates && tour.startDates.length > 0) {
-      var now = new Date();
+      const now = new Date();
       now.setHours(0, 0, 0, 0);
-      availableDates = tour.startDates.filter(
-        sd => new Date(sd.date) >= now && sd.availableSlots > 0
-      );
+      availableDates = tour.startDates.filter(sd => {
+        const d = new Date(sd.date);
+        return d >= now && (sd.availableSlots || 0) > 0;
+      });
     }
 
   main.main.booking-shell
-    .booking-layout
-      form.booking-main-form(novalidate)
-        input(type='hidden', name='tourId', value=`${tour._id}`)
-        input#selectedDate(type='hidden', name='startDate', value='')
-        input#participants-input(type='hidden', name='participants', value='1')
+    form.booking-workspace(novalidate)
+      input(type='hidden', name='tourId', value=`${tour._id}`)
+      input#selectedDate(type='hidden', name='startDate', value='')
+      input#participants-input(type='hidden', name='participants', value='1')
 
-        .booking-form-grid
-          .booking-col.booking-col--primary
-            .tour-card
-              .tour-card__media
-                img(src=`/img/tours/${primaryImage}`, alt=`${tour.name}`)
-              .tour-card__body
-                span.tour-card__badge LLK Travel
-                h1.tour-card__title= tour.name
-                p.tour-card__summary= highlightSummary
-                ul.tour-card__meta
-                  li
-                    span.label Thời lượng
-                    span.value= `${tourDuration} ngày`
-                  li
-                    span.label Khởi hành
-                    span.value= locationDescription
-                  li
-                    span.label Đánh giá
-                    span.value= `${ratingValue} / 5 (${reviewCount})`
+      .booking-layout-grid
+        section.booking-card.booking-card--tour
+          .tour-card
+            .tour-card__media
+              img(src=`/img/tours/${primaryImage}`, alt=`${tour.name}`)
+            .tour-card__body
+              span.tour-card__badge= locationDescription
+              h1.tour-card__title= tour.name
+              p.tour-card__summary= highlightSummary
+              ul.tour-card__meta
+                li
+                  span.label Thời lượng
+                  span.value= `${tourDuration} ngày`
+                li
+                  span.label Đánh giá
+                  span.value= `${ratingValue}/5 (${reviewCount})`
+                li
+                  span.label Số khách tối đa
+                  span.value= `${maxGroup} khách`
 
-            .booking-section.booking-dates
-              .booking-block-header
-                h2.booking-block-title Chọn ngày khởi hành
-                p.booking-block-desc Các ngày hiển thị đều còn chỗ trống cho tour này.
-              if availableDates.length > 0
+        .booking-action-panel
+        .booking-action-panel
+          section.booking-card.booking-card--dates
+              .booking-card__header
+                h2 Chọn ngày khởi hành
+                p.card-desc Các ngày hiển thị đều còn chỗ trống
+              if availableDates.length
                 .booking-date-grid
                   each startObj in availableDates
-                    - var dateObj = new Date(startObj.date);
-                    - var day = dateObj.getDate();
-                    - var month = dateObj.toLocaleDateString('vi-VN', { month: 'short' });
-                    - var year = dateObj.getFullYear();
-                    - var weekday = dateObj.toLocaleDateString('vi-VN', { weekday: 'short' });
-                    - var lowSlots = startObj.availableSlots <= 3;
+                    - const dateObj = new Date(startObj.date)
+                    - const day = dateObj.getDate()
+                    - const month = dateObj.toLocaleDateString('vi-VN', { month: 'short' })
+                    - const year = dateObj.getFullYear()
+                    - const weekday = dateObj.toLocaleDateString('vi-VN', { weekday: 'short' })
+                    - const lowSlots = startObj.availableSlots <= 3
                     button.booking-date-btn(
                       type='button',
-                      class= lowSlots ? 'low-slots' : '',
+                      class=lowSlots ? 'low-slots' : '',
                       data-date=dateObj.toISOString(),
                       data-slots=startObj.availableSlots
                     )
@@ -79,111 +81,111 @@ block content
                       span.booking-date-month= `${month} ${year}`
                       span.booking-date-slotline= `${startObj.availableSlots} chỗ`
                       if lowSlots
-                        span.booking-date-alert Sắp hết chỗ
+                        span.booking-date-alert Sắp hết
               else
-                .booking-empty-state Hiện chưa có ngày khởi hành nào còn chỗ. Vui lòng quay lại sau.
-
+                .booking-empty-state Chưa có lịch khởi hành mở. Quay lại sau bạn nhé.
               .booking-date-selected
                 .booking-date-selected__info
                   span.booking-date-selected__label Ngày đã chọn
                   strong#selected-date-label Chưa chọn
                 span.booking-date-slots#selected-date-slots Chưa xác định
 
-            .booking-section.booking-participants
-              .booking-block-header
-                h2.booking-block-title Số lượng khách
-                p.booking-block-desc Điều chỉnh số thành viên để hệ thống tính chính xác chi phí.
-              .participants-control
-                button.booking-participants-btn.decrease-btn(type='button', aria-label='Giảm số lượng') -
-                .participants-count
-                  span Nhóm khách
-                  strong#participants-number 1
-                button.booking-participants-btn.increase-btn(type='button', aria-label='Tăng số lượng') +
-              .participants-hint
-                span.text Còn
-                strong#participants-remaining= `${Math.max(maxGroup - 1, 0)} chỗ`
-                span.text= `trống trong nhóm tối đa ${maxGroup} khách`
-
-            if services && services.length
-              .booking-section.booking-services
-                .booking-block-header
-                  h2.booking-block-title Dịch vụ bổ sung
-                  p.booking-block-desc Tùy chọn thêm để nâng cấp trải nghiệm trong cùng một lần thanh toán.
-                .services-stack
+          if services && services.length
+            section.booking-card.booking-card--services
+              .booking-card__header
+                h2 Dịch vụ bổ sung
+                p.card-desc Tùy chọn thêm để nâng cấp trải nghiệm
+                .service-options
                   each service in services
-                    - var serviceId = service.id || (service._id && service._id.toString());
-                    label.service-card
-                      input.service-checkbox(
-                        type='checkbox',
-                        data-service-id=serviceId,
-                        data-price=service.price,
-                        data-charge-type=service.chargeType,
-                        data-allow-multiple=service.allowMultiple,
-                        data-max-quantity=service.maxQuantity,
-                        data-min-quantity=service.minQuantity,
-                        data-name=service.name
-                      )
-                      .service-card__details
-                        .service-card__head
-                          span.service-card__name= service.name
-                          span.service-card__price= `${service.price.toLocaleString('vi-VN')} ₫`
-                        if service.shortDescription
-                          p.service-card__desc= service.shortDescription
-                        .service-card__meta
-                          span.badge= service.chargeType === 'per-person' ? 'Tính theo khách' : 'Tính theo booking'
-                          if service.allowMultiple && service.chargeType === 'per-booking'
-                            span.badge.badge--outline Có thể chọn nhiều lần
-                        if service.allowMultiple && service.chargeType === 'per-booking'
-                          .service-quantity
-                            label.service-quantity__label(for=`service-qty-${serviceId}`) Số lượng
-                            input.service-quantity-input(
-                              type='number',
-                              id=`service-qty-${serviceId}`,
-                              min=service.minQuantity || 1,
-                              max=service.maxQuantity || service.minQuantity || 1,
-                              value=service.minQuantity || 1,
-                              data-service-id=serviceId,
-                              disabled
-                            )
-            else
-              p.booking-inline-note Tour hiện chưa có dịch vụ bổ sung. Bạn vẫn có thể đặt tour ngay.
+                    - const serviceId = service.id || (service._id && service._id.toString())
+                    .service-option
+                      label.service-option__main(for=`service-check-${serviceId}`)
+                        input.service-checkbox(
+                          type='checkbox',
+                          id=`service-check-${serviceId}`,
+                          value=serviceId,
+                          data-service-id=serviceId,
+                          data-price=service.price,
+                          data-charge-type=service.chargeType,
+                          data-allow-multiple=service.allowMultiple,
+                          data-min-quantity=service.minQuantity || 1,
+                          data-max-quantity=service.maxQuantity || service.minQuantity || 1,
+                          data-name=service.name
+                        )
+                        .service-option__details
+                          strong= service.name
+                          span.service-option__price= `${service.price.toLocaleString('vi-VN')} đ`
+                          if service.shortDescription
+                            p.service-option__desc= service.shortDescription
+                          .service-option__badges
+                            span.badge= service.chargeType === 'per-person' ? 'Theo khách' : 'Theo booking'
+                            if service.allowMultiple && service.chargeType === 'per-booking'
+                              span.badge.badge--outline Nhiều lần
+                      if service.allowMultiple && service.chargeType === 'per-booking'
+                        .service-quantity
+                          label.service-quantity__label(for=`service-qty-${serviceId}`) Số lượng
+                          input.service-quantity-input(
+                            type='number',
+                            id=`service-qty-${serviceId}`,
+                            min=service.minQuantity || 1,
+                            max=service.maxQuantity || service.minQuantity || 1,
+                            value=service.minQuantity || 1,
+                            data-service-id=serviceId,
+                            disabled
+                          )
+          else
+            section.booking-card.booking-card--services
+              .booking-card__header
+                h2 Dịch vụ bổ sung
+                p.card-desc Chưa có dịch vụ bổ sung cho tour này
+              .booking-empty-state Bạn vẫn có thể đặt tour ngay.
 
-          .booking-col.booking-col--summary
-            .payment-card
-              .payment-card__header
-                span.payment-eyebrow TỔNG QUAN CHI PHÍ
-                h3 Khóa chỗ tour chỉ trong 1 bước
-                p Chi phí đã bao gồm dịch vụ cơ bản và hỗ trợ 24/7.
+          section.booking-card.booking-card--payment
+              .booking-card__header
+                h2 Thanh toán
+                p.card-desc Kiểm tra chi phí dự kiến trước khi thanh toán
+              .payment-card
+                .payment-row
+                  span.payment-label Giá tour / khách
+                  span.payment-value#price-per-person= `${formattedPrice} đ`
+                .payment-row
+                  span.payment-label Số người
+                  span.payment-value#participants-display 1
+                .payment-row
+                  span.payment-label Dịch vụ bổ sung
+                  span.payment-value#services-total 0 đ
+                .payment-row
+                  span.payment-label Giảm giá
+                  span.payment-value#discount-amount 0 đ
+                .payment-row.total-row
+                  span.payment-label Tổng thanh toán dự kiến
+                  span.payment-value#grand-total= `${formattedPrice} đ`
 
-              .payment-row
-                span.payment-label Giá tour / khách
-                span.payment-value#price-per-person= `${formattedPrice} ₫`
-              .payment-row
-                span.payment-label Số người
-                span.payment-value#participants-display 1
-              .payment-row
-                span.payment-label Dịch vụ bổ sung
-                span.payment-value#services-total 0 ₫
-              .payment-row
-                span.payment-label Giảm giá
-                span.payment-value#discount-amount 0 ₫
-              .payment-row.total-row
-                span.payment-label Tổng thanh toán dự kiến
-                span.payment-value#grand-total= `${formattedPrice} ₫`
+              section.booking-card.booking-card--participants-insight
+                h3 Số lượng khách
+                p.card-desc Điều chỉnh để hệ thống tính chi phí chính xác.
+                .participants-control
+                  button.booking-participants-btn.decrease-btn(type='button', aria-label='Giảm số lượng') -
+                  .participants-count
+                    span Nhóm khách
+                    strong#participants-number 1
+                  button.booking-participants-btn.increase-btn(type='button', aria-label='Tăng số lượng') +
+                .participants-hint
+                  span.text Còn
+                  strong#participants-remaining= `${Math.max(maxGroup - 1, 0)} chỗ`
+                  span.text= `trống / tối đa ${maxGroup} khách`
 
               .promotion-block
-                label.booking-block-title(for='promotion-code') Mã ưu đãi
+                label(for='promotion-code') Mã ưu đãi
                 .promotion-actions
                   input#promotion-code(type='text', placeholder='Nhập mã của bạn', autocomplete='off')
                   button.btn.btn--small.btn--blue#apply-promo(type='button') Áp dụng
-                  button.btn.btn--small.btn--gray#remove-promo(type='button', disabled=true, hidden) Xóa mã
+                  button.btn.btn--small.btn--gray#remove-promo(type='button', disabled=true, hidden) Xoá mã
                 p.promo-message#promotion-message
                 if userPromotions && userPromotions.length
-                  .user-promotions-hint
-                    span Bạn có thể dùng:
-                    .promo-chip-list
-                      each promo in userPromotions
-                        button(type='button', class='promo-chip', data-code=promo.code, data-name=promo.name, data-expiry=promo.expiresAt)= promo.code
+                  .promo-chip-list
+                    each promo in userPromotions
+                      button(type='button', class='promo-chip', data-code=promo.code, data-name=promo.name, data-expiry=promo.expiresAt)= promo.code
 
               .booking-actions
                 a.btn.btn--gray(href=`/tour/${tour.slug}`) Xem thông tin tour
@@ -215,8 +217,3 @@ block scripts
   script#booking-data(type='application/json')!= bookingDataPayload
   script(src='/js/bookingForm.js', type='module')
   script(src='/js/stripe.js', type='module')
-
-
-
-
-

@@ -1,32 +1,72 @@
 extends adminLayout
 
+block append styles
+  link(rel='stylesheet', href='/css/adminChat.css')
+
 block adminContent
   .llk-admin-topbar
     .llk-admin-topbar__left
-      h1.llk-admin-topbar__title Chat khách hàng
-      p.llk-admin-topbar__subtitle Giữ kết nối với người dùng theo thời gian thực.
-    .llk-admin-topbar__right
-      button.btn.btn--ghost(type='button')
-        svg(width='16' height='16')
-          use(xlink:href='/img/icons.svg#icon-archive')
-        |  Lưu hội thoại
+      h1.llk-admin-topbar__title Trung tâm chăm sóc khách hàng
+      p.llk-admin-topbar__subtitle Theo dõi và phản hồi mọi hội thoại với khách theo thời gian thực.
 
   section.llk-admin-panel
-    .llk-chat-wrapper
-      aside.llk-chat-sidebar
-        h3 Danh sách Chat
-        .llk-search-box
+    .admin-chat-layout
+      aside.admin-chat-sidebar
+        .admin-chat-sidebar__header
+          .admin-chat-sidebar__title
+            h3 Phòng chat gần đây
+        .admin-chat-search
           input#user-search(type='text', placeholder='Tìm kiếm người dùng...')
-        ul#user-list
+        ul#user-list.admin-chat-room-list
 
-      section.llk-chat-main
-        #chat-box.llk-chat-box
-          .llk-chat-empty Chọn người dùng để bắt đầu chat
-        form#chat-form.llk-chat-form
-          input#chat-input(type='text', placeholder='Nhập tin nhắn...' autocomplete='off')
-          button.llk-send-btn(type='submit')
-            i(class="fa-solid fa-paper-plane")
-            |  Gửi
+      section.admin-chat-conversation
+        .admin-chat-conversation__header
+          .admin-chat-partner
+            img#active-user-avatar.admin-chat-partner__avatar(src='/img/users/default.jpg', alt='Khách hàng đang chọn')
+            .admin-chat-partner__meta
+              span.admin-chat-partner__label Khách hàng đang chọn
+              span#active-user-name.admin-chat-partner__name Chưa chọn phòng chat
+              span#active-user-status.admin-chat-partner__status Chọn người dùng ở danh sách bên trái để xem lịch sử.
+          .admin-chat-conversation__copy
+            h2.heading-secondary Chat hỗ trợ LLK
+
+        #chat-box.admin-chat-messages
+          .admin-chat-empty Chọn người dùng để bắt đầu chat
+
+        .admin-chat-conversation__footer
+          form#chat-form.admin-chat-form
+            input#chat-input.admin-chat-input(type='text', placeholder='Nhập tin nhắn...' autocomplete='off')
+            button.admin-chat-send(type='submit')
+              i(class='fa-solid fa-paper-plane')
+              |  Gửi
+
+      aside.admin-chat-stats
+        .admin-chat-stats__header
+          h3 Tổng quan realtime
+          span#chat-stat-timestamp Cập nhật --
+        .admin-chat-stats__cards
+          article.admin-chat-card
+            span.admin-chat-card__label Room đang hoạt động
+            strong#chat-stat-active 0
+            small.admin-chat-card__note Bao gồm các phòng vừa được tải
+          article.admin-chat-card.admin-chat-card--accent
+            span.admin-chat-card__label Tin nhắn mới
+            strong#chat-stat-new 0
+            small.admin-chat-card__note Tổng tin chưa đọc
+          article.admin-chat-card.admin-chat-card--warning
+            span.admin-chat-card__label Chưa phản hồi
+            strong#chat-stat-pending 0
+            small.admin-chat-card__note Phòng đang chờ phản hồi
+        .admin-chat-stats__list
+          div
+            span.admin-chat-stats__list-label SLA phản hồi
+            strong < 5 phút
+          div
+            span.admin-chat-stats__list-label Hệ thống đang online
+            strong LLK Support Bot
+          div
+            span.admin-chat-stats__list-label Gợi ý
+            p.admin-chat-stats__list-text Gắn nhãn mức độ ưu tiên cho các phòng nhiều tin nhắn chưa phản hồi để phân công nhanh hơn.
 
 block append scripts
-  script(src="/js/chatAdmin.js")
+  script(src='/js/chatAdmin.js')

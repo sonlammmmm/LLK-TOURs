@@ -14,25 +14,80 @@ exports.getAdminChatView = catchAsync(async (req, res) => {
 exports.getUserChatView = catchAsync(async (req, res) => {
   // Lấy toàn bộ tin của user này, không cần chọn 1 admin
   const userId = req.user._id;
+  const userAvatar = req.user?.photo
+    ? `/img/users/${req.user.photo}`
+    : '/img/users/default.jpg';
+
   const messages = await Message.find({
     $or: [{ sender: userId }, { receiver: userId }]
-  }).sort({ createdAt: 1 });
+  })
+    .sort({ createdAt: 1 })
+    .lean();
 
-  const serialized = messages.map(m => ({
-    sender: m.sender.toString(),
-    receiver: m.receiver.toString(),
-    senderName: m.senderName,
-    receiverName: m.receiverName,
-    content: m.content,
-    role: m.role,
-    createdAt: m.createdAt
-  }));
+  const adminIds = [
+    ...new Set(
+      messages
+        .filter(m => m.role === 'admin')
+        .map(m => m.sender.toString())
+    )
+  ];
+
+  const admins =
+    adminIds.length > 0
+      ? await User.find({ _id: { $in: adminIds } })
+          .select('name photo')
+          .lean()
+      : [];
+
+  const fallbackAdminAvatar = '/img/users/default.jpg';
+  const adminAvatarMap = admins.reduce((acc, admin) => {
+    acc[admin._id.toString()] = admin.photo
+      ? `/img/users/${admin.photo}`
+      : fallbackAdminAvatar;
+    return acc;
+  }, {});
+
+  const lastAdminMessage = messages.filter(m => m.role === 'admin').pop();
+  const activeAdminId = lastAdminMessage
+    ? lastAdminMessage.sender.toString()
+    : adminIds[0];
+  const activeAdmin =
+    activeAdminId &&
+    admins.find(admin => admin._id.toString() === activeAdminId);
+
+  const partnerInfo = {
+    name: activeAdmin?.name || 'Admin LLK',
+    avatar: activeAdmin
+      ? adminAvatarMap[activeAdmin._id.toString()]
+      : fallbackAdminAvatar,
+    status: 'Thường phản hồi trong vài phút'
+  };
+
+  const serialized = messages.map(m => {
+    const senderId = m.sender.toString();
+    return {
+      sender: senderId,
+      receiver: m.receiver.toString(),
+      senderName: m.senderName,
+      receiverName: m.receiverName,
+      content: m.content,
+      role: m.role,
+      createdAt: m.createdAt,
+      senderAvatar:
+        m.role === 'admin'
+          ? adminAvatarMap[senderId] || fallbackAdminAvatar
+          : userAvatar
+    };
+  });
 
   res.status(200).render('chat', {
     title: 'Chat với admin',
     user: req.user,
-    // không cần truyền adminId cố định nữa
-    messages: serialized
+    messages: serialized,
+    chatPartner: partnerInfo,
+    adminAvatarMap,
+    fallbackAdminAvatar,
+    userAvatar
   });
 });
 

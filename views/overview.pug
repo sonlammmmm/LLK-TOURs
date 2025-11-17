@@ -9,26 +9,18 @@ block content
         form.search-form(action="/search", method="GET")
           .form-group.main-search
             input#searchInput.form-input(
-              type="text", 
-              name="name", 
+              type="text",
+              name="name",
               placeholder="Bạn muốn đi đâu?",
               value=searchParams ? searchParams.name : ''
             )
           .form-group-row
             .form-group
               input.form-input(
-                type="date", 
+                type="date",
                 name="startDates",
                 value=searchParams ? searchParams.startDates : ''
               )
-            .form-group
-              select.form-input(name="startLocation")
-                option(value="") Khởi hành từ
-                each location in uniqueLocations || []
-                  option(
-                    value=location,
-                    selected=searchParams && searchParams.startLocation === location
-                  )= location
             button.btn.btn--timkim(type="submit") Tìm kiếm
 
   main.main
@@ -39,7 +31,22 @@ block content
     else
       .card-container
         each tour in tours
-          .card
+          - const nextDateObj = tour.startDates.filter(d => new Date(d.date || d) > new Date() && (d.availableSlots > 0 || d.availableSlots === undefined)).sort((a, b) => new Date(a.date || a) - new Date(b.date || b))[0]
+          - const dateDisplay = nextDateObj ? new Date(nextDateObj.date || nextDateObj).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Trống lịch'
+          - const availableSlots = nextDateObj ? (nextDateObj.availableSlots !== undefined ? nextDateObj.availableSlots : tour.maxGroupSize) : 0
+          - const slotsText = `Còn ${availableSlots}/${tour.maxGroupSize} chỗ`
+          - const canBook = availableSlots > 0
+          - const contactMessage = `Tôi muốn hỏi về Tour ${tour.name}`
+          - const contactHref = `/chat?prefill=${encodeURIComponent(contactMessage)}`
+          - const isUser = user && user.role === 'user'
+          - const primaryHref = canBook ? (isUser ? `/book-tour/${tour._id}` : '/login') : (isUser ? contactHref : '/login')
+          .card(class={ 'card--sold-out': !canBook })
+            a.card__overlay-link(
+              href=`/tour/${tour.slug}`
+              aria-label=`Xem chi tiết tour ${tour.name}`
+            )
+            if !canBook
+              img.card__sold-out-note(src='/img/soldout.png', alt='Tour đã hết chỗ')
             .card__header
               .card__picture
                 img.card__picture-img(src=`/img/tours/${tour.imageCover}`, alt=`${tour.name}`)
@@ -56,8 +63,6 @@ block content
               .card__data
                 svg.card__icon
                   use(xlink:href='/img/icons.svg#icon-calendar')
-                - const nextDateObj = tour.startDates.filter(d => new Date(d.date || d) > new Date() && (d.availableSlots > 0 || d.availableSlots === undefined)).sort((a, b) => new Date(a.date || a) - new Date(b.date || b))[0]
-                - const dateDisplay = nextDateObj ? new Date(nextDateObj.date || nextDateObj).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Chưa có lịch khởi hành'
                 span= dateDisplay
               .card__data
                 svg.card__icon
@@ -66,26 +71,22 @@ block content
               .card__data
                 svg.card__icon
                   use(xlink:href='/img/icons.svg#icon-user')
-                - const availableSlots = nextDateObj ? (nextDateObj.availableSlots !== undefined ? nextDateObj.availableSlots : tour.maxGroupSize) : 0
-                - const slotsText = `Còn ${availableSlots}/${tour.maxGroupSize} vé`
                 span= slotsText
 
             .card__footer
-              p
-                span.card__footer-value= `${tour.price.toLocaleString('vi-VN')}`
-                | 
-                span.card__footer-text VNĐ/khách
-              p.card__ratings
-                span.card__footer-value= tour.ratingsAverage
-                | 
-                span.card__footer-text= `/5⭐(${tour.ratingsQuantity})`
+              .card__footer-info
+                .card__price
+                  span.card__footer-label Giá từ
+                  span.card__footer-value= `${tour.price.toLocaleString('vi-VN')}`
+                  span.card__footer-text VNĐ/khách
+                .card__rating
+                  span.card__footer-label Đánh giá
+                  span.card__footer-value= tour.ratingsAverage
+                  span.card__footer-text= `/5⭐(${tour.ratingsQuantity})`
               .card__actions
-                a.btn.btn--blue.btn--small(href=`/tour/${tour.slug}`) CHI TIẾT
-                if !user
-                  a.btn.btn--green.btn--small(href=`/book-tour/${tour._id}`) ĐẶT TOUR
-                else if user.role === 'user'
-                  - const canBook = availableSlots > 0
-                  if canBook
-                    a.btn.btn--green.btn--small(href=`/book-tour/${tour._id}`) ĐẶT TOUR
-                  else
-                    a.btn.btn--grey.btn--small.btn--disabled(style="cursor: not-allowed; opacity: 0.6;") HẾT CHỖ
+                if canBook
+                  a.btn.btn--green.btn--small(href=primaryHref) ĐẶT TOUR
+                else
+                  a.btn.btn--contact.btn--small(href=primaryHref)
+                    i.fa-solid.fa-phone
+                    span Liên hệ

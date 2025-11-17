@@ -7,101 +7,96 @@ block content
       +userPortalMenu('tours')
       .user-portal__content
         .user-portal__content-heading
-          h2.heading-secondary Tour của tôi
-          p Tập hợp các chuyến đi, hóa đơn và đánh giá để bạn nắm rõ hành trình của mình.
-
-        .my-tour-collection
-          if !tours || tours.length === 0
-            .empty-tours
-              h2.heading-secondary Bạn chưa có tour nào
-              p.empty-tours-text Hãy chọn tour đầu tiên và lên lịch cho mình!
-              a.my-tour-link(href='/') Khám phá tour
-          else
-            - const bookingRecords = Array.isArray(bookings) ? bookings : []
-            - const reviewsList = Array.isArray(reviews) ? reviews : []
-            each tour in tours
-              - const matchedBookings = bookingRecords.filter(b => b.tour.id === tour.id)
-              if matchedBookings.length === 0
-                .empty-tours
-                  p Chưa có đặt chỗ cho tour #{tour.name}.
-              else
-                each booking in matchedBookings
-                  - const startDate = booking.startDate ? new Date(booking.startDate) : null
-                  - const fallbackDate = tour.startDates && tour.startDates.length ? new Date(tour.startDates[0]) : null
-                  - const displayDate = startDate ? startDate : fallbackDate
-                  - const bookingDateLabel = displayDate ? displayDate.toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Chưa xác định'
-                  - const today = new Date()
-                  - const tourEndDate = startDate ? new Date(startDate) : null
-                  - if (tourEndDate) tourEndDate.setDate(tourEndDate.getDate() + tour.duration)
-                  - const canReview = tourEndDate ? today > tourEndDate : false
-                  - const hasReviewed = reviewsList.some(r => r.tour.id === tour.id && r.user.id === user.id)
-                  - const userReview = reviewsList.find(r => r.tour.id === tour.id && r.user.id === user.id)
-
-                  article.my-tour-entry
-                    .my-tour-entry__hero
-                      .my-tour-entry__hero-media(style=`background-image: url('/img/tours/${tour.imageCover}')`)
-                      .my-tour-entry__hero-overlay
-                        span.my-tour-entry__duration= `${tour.duration} ngày`
-                        span.my-tour-entry__date= bookingDateLabel
-                        span.my-tour-entry__code= `Mã tour: #${booking.id.slice(-8).toUpperCase()}`
-
-                    .my-tour-entry__body
-                      h3.my-tour-entry__title= tour.name
-                      p.my-tour-entry__location
+          h2.heading-secondary Hành trình của bạn
+          p Theo dõi nhanh các chuyến đi, trạng thái và đánh giá ở một nơi duy nhất.
+        if !sortedBookings || sortedBookings.length === 0
+          .empty-tours
+            h2.heading-secondary Bạn chưa có tour nào
+            p.empty-tours-text Hãy khám phá hành trình mới và lưu lại chuyến đi đầu tiên của bạn.
+            a.my-tour-link(href='/') Khám phá tour
+        else
+          .my-tour-dashboard
+            .my-tour-dashboard__intro
+              .intro-text
+                h3.heading-tertiary Bảng điều khiển hành trình
+                p Cập nhật nhanh các chuyến đi, trạng thái và hóa đơn.
+              .intro-actions
+                a.btn.btn--green(href='/') Khám phá tour mới
+                a.btn.btn--outline(href='/my-billing') Lịch sử thanh toán
+            .my-tour-dashboard__stats
+              each stat in summaryStats
+                .stat-card
+                  strong.stat-card__value= stat.value
+                  span.stat-card__label= stat.label
+                  small.stat-card__detail= stat.detail
+            if pendingReviewCount
+              .my-tour-dashboard__alert
+                svg
+                  use(xlink:href='/img/icons.svg#icon-star')
+                span Bạn còn #{pendingReviewCount} đánh giá chưa gửi
+          .my-tour-grid
+            each entry in sortedBookings
+              article.my-tour-card
+                .my-tour-card__hero
+                  .my-tour-card__hero-media(style=`background-image: url('/img/tours/${entry.tour.imageCover}')`)
+                    .my-tour-card__hero-overlay
+                      span.my-tour-card__hero-badge= entry.statusText
+                      span.my-tour-card__hero-date= entry.dateLabel
+                      span.my-tour-card__hero-code= `Mã tour: #${entry.bookingCode}`
+                .my-tour-card__body
+                  h3.my-tour-card__title= entry.tour.name
+                  p.my-tour-card__location
+                    svg
+                      use(xlink:href='/img/icons.svg#icon-map-pin')
+                    span= entry.tour.startLocation.description
+                  p.my-tour-card__summary= entry.tour.summary
+                  .my-tour-card__info
+                    span
+                      svg
+                        use(xlink:href='/img/icons.svg#icon-flag')
+                      | #{entry.tour.locations ? entry.tour.locations.length : 0} điểm đến
+                    span
+                      svg
+                        use(xlink:href='/img/icons.svg#icon-user')
+                      | #{entry.booking.participants || 1} khách
+                    span
+                      svg
+                        use(xlink:href='/img/icons.svg#icon-calendar')
+                      | #{entry.tour.duration} ngày
+                  .my-tour-card__footer
+                    .my-tour-card__price
+                      strong= `${entry.paidAmountLabel} VNĐ`
+                      small Giá thanh toán
+                    .my-tour-card__actions
+                      a.my-tour-card__btn(href=`/tour/${entry.tour.slug}`)
                         svg
-                          use(xlink:href='/img/icons.svg#icon-map-pin')
-                        span= tour.startLocation.description
-                      p.my-tour-entry__summary= tour.summary
-
-                      .my-tour-entry__meta
-                        span
+                          use(xlink:href='/img/icons.svg#icon-eye')
+                        span Xem chi tiết
+                      if entry.booking
+                        a.my-tour-card__btn.my-tour-card__btn--outline(href=`/booking-invoice/${entry.booking.id}`)
                           svg
-                            use(xlink:href='/img/icons.svg#icon-flag')
-                          | #{tour.locations.length} địa điểm
-                        span
-                          svg
-                            use(xlink:href='/img/icons.svg#icon-user')
-                          | #{booking.participants || 1} khách
-
-                      .my-tour-entry__prices
-                        .my-tour-entry__price
-                          strong= `${booking.price.toLocaleString('vi-VN')} VNĐ`
-                          small Giá thanh toán
-                        .my-tour-entry__rating
-                          strong= tour.ratingsAverage.toFixed(1)
-                          small Đánh giá (#{tour.ratingsQuantity})
-
-                      .my-tour-entry__actions
-                        a.my-tour-entry__btn(href=`/tour/${tour.slug}`)
-                          svg
-                            use(xlink:href='/img/icons.svg#icon-eye')
-                          span Xem chi tiết
-                        if booking
-                          a.my-tour-entry__btn.my-tour-entry__btn--outline(href=`/booking-invoice/${booking.id}`)
+                            use(xlink:href='/img/icons.svg#icon-credit-card')
+                          span Hóa đơn
+                      if entry.canReview
+                        if !entry.hasReviewed
+                          button.my-tour-card__btn.my-tour-card__btn--accent.btn-add-review(type='button', data-tour-id=entry.tour.id)
                             svg
-                              use(xlink:href='/img/icons.svg#icon-credit-card')
-                            span Hoá đơn
-                        if canReview
-                          if !hasReviewed
-                            button.my-tour-entry__btn.my-tour-entry__btn--accent(type='button', data-tour-id=tour.id)
-                              svg
-                                use(xlink:href='/img/icons.svg#icon-star')
-                              span Đánh giá
-                          else if userReview
-                            button.my-tour-entry__btn.my-tour-entry__btn--accent(type='button',
-                              data-review-id=userReview.id,
-                              data-tour-id=tour.id,
-                              data-review-text=userReview.review,
-                              data-review-rating=userReview.rating
-                            )
-                              svg
-                                use(xlink:href='/img/icons.svg#icon-edit-2')
-                              span Sửa đánh giá
-
+                              use(xlink:href='/img/icons.svg#icon-star')
+                            span Gửi đánh giá
+                        else if entry.userReview
+                          button.my-tour-card__btn.my-tour-card__btn--accent.btn-edit-my-review(type='button',
+                            data-review-id=entry.userReview.id,
+                            data-tour-id=entry.tour.id,
+                            data-review-text=entry.userReview.review,
+                            data-review-rating=entry.userReview.rating
+                          )
+                            svg
+                              use(xlink:href='/img/icons.svg#icon-edit-2')
+                            span Chỉnh sửa đánh giá
         .modal.hidden#review-modal
           .modal__content
             span.modal__close &times;
-            h2.modal__title Đánh giá tour
+            h2.modal__title Gửi đánh giá tour
             form.form.form-add-review
               input#review-tour-id(type='hidden')
               input#review-id(type='hidden')

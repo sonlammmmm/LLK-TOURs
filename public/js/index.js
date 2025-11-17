@@ -32,7 +32,6 @@ import { handleServiceForm, initServiceListActions } from "./serviceManagement"
 // DOM ELEMENTS
 const loginForm = document.querySelector(".form--login")
 const signupForm = document.querySelector(".form--signup")
-const logOutBtn = document.querySelector(".nav__el--logout")
 const userDataForm = document.querySelector(".form-user-data")
 const userPasswordForm = document.querySelector(".form-user-password")
 const bookBtn = document.getElementById("book-tour")
@@ -72,8 +71,6 @@ if (signupForm)
     const passwordConfirm = document.getElementById("password-confirm").value
     signup(name, email, password, passwordConfirm)
   })
-
-if (logOutBtn) logOutBtn.addEventListener("click", logout)
 
 if (userDataForm)
   userDataForm.addEventListener("submit", (e) => {
@@ -406,26 +403,11 @@ export const initHeader = () => {
     });
   }
   
-  // Header scroll effect (optional)
-  let lastScrollTop = 0;
-  const header = document.querySelector('.header');
-  
-  window.addEventListener('scroll', () => {
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    
-    if (scrollTop > lastScrollTop && scrollTop > 100) {
-      // Scrolling down
-      header.style.transform = 'translateY(-100%)';
-    } else {
-      // Scrolling up
-      header.style.transform = 'translateY(0)';
-    }
-    
-    lastScrollTop = scrollTop;
-  });
-  
-  // Add scroll transition
-  header.style.transition = 'transform 0.3s ease-in-out';
+  const header = document.querySelector('.site-header');
+  if (header) {
+    header.style.transform = 'none';
+    header.style.transition = 'none';
+  }
 };
 
 // Logout functionality
@@ -448,8 +430,68 @@ export const handleLogout = () => {
   });
 };
 
+const initReviewCarousel = () => {
+  const track = document.querySelector('[data-reviews-track]');
+  if (!track) return;
+
+  const prevBtn = document.querySelector('.reviews-carousel__nav--prev');
+  const nextBtn = document.querySelector('.reviews-carousel__nav--next');
+  const step = () => track.clientWidth * 0.65;
+
+  if (prevBtn)
+    prevBtn.addEventListener('click', () => {
+      track.scrollBy({ left: -step(), behavior: 'smooth' });
+    });
+
+  if (nextBtn)
+    nextBtn.addEventListener('click', () => {
+      track.scrollBy({ left: step(), behavior: 'smooth' });
+    });
+
+  let isDragging = false;
+  let startX = 0;
+  let scrollStart = 0;
+
+  const startDrag = (event) => {
+    isDragging = true;
+    track.classList.add('is-dragging');
+    startX = event.pageX || (event.touches && event.touches[0].pageX) || 0;
+    scrollStart = track.scrollLeft;
+  };
+
+  const onDrag = (event) => {
+    if (!isDragging) return;
+    const x = event.pageX || (event.touches && event.touches[0].pageX) || 0;
+    const walk = x - startX;
+    track.scrollLeft = scrollStart - walk;
+  };
+
+  const stopDrag = () => {
+    isDragging = false;
+    track.classList.remove('is-dragging');
+  };
+
+  track.addEventListener('mousedown', startDrag);
+  track.addEventListener('touchstart', startDrag, { passive: true });
+  track.addEventListener('mousemove', onDrag);
+  track.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    onDrag(e);
+  }, { passive: false });
+
+  window.addEventListener('mouseup', stopDrag);
+  window.addEventListener('touchend', stopDrag);
+  track.addEventListener('mouseleave', stopDrag);
+
+  track.querySelectorAll('.reviews__card').forEach((card) => {
+    card.addEventListener('dragstart', (e) => e.preventDefault());
+  });
+};
+
 // Initialize header when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   initHeader();
   handleLogout();
+  initReviewCarousel();
 });

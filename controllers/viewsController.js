@@ -131,18 +131,128 @@ exports.getAccount = (req, res) => {
 
 exports.getMyTours = catchAsync(async (req, res, next) => {
   const bookings = await Booking.find({ user: req.user.id });
-  const tourIDs = bookings.map(el => el.tour);
-  const tours = await Tour.find({ _id: { $in: tourIDs } });
   const reviews = await Review.find({ user: req.user.id }).populate({
     path: 'tour',
     select: 'name'
   });
+  const reviewsMap = reviews.reduce((acc, review) => {
+    if (review.tour) acc[review.tour.id] = review;
+    return acc;
+  }, {});
+
+  const today = new Date();
+
+  const enrichedBookings = bookings
+    .map(booking => {
+      const { tour } = booking;
+      if (!tour) return null;
+      const startDate = booking.startDate ? new Date(booking.startDate) : null;
+      const fallbackDate =
+        tour.startDates && tour.startDates.length
+          ? new Date(tour.startDates[0])
+          : null;
+      const displayDate = startDate || fallbackDate;
+      let endDate = null;
+      if (displayDate) {
+        endDate = new Date(displayDate);
+        endDate.setDate(endDate.getDate() + (tour.duration || 0));
+      }
+      let statusText = 'Lịch trình cập nhật';
+      if (displayDate) {
+        if (endDate && today > endDate) {
+          statusText = 'Đã hoàn thành';
+        } else if (displayDate > today) {
+          statusText = 'Sắp khởi hành';
+        } else {
+          statusText = 'Đang diễn ra';
+        }
+      }
+      const tourId = tour.id ? tour.id : tour._id ? tour._id.toString() : null;
+      const userReview = tourId ? reviewsMap[tourId] : null;
+      const hasReviewed = userReview !== null && userReview !== undefined; // Check if userReview is not null or undefined
+      const canReview = endDate ? today > endDate : false;
+      const pendingReview = canReview && !hasReviewed;
+      const dateLabel = displayDate
+        ? displayDate.toLocaleDateString('vi-VN', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+          })
+        : 'Chưa xác định';
+      const paidAmount = booking.price ? Number(booking.price) : 0;
+      const paidAmountLabel = paidAmount.toLocaleString('vi-VN');
+      const bookingCode = booking.id ? booking.id.slice(-6).toUpperCase() : '';
+      const ratingAverage =
+        typeof tour.ratingsAverage === 'number' ? tour.ratingsAverage : 0;
+      const ratingsQuantity =
+        typeof tour.ratingsQuantity === 'number' ? tour.ratingsQuantity : 0;
+
+      return {
+        booking,
+        tour,
+        displayDate,
+        dateLabel,
+        statusText,
+        canReview,
+        hasReviewed,
+        userReview,
+        pendingReview,
+        paidAmount,
+        paidAmountLabel,
+        bookingCode,
+        ratingAverage,
+        ratingsQuantity,
+        endDate
+      };
+    })
+    .filter(Boolean);
+
+  const sortedBookings = [...enrichedBookings].sort((a, b) => {
+    const aTime = a.displayDate ? a.displayDate.getTime() : 0;
+    const bTime = b.displayDate ? b.displayDate.getTime() : 0;
+    return bTime - aTime;
+  });
+
+  const upcomingCount = sortedBookings.filter(
+    entry => entry.displayDate && entry.displayDate > today
+  ).length;
+  const completedCount = sortedBookings.filter(
+    entry => entry.endDate && today > entry.endDate
+  ).length;
+  const totalSpent = sortedBookings.reduce(
+    (sum, entry) => sum + entry.paidAmount,
+    0
+  );
+  const formattedSpend = totalSpent.toLocaleString('vi-VN');
+  const pendingReviewCount = sortedBookings.filter(entry => entry.pendingReview)
+    .length;
+
+  const summaryStats = [
+    {
+      label: 'Tour đã đặt',
+      value: sortedBookings.length,
+      detail: 'Lịch trình đang theo dõi'
+    },
+    {
+      label: 'Sắp khởi hành',
+      value: upcomingCount,
+      detail: 'Chuẩn bị hành lý'
+    },
+    { label: 'Đã hoàn thành', value: completedCount, detail: 'Kỷ niệm đã lưu' },
+    {
+      label: 'Tổng chi',
+      value: `${formattedSpend} VNĐ`,
+      detail: 'Đã thanh toán'
+    }
+  ];
 
   res.status(200).render('myTours', {
-    title: 'Tour của tôi',
-    tours,
+    title: 'Tour của bạn',
     bookings,
-    reviews
+    reviews,
+    sortedBookings,
+    summaryStats,
+    pendingReviewCount
   });
 });
 
@@ -199,40 +309,39 @@ exports.getManageTours = catchAsync(async (req, res, next) => {
   const tours = toursRaw.map(tour => {
     const tourObj = tour.toObject();
     const tourId = tourObj._id.toString();
-    const activeStartDates =
-      (tourObj.startDates || [])
-        .filter(
-          dateObj =>
-            dateObj &&
-            dateObj.date &&
-            new Date(dateObj.date).toString() !== 'Invalid Date' &&
-            new Date(dateObj.date) > now
-        )
-        .map(dateObj => {
-          const dateValue = new Date(dateObj.date);
-          const dateKey = dateValue.toISOString().split('T')[0];
-          const availableSlots =
-            typeof dateObj.availableSlots === 'number'
-              ? dateObj.availableSlots
-              : tourObj.maxGroupSize;
-          const bookedSeats =
-            bookingMap[tourId] && bookingMap[tourId][dateKey] != null
-              ? bookingMap[tourId][dateKey]
-              : Math.max(0, tourObj.maxGroupSize - availableSlots);
+    const activeStartDates = (tourObj.startDates || [])
+      .filter(
+        dateObj =>
+          dateObj &&
+          dateObj.date &&
+          new Date(dateObj.date).toString() !== 'Invalid Date' &&
+          new Date(dateObj.date) > now
+      )
+      .map(dateObj => {
+        const dateValue = new Date(dateObj.date);
+        const dateKey = dateValue.toISOString().split('T')[0];
+        const availableSlots =
+          typeof dateObj.availableSlots === 'number'
+            ? dateObj.availableSlots
+            : tourObj.maxGroupSize;
+        const bookedSeats =
+          bookingMap[tourId] && bookingMap[tourId][dateKey] != null
+            ? bookingMap[tourId][dateKey]
+            : Math.max(0, tourObj.maxGroupSize - availableSlots);
 
-          return {
-            date: dateValue,
-            dateFormatted: dateValue.toLocaleDateString('vi-VN', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric'
-            }),
-            availableSlots,
-            bookedSeats,
-            capacity: tourObj.maxGroupSize
-          };
-        })
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
+        return {
+          date: dateValue,
+          dateFormatted: dateValue.toLocaleDateString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          }),
+          availableSlots,
+          bookedSeats,
+          capacity: tourObj.maxGroupSize
+        };
+      })
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
 
     tourObj.activeStartDates = activeStartDates;
     return tourObj;
