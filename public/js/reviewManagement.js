@@ -1,6 +1,6 @@
 /* eslint-disable */
-import axios from "axios"
-import { showAlert } from "./alerts"
+import axios from "./vendor/axios.js"
+import { showAlert } from "./alerts.js"
 
 // Xóa đánh giá
 export const deleteReview = async (reviewId) => {

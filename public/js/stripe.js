@@ -1,6 +1,6 @@
 /* eslint-disable */
-import axios from "axios";
-import { loadStripe } from "@stripe/stripe-js";
+import axios from "./vendor/axios.js";
+import { loadStripe } from "./vendor/stripe.js";
 
 export const bookTour = async (tourId, startDate, participants) => {
   try {

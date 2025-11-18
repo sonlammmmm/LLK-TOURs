@@ -1,6 +1,6 @@
 /* eslint-disable */
-import axios from "axios"
-import { showAlert } from "./alerts"
+import axios from "./vendor/axios.js"
+import { showAlert } from "./alerts.js"
 
 // Xóa booking
 export const deleteBooking = async (bookingId) => {

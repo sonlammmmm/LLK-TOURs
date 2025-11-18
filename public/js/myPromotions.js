@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { showAlert } from "./alerts";
+import { showAlert } from "./alerts.js";
 
 export const initMyPromotions = () => {
   const buttons = document.querySelectorAll(".btn-copy-code");

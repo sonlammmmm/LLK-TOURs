@@ -1,6 +1,6 @@
 /* eslint-disable */
-import axios from "axios"
-import { showAlert } from "./alerts"
+import axios from "./vendor/axios.js"
+import { showAlert } from "./alerts.js"
 
 // Sửa lại hàm updateUser để xử lý đúng việc upload ảnh
 export const updateUser = async (userId, userData) => {

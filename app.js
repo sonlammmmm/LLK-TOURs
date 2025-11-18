@@ -21,6 +21,15 @@ const promotionRouter = require('./routes/promotionRoutes');
 
 const app = express();
 
+app.use(
+  '/node_modules/axios/dist/esm',
+  express.static(path.join(__dirname, 'node_modules/axios/dist/esm'))
+);
+app.use(
+  '/node_modules/@stripe/stripe-js/dist',
+  express.static(path.join(__dirname, 'node_modules/@stripe/stripe-js/dist'))
+);
+
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
