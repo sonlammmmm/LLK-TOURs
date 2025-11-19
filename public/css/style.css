@@ -1,5 +1,151 @@
 :root {
   --section-rotate: 9vw;
+  --font-size-base: 1.15rem;
+}
+
+/* Global Cobe font-face declarations */
+@font-face {
+  font-family: "Cobe";
+  font-style: normal;
+  font-weight: 100;
+  font-display: swap;
+  src: url("/fonts/Cobe Thin.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Cobe";
+  font-style: italic;
+  font-weight: 100;
+  font-display: swap;
+  src: url("/fonts/Cobe Thin Italic.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Cobe";
+  font-style: normal;
+  font-weight: 200;
+  font-display: swap;
+  src: url("/fonts/Cobe Ultra Light.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Cobe";
+  font-style: italic;
+  font-weight: 200;
+  font-display: swap;
+  src: url("/fonts/Cobe Ultra Light Italic.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Cobe";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("/fonts/Cobe Light.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Cobe";
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+  src: url("/fonts/Cobe Light Italic.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Cobe";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/Cobe Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Cobe";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/Cobe Italic.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Cobe";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/Cobe Medium.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Cobe";
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/Cobe Medium Italic.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Cobe";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/Cobe Semi Bold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Cobe";
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/Cobe Semi Bold Italic.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Cobe";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/Cobe Bold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Cobe";
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/Cobe Bold Italic.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Cobe";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("/fonts/Cobe Extra Bold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Cobe";
+  font-style: italic;
+  font-weight: 800;
+  font-display: swap;
+  src: url("/fonts/Cobe Extra Bold Italic.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Cobe";
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("/fonts/Cobe Heavy.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Cobe";
+  font-style: italic;
+  font-weight: 900;
+  font-display: swap;
+  src: url("/fonts/Cobe Heavy Italic.ttf") format("truetype");
 }
 
 ::-moz-selection {
@@ -29,13 +175,22 @@ html {
 
 body {
   line-height: 1.6;
-  font-weight: 300;
-  font-family: "Open Sans", "Montserrat", sans-serif;
+  font-weight: 500;
+  font-family: "Cobe", sans-serif;
+  font-size: var(--font-size-base);
   color: #1a2240;
   padding: 70px 0 0;
   min-height: 100vh;
   background: #eef3ff;
   margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: "Cobe", sans-serif;
+  font-size: inherit;
 }
 
 .site-header {
@@ -1008,6 +1163,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.35rem;
   color: #8a92b1;
+  font-weight: 600;
 }
 
 .tour-metric__value {
@@ -1179,7 +1335,7 @@ body {
 
 .quick-booking__price {
   margin: 0;
-  font-size: 2.6rem;
+  font-size: 2.3rem;
 }
 
 .quick-booking__note {
@@ -2736,7 +2892,7 @@ body {
 }
 
 .mapboxgl-popup-content {
-  font-family: 'Lato', sans-serif;
+  font-family: "Cobe", sans-serif;
   padding: 0 !important;
   border-radius: 18px !important;
   box-shadow: 0 2.4rem 4.2rem rgba(2, 8, 20, 0.45) !important;
