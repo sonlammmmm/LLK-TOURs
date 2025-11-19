@@ -81,6 +81,13 @@ export const bookTour = async (
   promotionCode
 ) => {
   try {
+    console.log("[Stripe Debug] booking params", {
+      tourId,
+      startDate,
+      participants,
+      promotionCode,
+      selectedServices
+    });
     const session = await axios.post(
       `/api/v1/bookings/checkout-session/${tourId}`,
       {
@@ -91,7 +98,26 @@ export const bookTour = async (
         platform: "web"
       }
     );
-    window.location.replace(session.data.session.url);
+    console.log("[Stripe Debug] checkout response", session.data);
+
+    const checkoutSession = session.data?.session;
+    if (!checkoutSession) {
+      throw new Error("Stripe session response was empty.");
+    }
+
+    if (checkoutSession.url) {
+      window.location.replace(checkoutSession.url);
+      return;
+    }
+
+    if (!checkoutSession.id) {
+      throw new Error("Missing Stripe checkout session ID.");
+    }
+
+    const fallbackUrl = `https://checkout.stripe.com/pay/${checkoutSession.id}`;
+    const stripeUrl = checkoutSession.url || fallbackUrl;
+    window.redirectingToStripe = true;
+    window.location.assign(stripeUrl);
   } catch (err) {
     console.error("Stripe booking error:", err);
     const message =

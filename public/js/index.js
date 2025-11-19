@@ -101,7 +101,11 @@ if (userPasswordForm)
   })
 
 
-if (bookBtn && !document.querySelector(".booking-main-form")) {
+const isBookingPage =
+  document.querySelector(".booking-workspace") ||
+  document.querySelector(".booking-main-form");
+
+if (bookBtn && !isBookingPage) {
   bookBtn.addEventListener("click", (e) => {
     e.preventDefault();
     const { tourId } = e.target.dataset;

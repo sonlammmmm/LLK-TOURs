@@ -50,16 +50,13 @@ exports.assignPromotionToUser = catchAsync(async (req, res, next) => {
     }
   }
 
-  const normalizedIds = new Set(
-    [
-      ...(Array.isArray(userIds)
-        ? userIds
-        : typeof userIds === 'string' && userIds.length
-        ? [userIds]
-        : []),
-      userId
-    ].filter(Boolean)
-  );
+  const processedUserIds = Array.isArray(userIds)
+    ? userIds
+    : typeof userIds === 'string' && userIds.length
+    ? [userIds]
+    : [];
+
+  const normalizedIds = new Set([...processedUserIds, userId].filter(Boolean));
 
   if (!normalizedIds.size) {
     return next(new AppError('Vui lòng chọn người dùng hợp lệ.', 400));

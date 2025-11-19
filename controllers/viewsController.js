@@ -116,7 +116,8 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
   const finalMinPrice = Math.min(parsedMin, parsedMax);
   const finalMaxPrice = Math.max(parsedMin, parsedMax);
   let startDateFilter = startDates ? new Date(startDates) : null;
-  if (startDateFilter && Number.isNaN(startDateFilter.getTime())) startDateFilter = null;
+  if (startDateFilter && Number.isNaN(startDateFilter.getTime()))
+    startDateFilter = null;
 
   const filteredTours = rawTours.filter(tour => {
     if (name && !tour.name.toLowerCase().includes(name.toLowerCase())) {
@@ -128,10 +129,14 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
       !(
         (tour.startLocation &&
           tour.startLocation.description &&
-          tour.startLocation.description.toLowerCase().includes(startLocation.toLowerCase())) ||
+          tour.startLocation.description
+            .toLowerCase()
+            .includes(startLocation.toLowerCase())) ||
         (tour.startLocation &&
           tour.startLocation.address &&
-          tour.startLocation.address.toLowerCase().includes(startLocation.toLowerCase()))
+          tour.startLocation.address
+            .toLowerCase()
+            .includes(startLocation.toLowerCase()))
       )
     ) {
       return false;
@@ -154,7 +159,8 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
   const toursWithMeta = filteredTours.map(tour => {
     const upcomingStartDates = formatStartDatesWithSlots(tour);
     const nextStart = upcomingStartDates[0] || null;
-    const hasStartDates = Array.isArray(tour.startDates) && tour.startDates.length > 0;
+    const hasStartDates =
+      Array.isArray(tour.startDates) && tour.startDates.length > 0;
     const showSoldOutBadge = nextStart
       ? nextStart.availableSlots === 0 ||
         typeof nextStart.availableSlots !== 'number'
@@ -305,9 +311,11 @@ exports.getMyTours = catchAsync(async (req, res, next) => {
           statusText = 'Đang diễn ra';
         }
       }
-      const tourId = tour.id ? tour.id : tour._id ? tour._id.toString() : null;
+      const tourId = tour.id || (tour._id ? tour._id.toString() : null);
       const userReview = tourId ? reviewsMap[tourId] : null;
-      const hasReviewed = userReview !== null && userReview !== undefined; // Check if userReview is not null or undefined
+      // Check if userReview is not null or undefined
+      const hasReviewed = userReview !== null && userReview !== undefined;
+
       const canReview = endDate ? today > endDate : false;
       const pendingReview = canReview && !hasReviewed;
       const dateLabel = displayDate
@@ -763,7 +771,8 @@ exports.getBookingSuccess = catchAsync(async (req, res, next) => {
     title: pending ? 'Đang xác nhận thanh toán' : 'Thanh toán thành công',
     booking,
     pending,
-    sid: sid || null // dùng cho client poll
+    sid: sid || null, // dùng cho client poll
+    hideFooter: true
   });
 });
 

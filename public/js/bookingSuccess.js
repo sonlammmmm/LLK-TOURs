@@ -1,43 +1,38 @@
 /* eslint-disable */
 
-// Polling để kiểm tra booking đã được tạo chưa
-const pollBookingStatus = async (sid) => {
+const pollBookingStatus = sid => {
   if (!sid) return;
 
-  const maxAttempts = 30; // 30 lần
-  const interval = 2000; // 2 giây
+  const maxAttempts = 30;
+  const interval = 2000;
   let attempts = 0;
 
   const checkStatus = async () => {
     try {
-      attempts++;
-      console.log(`[POLL] Checking booking status (${attempts}/${maxAttempts})...`);
-
+      attempts += 1;
       const res = await fetch(`/api/v1/bookings/by-session/${sid}`);
       const data = await res.json();
 
       if (data.status === 'success' && data.data) {
-        console.log('[POLL] ✅ Booking found!', data.data);
-        
-        // Reload trang để hiển thị thông tin booking
         window.location.reload();
         return;
       }
 
-      // Nếu chưa có booking và còn attempt
       if (attempts < maxAttempts) {
         setTimeout(checkStatus, interval);
       } else {
-        console.log('[POLL] ❌ Timeout - booking not found after 30 attempts');
-        
-        // Hiển thị thông báo lỗi
-        const pendingMsg = document.querySelector('.booking-success__pending');
-        if (pendingMsg) {
-          pendingMsg.innerHTML = `
-            <h2>⚠️ Có vấn đề xảy ra</h2>
-            <p>Chúng tôi không thể xác nhận booking của bạn sau khi thanh toán.</p>
-            <p>Vui lòng liên hệ với chúng tôi hoặc kiểm tra lại trong phần "Tour của tôi".</p>
-            <a href="/my-tours" class="btn btn--green">Xem tour của tôi</a>
+        const pendingCard = document.querySelector('.booking-success__card--pending');
+        if (pendingCard) {
+          pendingCard.innerHTML = `
+            <div class="booking-success__card-header">
+              <h2>Không thể xác nhận thanh toán</h2>
+              <p>Chúng tôi chưa tìm thấy booking tương ứng với phiên Stripe này.</p>
+            </div>
+            <p>Vui lòng kiểm tra mục "<strong>Tour của tôi</strong>" hoặc liên hệ với đội ngũ hỗ trợ để được trợ giúp thêm.</p>
+            <div class="booking-success__links">
+              <a class="btn btn--green" href="/my-tours">Tour của tôi</a>
+              <a class="btn btn--ghost" href="/">Trang chủ</a>
+            </div>
           `;
         }
       }
@@ -49,18 +44,81 @@ const pollBookingStatus = async (sid) => {
     }
   };
 
-  // Bắt đầu polling sau 1 giây
   setTimeout(checkStatus, 1000);
 };
 
-// Tự động chạy khi trang load
-document.addEventListener('DOMContentLoaded', () => {
+const COUNTDOWN_ENABLED = true;
+
+const initCountdownRedirect = () => {
+  if (!COUNTDOWN_ENABLED) return;
+
+  const container = document.querySelector('[data-redirect-seconds]');
+  if (!container) return;
+
+  const target = container.dataset.redirectTarget || '/';
+  const seconds = parseInt(container.dataset.redirectSeconds || '0', 10);
+  const counterEl = container.querySelector('[data-redirect-counter]');
+
+  if (!seconds || seconds < 1 || !counterEl) return;
+
+  let remaining = seconds;
+  let countdownIntervalId = null;
+
+  const updateCounter = value => {
+    counterEl.textContent = String(value);
+  };
+
+  const tick = () => {
+    remaining -= 1;
+    if (remaining <= 0) {
+      updateCounter(0);
+      window.clearInterval(countdownIntervalId);
+      window.location.assign(target);
+    } else {
+      updateCounter(remaining);
+    }
+  };
+
+  updateCounter(remaining);
+  countdownIntervalId = window.setInterval(tick, 1000);
+
+  const cancelRedirect = () => {
+    if (!countdownIntervalId) return;
+    window.clearInterval(countdownIntervalId);
+    countdownIntervalId = null;
+    container.classList.add('is-paused');
+
+    const label = container.querySelector('.booking-success__countdown-label');
+    if (label) {
+      label.textContent = 'Đếm ngược đã tạm dừng';
+    }
+
+    const hint = container.querySelector('.booking-success__countdown-hint');
+    if (hint) {
+      hint.textContent = 'Bạn có thể ở lại trang này bao lâu tùy thích.';
+    }
+  };
+
+  const cancelBtn = document.querySelector('[data-redirect-cancel]');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', event => {
+      event.preventDefault();
+      cancelRedirect();
+    });
+  }
+};
+
+export const initBookingSuccess = () => {
+  const root = document.querySelector('.booking-success');
+  if (!root) return;
+
   const urlParams = new URLSearchParams(window.location.search);
   const sid = urlParams.get('sid');
-  const isPending = document.querySelector('.booking-success__pending');
+  const pendingCard = root.querySelector('.booking-success__card--pending');
 
-  if (sid && isPending) {
-    console.log('[POLL] Starting polling for session:', sid);
+  if (sid && pendingCard) {
     pollBookingStatus(sid);
   }
-});
+
+  initCountdownRedirect();
+};

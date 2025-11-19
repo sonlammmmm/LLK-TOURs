@@ -118,9 +118,6 @@ bookingSchema.post('save', async doc => {
     const tour = await Tour.findById(doc.tour);
     if (tour) {
       await tour.decreaseSlots(doc.startDate, doc.participants);
-      console.log(
-        `✅ Đã giảm ${doc.participants} slot cho tour ${tour.name} ngày ${doc.startDate}`
-      );
     }
   } catch (err) {
     console.error('❌ Lỗi khi giảm slot:', err.message);

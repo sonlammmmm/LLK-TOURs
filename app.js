@@ -37,6 +37,11 @@ app.set('views', path.join(__dirname, 'views'));
 // Phục vụ các tệp tĩnh
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use((req, res, next) => {
+  res.locals.stripePublicKey = process.env.STRIPE_PUBLIC_KEY || '';
+  next();
+});
+
 // Thiết lập tiêu đề HTTP bảo mật
 app.use(helmet());
 
@@ -81,7 +86,8 @@ app.use(
         'https://js.stripe.com'
       ],
       imgSrc: ["'self'", 'data:', 'https://api.mapbox.com'],
-      frameSrc: ["'self'", 'https://js.stripe.com']
+      frameSrc: ["'self'", 'https://js.stripe.com'],
+      navigateSrc: ["'self'", 'https://checkout.stripe.com']
     }
   })
 );

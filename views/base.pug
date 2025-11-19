@@ -40,6 +40,8 @@ html
 
     // ========== SCRIPT CHUNG ==========
     script(src='https://cdn.jsdelivr.net/npm/chart.js')
+    script.
+      window.STRIPE_PUBLIC_KEY = !{JSON.stringify(stripePublicKey || '')};
     script(src='/dist/index.js')
     
     // ========== SOCKET.IO & CHAT SCRIPTS ==========

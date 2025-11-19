@@ -1,2 +1,3 @@
-export { default } from "../../../node_modules/axios/dist/esm/axios.js";
-export * from "../../../node_modules/axios/dist/esm/axios.js";
+/* eslint-disable node/no-unsupported-features/es-syntax,import/extensions,no-restricted-exports */
+export { default } from 'axios/dist/esm/axios.js';
+export * from 'axios/dist/esm/axios.js';

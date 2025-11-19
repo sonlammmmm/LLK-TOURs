@@ -1,69 +1,116 @@
 extends base
 
+block append head
+  style.
+    :root {
+      --booking-header-height: 0px;
+    }
+    body {
+      overflow: hidden;
+      background: #050a1a;
+    }
+
 block content
-  main.main
-    .booking-success
-      if pending
-        //- ĐANG CHỜ XÁC NHẬN
-        .booking-success__pending
-          .booking-success__spinner
-            svg.spinner
-              circle(cx="50" cy="50" r="45")
-          h2.hd-secondary Đang xác nhận thanh toán...
-          p.booking-success__message Vui lòng đợi trong giây lát, chúng tôi đang xử lý booking của bạn.
-          p.booking-success__note Không đóng trang này.
-      else
-        //- ĐÃ XÁC NHẬN THÀNH CÔNG
-        .booking-success__confirmed
-          .booking-success__icon
-            svg.checkmark
-              use(xlink:href='/img/icons.svg#icon-check')
-          
-          h2.hd-secondary Thanh toán thành công! 🎉
-          p.booking-success__message Cảm ơn bạn đã đặt tour. Chúng tôi đã gửi email xác nhận đến hộp thư của bạn.
+  -
+    const formatCurrency = value => Number(value || 0).toLocaleString('vi-VN');
+    const heroImage =
+      booking && booking.tour && booking.tour.imageCover
+        ? `/img/tours/${booking.tour.imageCover}`
+        : '/img/tours/tour-default.jpg';
+    const startDateLabel = booking
+      ? new Date(booking.startDate).toLocaleDateString('vi-VN', {
+          weekday: 'long',
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric'
+        })
+      : '';
+    const customerEmail =
+      booking && booking.user && booking.user.email ? booking.user.email : '';
+  main.main.booking-success
+    section.booking-success__viewport(class=pending ? 'is-pending' : '')
+      .booking-success__bg(style=`background-image:url('${heroImage}')`)
+      .booking-success__overlay
+      .booking-success__content
+        .booking-success__hero
+          span.booking-success__hero-eyebrow= pending ? 'Đang xác nhận thanh toán' : 'Đặt tour thành công'
+          h1.booking-success__hero-title= pending ? 'Chúng tôi đang kết nối với Stripe' : 'Hành trình của bạn đã được xác nhận'
+          if pending
+            p.booking-success__hero-desc Hệ thống LLK TOUR đang nhận thông tin từ Stripe để tạo booking của bạn. Vui lòng giữ trang này mở trong giây lát.
+          else
+            p.booking-success__hero-desc Thanh toán đã hoàn tất, chúng tôi đã gửi thông tin hành trình cùng hướng dẫn chi tiết vào email của bạn.
+          if !pending && booking
+            ul.booking-success__hero-meta
+              if startDateLabel
+                li
+                  strong= startDateLabel
+                  span Ngày khởi hành
+              li
+                strong= `${booking.participants} khách`
+                span Số khách
+              li
+                strong= `${formatCurrency(booking.price)} VND`
+                span Tổng thanh toán
+          else if pending
+            p.booking-success__hero-hint Bạn vẫn có thể rời khỏi trang, chúng tôi sẽ gửi email khi hoàn tất.
 
-          if booking
-            .booking-success__details
-              h3 Thông tin booking:
-              
-              .booking-detail-row
-                strong Tour:
-                span= booking.tour.name
-              
-              .booking-detail-row
-                strong Ngày khởi hành:
-                span= new Date(booking.startDate).toLocaleDateString('vi-VN')
-              
-              .booking-detail-row
-                strong Số người:
-                span= `${booking.participants} người`
+        if pending
+          article.booking-success__card.booking-success__card--pending
+            span.booking-success__card-badge Đang xử lý
+            h2.booking-success__card-title Đang xác minh giao dịch
+            p.booking-success__card-copy Chúng tôi sẽ tự động tải lại trang ngay khi nhận được kết quả.
+            .booking-success__status
+              span.booking-success__status-pulse
+              span.booking-success__status-text Đồng bộ thông tin thanh toán...
+            p.booking-success__card-note Nếu quá 1 phút, hãy tải lại trang hoặc truy cập mục "Tour của tôi".
+            .booking-success__links
+              a.btn.btn--green(href='/my-tours') Tour của tôi
+              a.btn.btn--ghost(href='/') Trang chủ
+        else if booking
+          article.booking-success__card.booking-success__card--summary
+            .booking-success__summary
+              span.booking-success__card-badge Thanh toán thành công
+              h2.booking-success__card-title= booking.tour.name
+              if customerEmail
+                p.booking-success__card-copy Đã gửi xác nhận tới #{customerEmail}
+              else
+                p.booking-success__card-copy LLK TOUR luôn đồng hành cùng bạn trong chuyến đi sắp tới.
+              .booking-success__amount
+                span.booking-success__amount-label Tổng thanh toán
+                strong.booking-success__amount-value= `${formatCurrency(booking.price)} VND`
+            .booking-success__actions
+              .booking-success__countdown(
+                data-redirect-target='/'
+                data-redirect-seconds='10')
+                span.booking-success__countdown-label Trang sẽ tự quay về sau
+                span.booking-success__countdown-timer
+                  span(data-redirect-counter) 10
+                  |  s
+              .booking-success__actions-buttons
+                a.btn.btn--green(href='/my-tours') Tour của tôi
+                a.btn.btn--outline(href=`/booking-invoice/${booking.id}`) Hóa đơn
+                button.btn.btn--ghost(type='button', data-redirect-cancel) Xem thêm
+                a.btn.btn--ghost(href='/') Trang chủ
+        else
+          article.booking-success__card.booking-success__card--summary
+            span.booking-success__card-badge Đặt tour thành công
+            h2.booking-success__card-title Thanh toán đã được ghi nhận
+            p.booking-success__card-copy Bạn có thể xem lại thông tin chuyến đi trong mục "Tour của tôi".
+            .booking-success__links
+              a.btn.btn--green(href='/my-tours') Tour của tôi
+              a.btn.btn--ghost(href='/') Trang chủ
 
-              if booking.services && booking.services.length
-                .booking-detail-row
-                  strong Dịch vụ thêm:
-                  ul.booking-services
-                    each service in booking.services
-                      li
-                        span= `${service.name} x ${service.quantity}`
-                        span.booking-services__price= `${(service.total || 0).toLocaleString('vi-VN')} ₫`
-
-              if booking.discountAmount && booking.discountAmount > 0
-                .booking-detail-row
-                  strong Giảm giá:
-                  span= `- ${(booking.discountAmount || 0).toLocaleString('vi-VN')} ₫`
-
-              .booking-detail-row
-                strong Tổng thanh toán:
-                span= `${booking.price.toLocaleString('vi-VN')} ₫`
-              
-              .booking-detail-row
-                strong Trạng thái:
-                span.status-badge.status-badge--paid= booking.paid ? 'Đã thanh toán' : 'Chưa thanh toán'
-
-          .booking-success__actions
-            a.btn.btn--green(href='/my-tours') Xem tour của tôi
-            a.btn.btn--gray(href='/') Quay về trang chủ
+block append scripts
+  script.
+    (function () {
+      const header = document.querySelector('.site-header');
+      if (header) {
+        document.documentElement.style.setProperty(
+          '--booking-header-height',
+          `${header.offsetHeight}px`
+        );
+      }
+    })();
 
 block scripts
-  if pending && sid
-    script(src='/js/bookingSuccess.js')
+  //- Scripts bundle trong /dist/index.js
