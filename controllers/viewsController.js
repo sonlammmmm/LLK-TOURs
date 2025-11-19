@@ -40,13 +40,151 @@ exports.alerts = (req, res, next) => {
 
 exports.getOverview = catchAsync(async (req, res, next) => {
   const tours = await Tour.find().lean();
+  const toursWithMeta = tours.map(tour => {
+    const upcomingStartDates = formatStartDatesWithSlots(tour);
+    const nextStart = upcomingStartDates[0] || null;
+    return { ...tour, upcomingStartDates, nextStart };
+  });
   const uniqueLocations = await Tour.distinct('startLocation.description');
 
   res.status(200).render('overview', {
     title: 'Tất cả chuyến đi',
-    tours,
+    tours: toursWithMeta,
     uniqueLocations,
-    noResults: tours.length === 0
+    noResults: toursWithMeta.length === 0,
+    searchParams: req.query || {}
+  });
+});
+
+const parsePositiveNumber = value => {
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : null;
+};
+
+const matchesDuration = (tour, durationKey) => {
+  if (!durationKey) return true;
+  const duration = tour.duration || 0;
+  if (durationKey === '2-4') return duration >= 2 && duration <= 4;
+  if (durationKey === '5-7') return duration >= 5 && duration <= 7;
+  if (durationKey === '8+') return duration >= 8;
+  return true;
+};
+
+const matchesGroupSize = (tour, groupKey) => {
+  if (!groupKey) return true;
+  const size = tour.maxGroupSize || 0;
+  if (groupKey === '6-10') return size >= 6 && size <= 10;
+  if (groupKey === '11-20') return size >= 11 && size <= 20;
+  if (groupKey === '21+') return size >= 21;
+  return true;
+};
+
+const hasStartDateOnOrAfter = (tour, targetDate) => {
+  if (!targetDate) return true;
+  if (!tour.startDates) return false;
+  return tour.startDates.some(dateObj => {
+    const rawDate = dateObj && (dateObj.date || dateObj);
+    if (!rawDate) return false;
+    const current = new Date(rawDate);
+    return current >= targetDate;
+  });
+};
+
+exports.getAllTours = catchAsync(async (req, res, next) => {
+  const rawTours = await Tour.find().lean();
+
+  const filterLocations = Array.from(
+    new Set(
+      rawTours
+        .map(tour => tour.startLocation && tour.startLocation.description)
+        .filter(Boolean)
+    )
+  );
+
+  const {
+    name = '',
+    startLocation = '',
+    startDates = '',
+    duration = '',
+    groupSize = '',
+    minPrice,
+    maxPrice
+  } = req.query;
+
+  const parsedMin = parsePositiveNumber(minPrice) ?? 1000000;
+  const parsedMax = parsePositiveNumber(maxPrice) ?? 50000000;
+  const finalMinPrice = Math.min(parsedMin, parsedMax);
+  const finalMaxPrice = Math.max(parsedMin, parsedMax);
+  let startDateFilter = startDates ? new Date(startDates) : null;
+  if (startDateFilter && Number.isNaN(startDateFilter.getTime())) startDateFilter = null;
+
+  const filteredTours = rawTours.filter(tour => {
+    if (name && !tour.name.toLowerCase().includes(name.toLowerCase())) {
+      return false;
+    }
+
+    if (
+      startLocation &&
+      !(
+        (tour.startLocation &&
+          tour.startLocation.description &&
+          tour.startLocation.description.toLowerCase().includes(startLocation.toLowerCase())) ||
+        (tour.startLocation &&
+          tour.startLocation.address &&
+          tour.startLocation.address.toLowerCase().includes(startLocation.toLowerCase()))
+      )
+    ) {
+      return false;
+    }
+
+    if (!matchesDuration(tour, duration)) return false;
+    if (!matchesGroupSize(tour, groupSize)) return false;
+
+    if (tour.price < finalMinPrice || tour.price > finalMaxPrice) {
+      return false;
+    }
+
+    if (!hasStartDateOnOrAfter(tour, startDateFilter)) {
+      return false;
+    }
+
+    return true;
+  });
+
+  const toursWithMeta = filteredTours.map(tour => {
+    const upcomingStartDates = formatStartDatesWithSlots(tour);
+    const nextStart = upcomingStartDates[0] || null;
+    const hasStartDates = Array.isArray(tour.startDates) && tour.startDates.length > 0;
+    const showSoldOutBadge = nextStart
+      ? nextStart.availableSlots === 0 ||
+        typeof nextStart.availableSlots !== 'number'
+      : hasStartDates;
+    return { ...tour, upcomingStartDates, nextStart, showSoldOutBadge };
+  });
+
+  toursWithMeta.sort((a, b) => {
+    const aHas = Boolean(a.nextStart);
+    const bHas = Boolean(b.nextStart);
+    if (aHas === bHas) return 0;
+    return aHas ? -1 : 1;
+  });
+
+  const filters = {
+    name,
+    startLocation,
+    startDates,
+    duration,
+    groupSize,
+    minPrice: finalMinPrice,
+    maxPrice: finalMaxPrice
+  };
+
+  res.status(200).render('all', {
+    title: 'Tất cả tour',
+    tours: toursWithMeta,
+    filterLocations,
+    filters,
+    noTours: toursWithMeta.length === 0
   });
 });
 
@@ -723,6 +861,10 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
     Booking.countDocuments({ paid: false })
   ]);
 
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonthIndex = today.getMonth();
+
   const availableYearsAggregation = await Booking.aggregate([
     {
       $group: {
@@ -734,18 +876,22 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
 
   let availableYears = availableYearsAggregation.map(item => item._id);
   if (availableYears.length === 0) {
-    availableYears = [new Date().getFullYear()];
+    availableYears = [currentYear];
   }
+
+  if (!availableYears.includes(currentYear)) {
+    availableYears.push(currentYear);
+  }
+  availableYears.sort((a, b) => a - b);
 
   let selectedYear = parseInt(req.query.year, 10);
   if (!selectedYear || !availableYears.includes(selectedYear)) {
-    selectedYear = availableYears[availableYears.length - 1];
+    selectedYear = currentYear;
   }
 
   const startDate = new Date(selectedYear, 0, 1);
   const endDate = new Date(selectedYear + 1, 0, 1);
 
-  const today = new Date();
   const todayStart = new Date(
     today.getFullYear(),
     today.getMonth(),
@@ -893,6 +1039,42 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
     }
   });
 
+  const currencyFormatter = new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  });
+  const formatBookingDate = date =>
+    date
+      ? `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`
+      : 'Ngày chưa xác định';
+  const recentBookings = await Booking.find()
+    .sort('-createdAt')
+    .limit(4);
+  const recentOrders = recentBookings.map(booking => {
+    const noteParts = [];
+    if (booking.tour && booking.tour.name) noteParts.push(booking.tour.name);
+    if (booking.startDate) noteParts.push(formatBookingDate(booking.startDate));
+    return {
+      customer: (booking.user && booking.user.name) || 'Khách mới',
+      note: noteParts.length ? noteParts.join(' · ') : 'Đơn mới',
+      amount: currencyFormatter.format(booking.price || 0),
+      status: booking.paid ? 'Đã thanh toán' : 'Chưa thanh toán'
+    };
+  });
+
+  const bookingStatusBreakdown = [
+    { label: 'Đã thanh toán', value: paidBookings },
+    { label: 'Chưa thanh toán', value: unpaidBookings }
+  ];
+  const entityTotals = [
+    { label: 'Tour', value: totalTours },
+    { label: 'Người dùng', value: totalUsers },
+    { label: 'Đơn đặt tour', value: totalBookings }
+  ];
+  const conversionPercentage = totalBookings
+    ? ((paidBookings / totalBookings) * 100).toFixed(1)
+    : '0.0';
+
   res.status(200).render('dashboard', {
     title: 'Bảng điều khiển quản lý',
     stats: {
@@ -901,12 +1083,18 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
       totalUsers,
       totalReviews,
       paidBookings,
-      unpaidBookings
+      unpaidBookings,
+      conversionRate: `${conversionPercentage}%`,
+      recentOrders
     },
     revenueData: formattedRevenueData,
     dailyRevenueByMonth,
     selectedYear,
     availableYears,
+    currentMonthIndex,
+    monthLabels: months,
+    bookingStatusBreakdown,
+    entityTotals,
     todayRevenue: todayRevenue.length > 0 ? todayRevenue[0].total : 0,
     monthRevenue: monthRevenue.length > 0 ? monthRevenue[0].total : 0,
     yearRevenue: yearRevenue.length > 0 ? yearRevenue[0].total : 0,

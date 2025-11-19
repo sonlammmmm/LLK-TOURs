@@ -95,6 +95,8 @@ form.booking-workspace {
   grid-column: span 2;
   min-height: 260px;
   padding: 0;
+  backdrop-filter: none;
+  background: transparent;
 }
 
 .hero-image {
@@ -120,8 +122,16 @@ form.booking-workspace {
   inset: 0;
   padding: clamp(1.5rem, 3vw, 2rem);
   justify-content: flex-end;
-  background: linear-gradient(180deg, rgba(3, 6, 21, 0) 10%, rgba(3, 6, 21, 0.9));
-  backdrop-filter: blur(18px);
+}
+
+.hero-content__inner {
+  background: rgba(3, 6, 21, 0.85);
+  border-radius: 24px;
+  padding: clamp(1.5rem, 3vw, 2rem);
+  max-width: min(640px, 100%);
+  width: 100%;
+  box-shadow: 0 30px 60px rgba(3, 6, 21, 0.7);
+  backdrop-filter: blur(14px);
 }
 
 .booking-column {
@@ -129,14 +139,30 @@ form.booking-workspace {
   flex-direction: column;
   gap: 1rem;
   grid-column: 3;
+  align-items: stretch;
+}
+
+.booking-column--dates-participants {
+  min-height: 420px;
+}
+
+.booking-card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.booking-card-stack.booking-card-stack--schedule {
+  min-height: 420px;
+  flex: 1;
 }
 
 .booking-column--services-group {
   grid-column: 4;
-}
-
-.booking-column--services-group {
   grid-column: span 1;
+  min-height: 420px;
+  display: flex;
+  align-items: stretch;
 }
 
 .hero-info__eyebrow {
@@ -198,8 +224,18 @@ form.booking-workspace {
 .booking-card--dates {
   padding-bottom: 1rem;
   border-color: rgba(255, 255, 255, 0.4);
-  min-height: 420px;
+  min-height: 260px;
   z-index: 4;
+}
+
+.booking-card-stack--schedule .booking-card--dates {
+  flex: 1;
+  min-height: 260px;
+}
+
+.booking-card-stack--schedule .booking-card--participants {
+  min-height: 150px;
+  flex: 0 0 150px;
 }
 
 .booking-card__header {
@@ -307,25 +343,25 @@ form.booking-workspace {
 
 .booking-card--services {
   min-height: 420px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
 }
 
 .booking-card--participants {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.12);
   color: var(--booking-text);
   padding: 1rem;
   min-height: 150px;
-  grid-column: 3;
-  grid-row: 2;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 0.5rem;
+  flex: 0 0 150px;
 }
 
-.booking-card--services {
-  min-height: 420px;
-  z-index: 3;
-}
 
 .service-options {
   display: flex;
@@ -384,10 +420,6 @@ form.booking-workspace {
 
 .badge--outline {
   background: rgba(3, 6, 21, 0.6);
-}
-
-.booking-card--participants {
-  background: rgba(255, 255, 255, 0.12);
 }
 
 .participants-control {

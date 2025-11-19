@@ -43,20 +43,20 @@ block content
             .hero-image
               img(src=`/img/tours/${primaryImage}`, alt=`${tour.name}`)
               .hero-content
-                span.hero-info__eyebrow= locationDescription
-                h1.hero-title= tour.name
-                p.hero-summary= highlightSummary
-                .hero-meta
-                  .hero-meta__item
-                    span Thời lượng
-                    strong= `${tourDuration} ngày`
-                  .hero-meta__item
-                    span Đánh giá
-                    strong= `${ratingValue}/5`
-                  .hero-meta__item
-                    span Khách tối đa
-                    strong= `${maxGroup} khách`
-
+                .hero-content__inner
+                  span.hero-info__eyebrow= locationDescription
+                  h1.hero-title= tour.name
+                  p.hero-summary= highlightSummary
+                  .hero-meta
+                    .hero-meta__item
+                      span Thời lượng
+                      strong= `${tourDuration} ngày`
+                    .hero-meta__item
+                      span Đánh giá
+                      strong= `${ratingValue}/5`
+                    .hero-meta__item
+                      span Khách tối đa
+                      strong= `${maxGroup} khách`
           section.booking-card.booking-card--promo
             .booking-card__header
               h2 Mã ưu đãi
@@ -72,80 +72,81 @@ block content
                   each promo in userPromotions
                     button(type='button', class='promo-chip', data-code=promo.code, data-name=promo.name, data-expiry=promo.expiresAt)= promo.code
 
-        .booking-column
+        .booking-column.booking-column--dates-participants
 
-          section.booking-card.booking-card--dates
+          .booking-card-stack.booking-card-stack--schedule
+            section.booking-card.booking-card--dates
 
-            .booking-card__header
+              .booking-card__header
 
-              h2 Chọn ngày khởi hành
+                h2 Chọn ngày khởi hành
 
-              p.card-desc Các đợt khởi hành sắp tới còn chỗ để đặt
+                p.card-desc Các đợt khởi hành sắp tới còn chỗ để đặt
 
-            .booking-dates-toolbar
+              .booking-dates-toolbar
 
-              span.booking-dates-total= `${availableDates.length} đợt lên đường`
+                span.booking-dates-total= `${availableDates.length} đợt lên đường`
 
-              span.booking-dates-note Chọn nhanh để giữ chỗ
+                span.booking-dates-note Chọn nhanh để giữ chỗ
 
-            if availableDates.length
+              if availableDates.length
 
-              .booking-dates-body
+                .booking-dates-body
 
-                .booking-date-grid
+                  .booking-date-grid
 
-                  each startObj in availableDates
+                    each startObj in availableDates
 
-                    - const dateObj = new Date(startObj.date)
+                      - const dateObj = new Date(startObj.date)
 
-                    - const day = dateObj.getDate()
+                      - const day = dateObj.getDate()
 
-                    - const month = dateObj.toLocaleDateString('vi-VN', { month: 'short' })
+                      - const month = dateObj.toLocaleDateString('vi-VN', { month: 'short' })
 
-                    - const year = dateObj.getFullYear()
+                      - const year = dateObj.getFullYear()
 
-                    - const weekday = dateObj.toLocaleDateString('vi-VN', { weekday: 'short' })
+                      - const weekday = dateObj.toLocaleDateString('vi-VN', { weekday: 'short' })
 
-                    - const lowSlots = startObj.availableSlots <= 3
+                      - const lowSlots = startObj.availableSlots <= 3
 
-                    button.booking-date-btn(
+                      button.booking-date-btn(
 
-                      type='button',
+                        type='button',
 
-                      class=lowSlots ? 'low-slots' : '',
+                        class=lowSlots ? 'low-slots' : '',
 
-                      data-date=dateObj.toISOString(),
+                        data-date=dateObj.toISOString(),
 
-                      data-slots=startObj.availableSlots
+                        data-slots=startObj.availableSlots
 
-                    )
+                      )
 
-                      span.booking-date-weekday= weekday
+                        span.booking-date-weekday= weekday
 
-                      strong.booking-date-day= day
+                        strong.booking-date-day= day
 
-                      span.booking-date-month= `${month} ${year}`
+                        span.booking-date-month= `${month} ${year}`
 
-                      span.booking-date-slotline= `${startObj.availableSlots} chỗ`
+                        span.booking-date-slotline= `${startObj.availableSlots} chỗ`
 
-                      if lowSlots
+                        if lowSlots
 
-                        span.booking-date-alert Sắp hết
-            else
-              .booking-empty-state Chưa có lịch khởi hành mở. Quay lại sau bạn nhé.
-          section.booking-card.booking-card--participants
-            .booking-card__header
-              h2 Số lượng
-            .participants-control
-              button.booking-participants-btn.decrease-btn(type='button', aria-label='Giảm số lượng') -
-              .participants-count
-                span KHÁCH
-                strong#participants-number 1
-              button.booking-participants-btn.increase-btn(type='button', aria-label='Tăng số lượng') +
-            .participants-hint
-              span.text Còn lại
-              strong#participants-remaining= `${Math.max(maxGroup - 1, 0)} chỗ`
-              span.text= `trên tối đa ${maxGroup} khách`
+                          span.booking-date-alert Sắp hết
+              else
+                .booking-empty-state Chưa có lịch khởi hành mở. Quay lại sau bạn nhé.
+            section.booking-card.booking-card--participants
+              .booking-card__header
+                h2 Số lượng
+              .participants-control
+                button.booking-participants-btn.decrease-btn(type='button', aria-label='Giảm số lượng') -
+                .participants-count
+                  span KHÁCH
+                  strong#participants-number 1
+                button.booking-participants-btn.increase-btn(type='button', aria-label='Tăng số lượng') +
+              .participants-hint
+                span.text Còn lại
+                strong#participants-remaining= `${Math.max(maxGroup - 1, 0)} chỗ`
+                span.text= `trên tối đa ${maxGroup} khách`
 
         .booking-column.booking-column--services-group
           section.booking-card.booking-card--services

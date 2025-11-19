@@ -3,21 +3,21 @@ extends adminLayout
 block adminContent
   .llk-admin-topbar
     .llk-admin-topbar__left
-      h1.llk-admin-topbar__title Quan ly khuyen mai
-      p.llk-admin-topbar__subtitle Theo doi ma giam gia va uu dai dang chay.
+      h1.llk-admin-topbar__title Quản lý khuyến mãi
+      p.llk-admin-topbar__subtitle Theo dõi mã giảm giá và ưu đãi đang chạy.
     .llk-admin-topbar__right
-      a.btn.btn--small.btn--green(href='/admin/promotions/new') Tao khuyen mai moi
+      a.btn.btn--small.btn--green(href='/admin/promotions/new') Tạo khuyến mãi mới
 
   section.llk-admin-panel
     if !promotions || promotions.length === 0
-      p.llk-admin-empty Chua co chuong trinh khuyen mai nao.
+      p.llk-admin-empty Chưa có chương trình khuyến mãi nào.
     else
       .promo-card-grid
         each promo in promotions
           - const isActive = promo.status === 'active';
           - const discountLabel = promo.discountType === 'percent' ? `${promo.discountValue}%` : `${promo.discountValue.toLocaleString('vi-VN')} VND`;
-          - const startLabel = promo.startDate ? new Date(promo.startDate).toLocaleDateString('vi-VN') : 'Khong xac dinh';
-          - const endLabel = promo.endDate ? new Date(promo.endDate).toLocaleDateString('vi-VN') : 'Khong gioi han';
+          - const startLabel = promo.startDate ? new Date(promo.startDate).toLocaleDateString('vi-VN') : 'Không xác định';
+          - const endLabel = promo.endDate ? new Date(promo.endDate).toLocaleDateString('vi-VN') : 'Không giới hạn';
           article.promo-card
             .promo-card__head
               .promo-card__title
@@ -25,23 +25,23 @@ block adminContent
                 h3.promo-card__name= promo.name
                 if promo.description
                   p.promo-card__desc= promo.description
-              span(class=`promo-card__badge ${isActive ? 'promo-card__badge--active' : 'promo-card__badge--inactive'}`)= promo.status
+              span(class=`promo-card__badge ${isActive ? 'promo-card__badge--active' : 'promo-card__badge--inactive'}`)= isActive ? 'Đang hoạt động' : 'Đã dừng'
             .promo-card__meta
               p
-                strong Uu dai:
+                strong Ưu đãi:
                 |  #{discountLabel}
                 if promo.maxDiscountAmount
-                  span.promo-card__chip= `Toi da ${promo.maxDiscountAmount.toLocaleString('vi-VN')} VND`
+                  span.promo-card__chip= `Tối đa ${promo.maxDiscountAmount.toLocaleString('vi-VN')} VND`
               p
-                strong Hieu luc:
+                strong Hiệu lực:
                 |  #{startLabel} - #{endLabel}
               p
-                strong Gioi han:
-                |  #{promo.usageLimit ? promo.usageLimit : 'Khong gioi han'} luot
+                strong Giới hạn:
+                |  #{promo.usageLimit ? promo.usageLimit : 'Không giới hạn'} lượt
             .promo-card__actions
-              a.btn.btn--small.btn--blue(href=`/admin/promotions/${promo.id}/edit`) Chinh sua
-              a.btn.btn--small.btn--orange(href=`/admin/promotions/${promo.id}/assign`) Gan ma
-              button.btn.btn--small.btn--red.btn-delete-promotion(data-promo-id=`${promo.id}`) Xoa
+              a.btn.btn--small.btn--blue(href=`/admin/promotions/${promo.id}/edit`) Chỉnh sửa
+              a.btn.btn--small.btn--orange(href=`/admin/promotions/${promo.id}/assign`) Gán mã
+              button.btn.btn--small.btn--red.btn-delete-promotion(data-promo-id=`${promo.id}`) Xóa
 
 
 

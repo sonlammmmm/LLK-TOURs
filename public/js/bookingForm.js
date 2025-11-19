@@ -383,11 +383,6 @@ export const initBookingForm = () => {
       const data = res.data.data;
       state.discountAmount = data?.discountAmount || 0;
       state.promotionCode = trimmed;
-      if (promotionMessage) {
-        promotionMessage.textContent = data?.promotion
-          ? `Da ap dung ma ${trimmed}.`
-          : "Uu dai duoc cap nhat.";
-      }
       if (removePromoBtn) {
         removePromoBtn.hidden = false;
         removePromoBtn.disabled = false;

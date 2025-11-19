@@ -1,0 +1,172 @@
+extends base
+
+block append head
+  link(rel='stylesheet' href='/css/landing.css')
+
+block content
+  - const safeTours = Array.isArray(tours) ? tours : [];
+  - const activeFilters = typeof filters === 'object' && filters ? filters : {};
+  - const heroNameValue = activeFilters.name || '';
+  - const heroStartDateValue = activeFilters.startDates || '';
+  - const heroLocationLabel = activeFilters.startLocation || 'Tất cả điểm khởi hành';
+  - const minPriceValue = activeFilters.minPrice || 1000000;
+  - const maxPriceValue = activeFilters.maxPrice || 50000000;
+
+  section.all-hero
+    .all-hero__inner
+      .all-hero__content
+        span.all-hero__eyebrow Bộ sưu tập tour
+        h1 Khám phá hành trình trọn vẹn
+        p Danh sách tour được cập nhật liên tục dành cho khách gia đình, công ty và nhóm yêu thích khám phá Việt Nam.
+        p.all-hero__note Chúng tôi hỗ trợ cá nhân hóa tuyến đi nếu bạn muốn kết hợp nhiều điểm đến.
+  section.all-main
+    .all-main__wrapper
+      aside.all-filters
+        form.all-filters__form(action='/all' method='GET')
+          h3 Lọc chuyến đi
+          .all-filters__section
+            label.all-filters__label(for='filterName') Tên tour
+            input#filterName(type='text' name='name' placeholder='VD: Hạ Long, Hà Nội' value=activeFilters.name)
+          .all-filters__section
+            label.all-filters__label(for='filterLocation') Khởi hành từ
+            select#filterLocation(name='startLocation')
+              option(value='') Tất cả
+              each location in filterLocations
+                option(
+                  value=location
+                  selected=activeFilters.startLocation === location
+                )= location
+          .all-filters__section
+            label.all-filters__label(for='filterDuration') Thời lượng
+            select#filterDuration(name='duration')
+              option(value='') Tất cả
+              option(value='2-4' selected=activeFilters.duration === '2-4') 2-4 ngày
+              option(value='5-7' selected=activeFilters.duration === '5-7') 5-7 ngày
+              option(value='8+' selected=activeFilters.duration === '8+') Từ 8 ngày
+          .all-filters__section
+            label.all-filters__label(for='filterGroup') Quy mô nhóm
+            select#filterGroup(name='groupSize')
+              option(value='') Tất cả
+              option(value='6-10' selected=activeFilters.groupSize === '6-10') 6-10 khách
+              option(value='11-20' selected=activeFilters.groupSize === '11-20') 11-20 khách
+              option(value='21+' selected=activeFilters.groupSize === '21+') Trên 20 khách
+          .all-filters__section
+            span.all-filters__label Giá tiền (VNĐ)
+            input#filterMinPrice(
+              type='range'
+              name='minPrice'
+              min='1000000'
+              max='50000000'
+              step='500000'
+              value=minPriceValue
+            )
+            input#filterMaxPrice(
+              type='range'
+              name='maxPrice'
+              min='1000000'
+              max='50000000'
+              step='500000'
+              value=maxPriceValue
+            )
+            .all-filters__price-values
+              span
+                small Tối thiểu
+                strong#filterMinPriceValue= minPriceValue.toLocaleString('vi-VN')
+              span
+                small Tối đa
+                strong#filterMaxPriceValue= maxPriceValue.toLocaleString('vi-VN')
+          .all-filters__section
+            button.btn.btn--green(type='submit') Áp dụng bộ lọc
+
+      if !safeTours.length
+        section.all-empty
+          h2 Mục tour đang được xây dựng
+          p Chúng tôi sẽ sớm đưa thêm nhiều hành trình mới. Hãy theo dõi lại hoặc liên hệ đội ngũ để nhận bản tin ưu đãi mới nhất.
+          a.btn.btn--green(href='/all') Khám phá lại sau
+      else
+        section.all-grid
+          each tour in safeTours
+            - const nextStart = tour.nextStart;
+            - const nextDateLabel = nextStart ? nextStart.dateFormatted : 'Đang cập nhật';
+            - const availableSlots = nextStart && typeof nextStart.availableSlots === 'number' ? nextStart.availableSlots : tour.maxGroupSize || 0;
+            - const canBook = Boolean(nextStart && nextStart.availableSlots > 0);
+            - const isSoldOutSlot = nextStart && (nextStart.availableSlots === 0 || typeof nextStart.availableSlots !== 'number');
+            - const hasUpcoming = Boolean(nextStart);
+            - const showSoldOutBadge = Boolean(tour.showSoldOutBadge);
+            - const bookingHref = user && user.role === 'user' ? `/book-tour/${tour._id}` : '/login';
+            - const tourContactHref = user && user.role === 'user' ? `/chat?prefill=${encodeURIComponent(`Tôi muốn hỏi về tour ${tour.name}`)}` : '/login';
+            - const stops = Array.isArray(tour.locations) ? tour.locations.length : 0;
+            article.all-tour-card(class={
+              'all-tour-card--soldout': showSoldOutBadge,
+              'all-tour-card--no-date': !hasUpcoming && !showSoldOutBadge
+            })
+              .all-tour-card__media(style=`background-image:url('/img/tours/${tour.imageCover}')`)
+                if showSoldOutBadge
+                  span.all-tour-card__badge.all-tour-card__badge--soldout Hết chỗ
+                else if nextStart && nextStart.isAlmostFull
+                  span.all-tour-card__badge.all-tour-card__badge--alert Gần hết chỗ
+              .all-tour-card__body
+                .all-tour-card__heading
+                  h3= tour.name
+                  span= tour.startLocation ? tour.startLocation.description : 'Khởi hành linh hoạt'
+                p.all-tour-card__summary= tour.summary
+                .all-tour-card__meta
+                  span
+                    i.fas.fa-clock
+                    |  #{tour.duration || '?'} ngày
+                  span
+                    i.fas.fa-map-marker-alt
+                    |  #{stops} điểm dừng
+                .all-tour-card__support
+                  .all-tour-card__price
+                    strong= tour.price ? `${tour.price.toLocaleString('vi-VN')} VNĐ` : 'Liên hệ'
+                    small /khách
+                  .all-tour-card__rating
+                    i.fas.fa-star
+                    span= tour.ratingsAverage ? tour.ratingsAverage.toFixed(1) : '0'
+                    small= `(${tour.ratingsQuantity || 0}) đánh giá`
+                .all-tour-card__actions
+                  if canBook
+                    a.btn.btn--green(href=bookingHref) Đặt tour
+                  a.btn.btn--contact(href=tourContactHref)
+                    i.fas.fa-headset
+                    span Tư vấn
+              .all-tour-card__footer
+                .all-tour-card__footer-info
+                  strong Khởi hành tiếp theo
+                  span= nextDateLabel
+                  small Chỗ trống #{availableSlots}/#{tour.maxGroupSize || 0}
+                a.all-tour-card__details-link(href=`/tour/${tour.slug}`)
+                  i.fas.fa-angle-right
+                  span Xem hành trình chi tiết
+
+block append scripts
+  script.
+    (function () {
+      var minInput = document.getElementById('filterMinPrice');
+      var maxInput = document.getElementById('filterMaxPrice');
+      var minOutput = document.getElementById('filterMinPriceValue');
+      var maxOutput = document.getElementById('filterMaxPriceValue');
+      if (!minInput || !maxInput || !minOutput || !maxOutput) return;
+
+      var formatCurrency = function (value) {
+        return new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(value);
+      };
+
+      var syncValues = function () {
+        var minValue = Number(minInput.value);
+        var maxValue = Number(maxInput.value);
+        if (minValue > maxValue) {
+          maxInput.value = minValue;
+        }
+        if (maxValue < minValue) {
+          minInput.value = maxValue;
+        }
+        minOutput.textContent = formatCurrency(minInput.value);
+        maxOutput.textContent = formatCurrency(maxInput.value);
+      };
+
+      minInput.addEventListener('input', syncValues);
+      maxInput.addEventListener('input', syncValues);
+      syncValues();
+    })();

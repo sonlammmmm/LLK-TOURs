@@ -3,16 +3,9 @@ extends adminLayout
 block adminContent
   .llk-admin-topbar
     .llk-admin-topbar__left
-      h1.llk-admin-topbar__title Dashboard Overview
-      p.llk-admin-topbar__subtitle Welcome back! Here's what's happening với hệ thống của bạn hôm nay.
+      h1.llk-admin-topbar__title Tổng quan điều hành
+      p.llk-admin-topbar__subtitle Chào mừng trở lại! Dưới đây là cái nhìn nhanh về hoạt động hôm nay.
     .llk-admin-topbar__right
-      div.llk-admin-topbar__search
-        svg(width='16' height='16')
-          use(xlink:href='/img/icons.svg#icon-search')
-        input(type='text', placeholder='Search…')
-      button.btn.btn--ghost(type='button')
-        svg(width='16' height='16')
-          use(xlink:href='/img/icons.svg#icon-bell')
       a.btn.btn--small.btn--green(href='/admin/tours/new') Tạo tour nhanh
 
   section.llk-admin-panel.llk-admin-dashboard
@@ -20,37 +13,56 @@ block adminContent
       .llk-admin-stat-card
         span.llk-admin-stat-card__label Doanh thu hôm nay (#{formattedDate})
         strong.llk-admin-stat-card__value #{todayRevenue.toLocaleString('vi-VN')} ₫
-        small.llk-admin-stat-card__trend +2.1% so với hôm qua
       .llk-admin-stat-card
         span.llk-admin-stat-card__label Doanh thu tháng #{formattedMonth}
         strong.llk-admin-stat-card__value #{monthRevenue.toLocaleString('vi-VN')} ₫
-        small.llk-admin-stat-card__trend +4.5% MoM
       .llk-admin-stat-card
         span.llk-admin-stat-card__label Doanh thu năm #{currentYear}
         strong.llk-admin-stat-card__value #{yearRevenue.toLocaleString('vi-VN')} ₫
-        small.llk-admin-stat-card__trend +12.3% YoY
       .llk-admin-stat-card
         span.llk-admin-stat-card__label Tỷ lệ chuyển đổi
-        strong.llk-admin-stat-card__value #{stats.conversionRate || '3.42%'}
-        small.llk-admin-stat-card__trend.text-success +0.8%
+        strong.llk-admin-stat-card__value #{stats.conversionRate}
+        small.llk-admin-stat-card__trend.text-success  Tỷ lệ đơn thanh toán thành công
 
     .llk-admin-dashboard__grid
       .llk-admin-chart-card
         .llk-admin-chart-card__header
-          h3.heading-tertiary Revenue Overview
+          h3.heading-tertiary Tổng quan doanh thu
+          .chart-filter
+            span.chart-filter__label Chọn năm
+            select.chart-filter__select#selectYear(name='year')
+              each year in availableYears
+                option(value=year selected=year === selectedYear)= year
         pre#dashboardRevenueData(style='display:none') !{JSON.stringify(revenueData)}
         .chart-wrapper
           canvas#monthlyChart
       .llk-admin-chart-card
         .llk-admin-chart-card__header
-          h3.heading-tertiary Profit vs Expenses
+          h3.heading-tertiary Doanh thu theo ngày
+          .chart-filter
+            span.chart-filter__label Chọn tháng
+            select.chart-filter__select#selectMonth
+              each month, index in monthLabels
+                option(value=index selected=index === currentMonthIndex)= month
         pre#dashboardDailyRevenueData(style='display:none') !{JSON.stringify(dailyRevenueByMonth)}
         .chart-wrapper
           canvas#dailyChart
+      .llk-admin-chart-card
+        .llk-admin-chart-card__header
+          h3.heading-tertiary Trạng thái đơn hàng
+        pre#dashboardStatusData(style='display:none') !{JSON.stringify(bookingStatusBreakdown)}
+        .chart-wrapper
+          canvas#statusChart
+      .llk-admin-chart-card
+        .llk-admin-chart-card__header
+          h3.heading-tertiary So sánh tài nguyên
+        pre#dashboardEntityData(style='display:none') !{JSON.stringify(entityTotals)}
+        .chart-wrapper
+          canvas#entityChart
 
     .llk-admin-dashboard__two-col
       .llk-admin-table-card
-        h3.heading-tertiary Recent Orders
+        h3.heading-tertiary Đơn hàng gần nhất
         ul.llk-admin-table
           each order in stats.recentOrders || []
             li
@@ -66,14 +78,14 @@ block adminContent
             li
               span Chưa có dữ liệu
       .llk-admin-table-card
-        h3.heading-tertiary Top Products
+        h3.heading-tertiary Tour bán chạy nhất
         ul.llk-admin-table
           each product in stats.topProducts || []
             li
               span
                 strong= product.name
                 br
-                small= product.sales + ' sales'
+                small= product.sales + ' đơn'
               span
                 strong= product.revenue
                 br
@@ -81,11 +93,6 @@ block adminContent
           if !stats.topProducts || !stats.topProducts.length
             li
               span Chưa có dữ liệu
-
-    .llk-admin-panel__toolbar
-      a.btn.btn--small.btn--blue(href='/admin/tours') Quản lý tour
-      a.btn.btn--small.btn--blue(href='/admin/users') Quản lý người dùng
-      a.btn.btn--small.btn--blue(href='/admin/bookings') Theo dõi bookings
 
 block scripts
   script(src='/js/dashboard.js')

@@ -146,12 +146,6 @@ block content
                 strong.tour-map-info__value= tour.startLocation.description
                 if tour.startLocation.address
                   span.tour-map-info__meta= tour.startLocation.address
-              li
-                span.tour-map-info__label Thời lượng
-                strong.tour-map-info__value= `${tour.duration} ngày`
-              li
-                span.tour-map-info__label Tổng điểm dừng
-                strong.tour-map-info__value= totalStops ? `${totalStops} điểm` : 'Đang cập nhật'
             if totalStops
               ul.tour-map-info__timeline
                 each location in tour.locations

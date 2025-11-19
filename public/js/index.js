@@ -4,7 +4,7 @@ import { login, logout } from "./login"
 import { updateSettings } from "./updateSettings"
 import { signup } from "./signup"
 import { bookTour } from "./stripe"
-import { handleTourForm, handleDeleteTour, initTourAdminInteractions } from "./tourManagement"
+import { handleTourForm, handleDeleteTour, initTourAdminInteractions, initTourSearch } from "./tourManagement"
 import { handleUserForm, handleDeactivateUser, handleActivateUser } from "./userManagement"
 import {
   handleDeleteBooking,
@@ -209,6 +209,7 @@ if (tourManagementList) {
 if (adminTourGrid) {
   handleDeleteTour()
   initTourAdminInteractions()
+  initTourSearch()
 }
 
 // User Management

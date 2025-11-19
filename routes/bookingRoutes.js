@@ -10,7 +10,6 @@ router.get('/by-session/:sid', bookingController.getByStripeSession);
 router.post(
   '/checkout-session/:tourId',
   authController.protect,
-  bookingController.checkBookingExists,
   bookingController.getCheckoutSession
 );
 

@@ -11,6 +11,7 @@ router.use(authController.isLoggedIn);
 
 // -------------------- TRANG NGƯỜI DÙNG --------------------
 router.get('/', viewsController.getOverview);
+router.get('/all', viewsController.getAllTours);
 router.get('/search', authController.isLoggedIn, viewsController.searchTours);
 router.get('/tour/:slug', authController.isLoggedIn, viewsController.getTour);
 router.get('/login', viewsController.getLoginForm);

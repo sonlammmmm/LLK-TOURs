@@ -45,7 +45,6 @@ export const displayMap = locations => {
       .setLngLat(loc.coordinates)
       .setHTML(`
         <div class="popup-content">
-          <div class="popup-day">Ngày ${loc.day}</div>
           <div class="popup-description">${loc.description}</div>
         </div>
       `);

@@ -33,18 +33,11 @@ exports.deletePromotion = catchAsync(async (req, res, next) => {
 });
 
 exports.assignPromotionToUser = catchAsync(async (req, res, next) => {
-  const { userId, usageLimit, expiresAt, note, customCode } = req.body;
+  const { userId, userIds, usageLimit, expiresAt, note, customCode } = req.body;
 
-  const [promotion, user] = await Promise.all([
-    Promotion.findById(req.params.id),
-    User.findById(userId)
-  ]);
-
+  const promotion = await Promotion.findById(req.params.id);
   if (!promotion) {
     return next(new AppError('Không tìm thấy khuyến mãi.', 404));
-  }
-  if (!user) {
-    return next(new AppError('Không tìm thấy người dùng.', 404));
   }
 
   const parsedLimit =
@@ -57,28 +50,52 @@ exports.assignPromotionToUser = catchAsync(async (req, res, next) => {
     }
   }
 
-  const assignment = await UserPromotion.findOneAndUpdate(
-    { promotion: promotion._id, user: user._id },
-    {
-      promotion: promotion._id,
-      user: user._id,
-      code: (customCode || promotion.code || '').toUpperCase(),
-      usageLimit: parsedLimit,
-      expiresAt: parsedExpire,
-      note,
-      assignedBy: req.user.id,
-      status: 'active'
-    },
-    {
-      upsert: true,
-      new: true,
-      setDefaultsOnInsert: true
-    }
+  const normalizedIds = new Set(
+    [
+      ...(Array.isArray(userIds)
+        ? userIds
+        : typeof userIds === 'string' && userIds.length
+        ? [userIds]
+        : []),
+      userId
+    ].filter(Boolean)
+  );
+
+  if (!normalizedIds.size) {
+    return next(new AppError('Vui lòng chọn người dùng hợp lệ.', 400));
+  }
+
+  const users = await User.find({ _id: { $in: Array.from(normalizedIds) } });
+  if (!users.length) {
+    return next(new AppError('Không tìm thấy người dùng.', 404));
+  }
+
+  const assignments = await Promise.all(
+    users.map(user =>
+      UserPromotion.findOneAndUpdate(
+        { promotion: promotion._id, user: user._id },
+        {
+          promotion: promotion._id,
+          user: user._id,
+          code: (customCode || promotion.code || '').toUpperCase(),
+          usageLimit: parsedLimit,
+          expiresAt: parsedExpire,
+          note,
+          assignedBy: req.user.id,
+          status: 'active'
+        },
+        {
+          upsert: true,
+          new: true,
+          setDefaultsOnInsert: true
+        }
+      )
+    )
   );
 
   res.status(200).json({
     status: 'success',
-    data: { data: assignment }
+    data: { assignments }
   });
 });
 

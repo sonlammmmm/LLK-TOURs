@@ -85,7 +85,10 @@ export const handlePromotionAssignForm = () => {
       submitBtn.textContent = "Đang gắn mã...";
     }
     const promoId = document.getElementById("assign-promotion-id").value;
-    const userId = document.getElementById("assign-user").value;
+    const assignUserSelect = document.getElementById("assign-user");
+    const selectedUserIds = Array.from(assignUserSelect?.selectedOptions || [])
+      .map(option => option.value)
+      .filter(Boolean);
     const usageLimit = Number.parseInt(
       document.getElementById("assign-limit").value || "1",
       10
@@ -93,7 +96,7 @@ export const handlePromotionAssignForm = () => {
     const expiresAt = document.getElementById("assign-expiry").value;
     const note = document.getElementById("assign-note").value.trim();
 
-    if (!userId) {
+    if (!selectedUserIds.length) {
       showAlert("error", "Vui lòng chọn người dùng.");
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -104,7 +107,8 @@ export const handlePromotionAssignForm = () => {
 
     try {
       await axios.post(`/api/v1/promotions/${promoId}/assign`, {
-        userId,
+        userIds: selectedUserIds,
+        userId: selectedUserIds[0],
         usageLimit,
         expiresAt: expiresAt || undefined,
         note

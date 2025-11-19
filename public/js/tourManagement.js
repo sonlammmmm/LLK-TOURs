@@ -502,3 +502,26 @@ export const initTourAdminInteractions = () => {
     });
   });
 };
+
+export const initTourSearch = () => {
+  const searchInput = document.querySelector('.llk-admin-panel__search');
+  if (!searchInput) return;
+
+  const tourCards = Array.from(document.querySelectorAll('.llk-admin-tour-card'));
+  const cardsData = tourCards.map((card) => ({
+    card,
+    searchableText: card.textContent.trim().toLowerCase(),
+  }));
+
+  const filterTours = () => {
+    const query = searchInput.value.trim().toLowerCase();
+    const showAll = query === '';
+
+    cardsData.forEach(({ card, searchableText }) => {
+      const matches = showAll || searchableText.includes(query);
+      card.style.display = matches ? '' : 'none';
+    });
+  };
+
+  searchInput.addEventListener('input', filterTours);
+};

@@ -15,8 +15,10 @@ export const login = async (email, password) => {
 
     if (res.data.status === 'success') {
       showAlert('success', 'Đăng nhập thành công');
+      const user = res.data && res.data.data && res.data.data.user;
+      const redirectUrl = user && user.role === 'admin' ? '/admin/dashboard' : '/';
       window.setTimeout(() => {
-        location.assign('/');
+        location.assign(redirectUrl);
       }, 1500);
     }
   } catch (err) {

@@ -1,92 +1,135 @@
 extends base
 
+block append head
+  link(rel='stylesheet' href='/css/landing.css')
+
 block content
-  section.banner
-    .overlay
-      .heading-container
-        h1.heading-text HƠN 500+ TOUR TRONG NƯỚC KHÁM PHÁ NGAY!
-      .search-container
-        form.search-form(action="/search", method="GET")
-          .form-group.main-search
-            input#searchInput.form-input(
-              type="text",
-              name="name",
-              placeholder="Bạn muốn đi đâu?",
-              value=searchParams ? searchParams.name : ''
-            )
-          .form-group-row
-            .form-group
-              input.form-input(
-                type="date",
-                name="startDates",
-                value=searchParams ? searchParams.startDates : ''
-              )
-            button.btn.btn--timkim(type="submit") Tìm kiếm
+  - const safeTours = Array.isArray(tours) ? tours : [];
+  - const safeLocations = Array.isArray(uniqueLocations) ? uniqueLocations : [];
+  - const totalTours = safeTours.length;
+  - const totalRatings = safeTours.reduce((sum, tour) => sum + (tour.ratingsAverage || 0), 0);
+  - const averageRating = totalTours ? (totalRatings / totalTours).toFixed(1) : '0';
+  - const trendingTours = safeTours.slice().sort((a, b) => (b.ratingsAverage || 0) - (a.ratingsAverage || 0)).slice(0, Math.min(3, totalTours));
+  - const heroLocations = safeLocations.slice(0, 8);
+  - const highlightLocations = safeLocations.slice(0, 6);
+  - const contactPrefill = 'Tôi cần tư vấn các hành trình đặc sắc tại LLK Travel';
+  - const contactHref = user && user.role === 'user' ? `/chat?prefill=${encodeURIComponent(contactPrefill)}` : '/login';
+  - const searchName = (searchParams && searchParams.name) || '';
+  - const searchDate = (searchParams && searchParams.startDates) || '';
+  - const searchLocation = (searchParams && searchParams.startLocation) || '';
 
-  main.main
-    if noResults
-      .no-results
-        h2.heading-secondary Không có tour nào phù hợp với mong muốn của bạn
-        p Vui lòng thử lại với các tiêu chí tìm kiếm khác
-    else
-      .card-container
-        each tour in tours
-          - const nextDateObj = tour.startDates.filter(d => new Date(d.date || d) > new Date() && (d.availableSlots > 0 || d.availableSlots === undefined)).sort((a, b) => new Date(a.date || a) - new Date(b.date || b))[0]
-          - const dateDisplay = nextDateObj ? new Date(nextDateObj.date || nextDateObj).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Trống lịch'
-          - const availableSlots = nextDateObj ? (nextDateObj.availableSlots !== undefined ? nextDateObj.availableSlots : tour.maxGroupSize) : 0
-          - const slotsText = `Còn ${availableSlots}/${tour.maxGroupSize} chỗ`
-          - const canBook = availableSlots > 0
-          - const contactMessage = `Tôi muốn hỏi về Tour ${tour.name}`
-          - const contactHref = `/chat?prefill=${encodeURIComponent(contactMessage)}`
-          - const isUser = user && user.role === 'user'
-          - const primaryHref = canBook ? (isUser ? `/book-tour/${tour._id}` : '/login') : (isUser ? contactHref : '/login')
-          .card(class={ 'card--sold-out': !canBook })
-            a.card__overlay-link(
-              href=`/tour/${tour.slug}`
-              aria-label=`Xem chi tiết tour ${tour.name}`
-            )
-            if !canBook
-              img.card__sold-out-note(src='/img/soldout.png', alt='Tour đã hết chỗ')
-            .card__header
-              .card__picture
-                img.card__picture-img(src=`/img/tours/${tour.imageCover}`, alt=`${tour.name}`)
-              h3.heading-tertirary
-                span= tour.name
+  section.landing-hero
+    .landing-hero__inner
+      .landing-hero__content
+        span.landing-hero__eyebrow Ưu tiên trải nghiệm
+        h1 LLK Travel | Kết nối hành trình Việt Nam tinh tế
+        p Chúng tôi thiết kế hành trình tinh gọn, giàu cảm xúc cho những người yêu khám phá và muốn du lịch thông minh.
+        .landing-hero__stats
+          article
+            strong= totalTours || 0
+            span Hành trình đẳng cấp
+          article
+            strong= safeLocations.length || 0
+            span Điểm đến đa dạng
+          article
+            strong= `${averageRating}/5`
+            span Đánh giá trung bình
+        .landing-hero__actions
+          a.btn.btn--green(href='/all') Khám phá tất cả tour
+          a.btn.btn--contact(href=contactHref)
+            i.fas.fa-headset
+            span Nhận tư vấn ngay
+      .landing-hero__search
+        h3 Tạo hành trình phù hợp với bạn
+        p Chọn chủ đề, thời gian và điểm khởi hành, chúng tôi sẽ gợi ý chuyến đi trên nền tảng duy nhất.
+        form.landing-search(action='/search' method='GET')
+          .landing-search__grid
+            input(type='text' name='name' aria-label='Tên tour' placeholder='Tên tour hoặc chủ đề' value=searchName)
+            input(type='date' name='startDates' aria-label='Ngày khởi hành' value=searchDate)
+            input(type='text' name='startLocation' aria-label='Điểm khởi hành' list='hero-locations' placeholder='Điểm khởi hành' value=searchLocation)
+            button.btn.btn--blue(type='submit')
+              i.fas.fa-search
+              span Tìm tour
+          datalist#hero-locations
+            each location in heroLocations
+              option(value=location)
 
-            .card__details
-              h4.card__sub-heading= `Tổng thời gian: ${tour.duration}-ngày`
-              p.card__text= tour.summary
-              .card__data
-                svg.card__icon
-                  use(xlink:href='/img/icons.svg#icon-map-pin')
-                span= tour.startLocation.description
-              .card__data
-                svg.card__icon
-                  use(xlink:href='/img/icons.svg#icon-calendar')
-                span= dateDisplay
-              .card__data
-                svg.card__icon
-                  use(xlink:href='/img/icons.svg#icon-flag')
-                span= `${tour.locations.length} điểm tham quan`
-              .card__data
-                svg.card__icon
-                  use(xlink:href='/img/icons.svg#icon-user')
-                span= slotsText
+  if noResults
+    section.landing-empty
+      h2 Chúng tôi đang cập nhật thêm hành trình
+      p Đội ngũ LLK Travel sẽ mở thêm các nhóm khởi hành cho những hành trình được săn đón nhất, hãy quay lại sau hoặc khám phá toàn bộ danh sách bên dưới.
+      a.btn.btn--green(href='/all') Khởi động lại hành trình
+  else
+    section.landing-highlight
+      .landing-highlight__header
+        span.landing-section__eyebrow Hành trình nổi bật
+        h2 Những chuyến đi được yêu thích nhất
+        p Các hành trình này được chăm chút kỹ lưỡng, phù hợp để trải nghiệm nghỉ dưỡng, khám phá văn hóa và ẩm thực trong một hành trình chuẩn mực.
+      .landing-highlight__grid
+        each highlight in trendingTours
+          - const nextStart = highlight.nextStart;
+          - const nextDateLabel = nextStart ? nextStart.dateFormatted : 'Đang cập nhật';
+          - const availableSlots = nextStart && typeof nextStart.availableSlots === 'number' ? nextStart.availableSlots : highlight.maxGroupSize || 0;
+          - const isAlmostFull = nextStart && nextStart.isAlmostFull;
+          - const isSoldOut = nextStart && nextStart.availableSlots === 0;
+          article.landing-highlight__card
+            .landing-highlight__media(style=`background-image:url('/img/tours/${highlight.imageCover}')`)
+              if isSoldOut
+                span.landing-highlight__chip.landing-highlight__chip--soldout Hết chỗ
+              else if isAlmostFull
+                span.landing-highlight__chip.landing-highlight__chip--alert Gần hết chỗ
+              else if nextStart
+                span.landing-highlight__chip.landing-highlight__chip--info= `Khởi hành ${nextDateLabel}`
+            .landing-highlight__body
+              h3.landing-highlight__title= highlight.name
+              p.landing-highlight__summary= highlight.summary
+              .landing-highlight__meta
+                span
+                  i.fas.fa-clock
+                  |  #{highlight.duration || '?'} ngày
+                span
+                  i.fas.fa-map-marker-alt
+                  |  #{highlight.startLocation ? highlight.startLocation.description : 'Khởi hành linh hoạt'}
+              .landing-highlight__info
+                .landing-highlight__date
+                  strong Khởi hành tiếp theo
+                  span= nextDateLabel
+                .landing-highlight__slots
+                  strong Chỗ trống
+                  span= availableSlots
+              .landing-highlight__footer
+                .landing-highlight__price
+                  strong= highlight.price ? `${highlight.price.toLocaleString('vi-VN')} VNĐ` : 'Liên hệ'
+                  small /khách
+                .landing-highlight__rating
+                  i.fas.fa-star
+                  span= highlight.ratingsAverage ? highlight.ratingsAverage.toFixed(1) : '0'
+                  small= `(${highlight.ratingsQuantity || 0}) đánh giá`
+              a.btn.btn--white.landing-highlight__cta(href=`/tour/${highlight.slug}`) Xem chi tiết
 
-            .card__footer
-              .card__footer-info
-                .card__price
-                  span.card__footer-label Giá từ
-                  span.card__footer-value= `${tour.price.toLocaleString('vi-VN')}`
-                  span.card__footer-text VNĐ/khách
-                .card__rating
-                  span.card__footer-label Đánh giá
-                  span.card__footer-value= tour.ratingsAverage
-                  span.card__footer-text= `/5⭐(${tour.ratingsQuantity})`
-              .card__actions
-                if canBook
-                  a.btn.btn--green.btn--small(href=primaryHref) ĐẶT TOUR
-                else
-                  a.btn.btn--contact.btn--small(href=primaryHref)
-                    i.fa-solid.fa-phone
-                    span Liên hệ
+  if highlightLocations.length
+    section.landing-locations
+      h3 Điểm xuất phát được ưa chuộng
+      p Chúng tôi hoạt động từ các điểm sau; nếu bạn cần hỗ trợ, đội concierge sẵn sàng kết nối.
+      ul
+        each location in highlightLocations
+          li= location
+
+  section.landing-article
+    .landing-article__inner
+      .landing-article__text
+        h3 Du lịch thông minh cùng LLK Travel
+        p Chúng tôi xây dựng mỗi hành trình xứng tầm tinh hoa, phối hợp giữa dịch vụ địa phương và chuẩn mực toàn cầu:
+        ul.landing-article__list
+          li Hành trình balance giữa khám phá và nghỉ dưỡng, quân tâm đến trải nghiệm từng giây.
+          li Hướng dẫn viên bản địa chuyên sâu, đội ngũ quản lý tại điểm luôn sẵn sàng xử lý chủ động.
+          li Bảo hiểm, phương tiện và khách sạn được đối tác uy tín kiểm duyệt hàng ngày.
+        p Khách hàng đánh giá LLK Travel là người đồng hành đủ tinh tế để thấu hiểu lịch trình và linh hoạt xử lý mọi thay đổi.
+      .landing-article__cta
+        h4 Cần ý tưởng riêng? Hãy nói với chúng tôi.
+        p Chọn dịch vụ tư vấn cao cấp để nhận kế hoạch personal hóa trong 24h.
+        .landing-article__actions
+          a.btn.btn--green(href='/all') Xem toàn bộ hành trình
+          a.btn.btn--contact(href=contactHref)
+            i.fas.fa-headset
+            span Tư vấn chuyên viên

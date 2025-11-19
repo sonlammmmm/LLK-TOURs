@@ -3,48 +3,48 @@ extends adminLayout
 block adminContent
   .llk-admin-topbar
     .llk-admin-topbar__left
-      h1.llk-admin-topbar__title Quan ly dich vu
-      p.llk-admin-topbar__subtitle Cau hinh dich vu bo sung cho tour.
+      h1.llk-admin-topbar__title Quản lý dịch vụ
+      p.llk-admin-topbar__subtitle Cấu hình dịch vụ bổ sung cho tour.
     .llk-admin-topbar__right
-      a.btn.btn--small.btn--green(href='/admin/services/new') Tao dich vu moi
+      a.btn.btn--small.btn--green(href='/admin/services/new') Tạo dịch vụ mới
 
   section.llk-admin-panel
     if !services || services.length === 0
-      p.llk-admin-empty Chua co dich vu nao duoc cau hinh.
+      p.llk-admin-empty Chưa có dịch vụ nào được cấu hình.
     else
       .service-card-grid
         each service in services
           - const isActive = service.status === 'active';
-          - const billingLabel = service.chargeType === 'per-person' ? 'Theo nguoi' : 'Theo luot/booking';
+          - const billingLabel = service.chargeType === 'per-person' ? 'Theo người' : 'Theo lượt/booking';
           article.service-admin-card
             .service-admin-card__head
               .service-admin-card__title
                 h3.service-admin-card__name= service.name
                 if service.shortDescription
                   p.service-admin-card__desc= service.shortDescription
-              span(class=`promo-card__badge ${isActive ? 'promo-card__badge--active' : 'promo-card__badge--inactive'}`)= isActive ? 'Dang hien thi' : 'Da an'
+                span(class=`promo-card__badge ${isActive ? 'promo-card__badge--active' : 'promo-card__badge--inactive'}`)= isActive ? 'Đang hiển thị' : 'Đã ẩn'
             .service-admin-card__price= `${service.price.toLocaleString('vi-VN')} VND`
             .service-admin-card__meta
               p
-                strong Loai tinh phi:
+                strong Loại tính phí:
                 |  #{billingLabel}
               p
-                strong Hien thi:
-                |  #{service.visibility === 'public' ? 'Cong khai' : 'Noi bo'}
+                strong Hiển thị:
+                |  #{service.visibility === 'public' ? 'Công khai' : 'Nội bộ'}
               p
-                strong Thu tu:
+                strong Thứ tự:
                 |  #{service.displayOrder || 0}
             if service.allowMultiple || service.chargeType === 'per-person'
               .service-admin-card__chips
                 if service.chargeType === 'per-person'
-                  span.service-admin-card__chip Ap dung theo so nguoi
+                  span.service-admin-card__chip Áp dụng theo số người
                 if service.allowMultiple && service.chargeType === 'per-booking'
-                  span.service-admin-card__chip Cho phep chon nhieu lan
+                  span.service-admin-card__chip Cho phép chọn nhiều lần
             .service-admin-card__actions
               button.btn.btn--small.btn--orange.btn-toggle-service(
                 data-service-id=`${service.id}`,
                 data-next-status=`${service.status === 'active' ? 'inactive' : 'active'}`
-              )= service.status === 'active' ? 'An dich vu' : 'Hien thi'
-              a.btn.btn--small.btn--blue(href=`/admin/services/${service.id}/edit`) Chinh sua
-              button.btn.btn--small.btn--red.btn-delete-service(data-service-id=`${service.id}`) Xoa
+              )= service.status === 'active' ? 'Ẩn dịch vụ' : 'Hiển thị'
+              a.btn.btn--small.btn--blue(href=`/admin/services/${service.id}/edit`) Chỉnh sửa
+              button.btn.btn--small.btn--red.btn-delete-service(data-service-id=`${service.id}`) Xóa
 

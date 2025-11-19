@@ -6,10 +6,6 @@ block adminContent
       h1.llk-admin-topbar__title Quản lý tour
       p.llk-admin-topbar__subtitle Kiểm soát hành trình và ngày khởi hành theo thời gian thực.
     .llk-admin-topbar__right
-      button.btn.btn--ghost(type='button')
-        svg(width='16' height='16')
-          use(xlink:href='/img/icons.svg#icon-settings')
-        |  Tùy chỉnh
       a.btn.btn--small.btn--green(href='/admin/tours/new')
         svg(width='16' height='16')
           use(xlink:href='/img/icons.svg#icon-plus-circle')
@@ -34,11 +30,6 @@ block adminContent
 
     .llk-admin-panel__toolbar
       input.llk-admin-panel__search(type='text', placeholder='Tìm tour theo tên...')
-      select.llk-admin-panel__filter
-        option(value='') Tất cả trạng thái
-        option(value='active') Đang mở bán
-        option(value='upcoming') Sắp khởi hành
-      button.btn.btn--ghost.llk-admin-panel__toggle(type='button') Chế độ lưới
 
     if tours.length === 0
       p.llk-admin-empty Không có tour nào vừa được tạo.
