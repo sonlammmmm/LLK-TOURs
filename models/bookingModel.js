@@ -195,7 +195,8 @@ bookingSchema.pre(/^find/, function(next) {
   })
     .populate({
       path: 'tour',
-      select: 'name slug imageCover duration price startDates'
+      select:
+        'name slug imageCover duration price startDates summary locations startLocation'
     })
     .populate({
       path: 'services.service',

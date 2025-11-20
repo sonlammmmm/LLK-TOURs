@@ -13,8 +13,6 @@ mixin userPortalMenu(activeMenu = 'account')
         else
           strong Khách hàng LLK
           span Đăng nhập để xem thêm
-      if user && user.role
-        span.user-portal__menu-tag= user.role === 'user' ? 'Người dùng' : 'Đội ngũ'
     ul.user-portal__menu-list
       li(class=`user-portal__menu-list-item ${activeMenu === 'account' ? 'user-portal__menu-list-item--active' : ''}`)
         a.user-portal__menu-link(href='/me')

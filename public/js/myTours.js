@@ -132,7 +132,7 @@ export const handleAddReview = () => {
       })
 
       // Cập nhật tiêu đề và nút
-      modalTitle.textContent = "Chỉnh sửa đánh giá"
+      modalTitle.textContent = "Sửa đánh giá"
       submitButton.textContent = "Cập nhật đánh giá"
 
       // Hiển thị modal

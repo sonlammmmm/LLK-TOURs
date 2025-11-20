@@ -113,10 +113,17 @@ exports.getUsersWithMessages = catchAsync(async (req, res) => {
   const skip = (page - 1) * limit;
 
   const agg = await Message.aggregate([
+    {
+      $addFields: {
+        userId: {
+          $cond: [{ $eq: ['$role', 'user'] }, '$sender', '$receiver']
+        }
+      }
+    },
     { $sort: { createdAt: -1 } },
     {
       $group: {
-        _id: '$receiver', // receiver luôn là userId
+        _id: '$userId',
         lastMessage: { $first: '$content' },
         lastMessageTime: { $first: '$createdAt' }
       }

@@ -40,7 +40,9 @@ const sendErrorDev = (err, req, res) => {
   console.error('LỖI', err);
   return res.status(err.statusCode).render('error', {
     title: 'Đã xảy ra lỗi!',
-    msg: err.message
+    msg: err.message,
+    statusCode: err.statusCode,
+    status: err.status
   });
 };
 
@@ -70,7 +72,9 @@ const sendErrorProd = (err, req, res) => {
     console.log(err);
     return res.status(err.statusCode).render('error', {
       title: 'Đã xảy ra lỗi!',
-      msg: err.message
+      msg: err.message,
+      statusCode: err.statusCode,
+      status: err.status
     });
   }
   // B) Lỗi lập trình hoặc lỗi chưa xác định: không tiết lộ chi tiết lỗi
@@ -79,7 +83,9 @@ const sendErrorProd = (err, req, res) => {
   // 2) Gửi thông báo chung
   return res.status(err.statusCode).render('error', {
     title: 'Đã xảy ra lỗi!',
-    msg: 'Vui lòng thử lại sau.'
+    msg: 'Vui lòng thử lại sau.',
+    statusCode: err.statusCode,
+    status: err.status
   });
 };
 

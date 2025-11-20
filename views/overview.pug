@@ -37,9 +37,10 @@ block content
       //- 2. UI & TEXT LAYER
       .slider-ui
         //- Search Box
-        form.slider-search(action='/tours' method='GET')
-          input(type='text' name='name' placeholder='Tìm điểm đến...')
-          button(type='submit') ->
+        form.slider-search(action='/all' method='GET')
+          input(type='text' name='name' placeholder='Bạn muốn đến nơi nào...?')
+          button(type='submit')
+            i.fa-solid.fa-magnifying-glass
 
         .slider-content-wrapper
           each tour, idx in sliderTours
@@ -176,7 +177,10 @@ block append scripts
         }
 
         // 3. Xử lý Nav
-        moveNavToLogicalIndex(currentIndex);
+        const wrapTransition =
+          (prevIndex === totalSlides - 1 && currentIndex === 0) ||
+          (prevIndex === 0 && currentIndex === totalSlides - 1);
+        moveNavToLogicalIndex(currentIndex, true, wrapTransition);
 
         // 4. Active Slide Mới
         const nextBg = backgrounds[currentIndex];
@@ -270,7 +274,7 @@ block append scripts
         navViewport.scrollTo({ left: target, behavior: smooth ? 'smooth' : 'auto' });
       }
 
-      function normalizeNavPosition() {
+      function normalizeNavPosition(wrapTransition = false) {
         if (!navViewport || !navCycleWidth || !navBaseCount) return;
         if (virtualNavIndex >= navBaseCount * 2) {
           virtualNavIndex -= navBaseCount;
@@ -279,16 +283,23 @@ block append scripts
           virtualNavIndex += navBaseCount;
           navViewport.scrollLeft += navCycleWidth;
         }
+        if (wrapTransition) {
+          const currentCard = navCards[virtualNavIndex];
+          if (currentCard) highlightNavCard(currentCard);
+        }
       }
 
-      function moveNavToLogicalIndex(targetIndex, smooth = true) {
+      function moveNavToLogicalIndex(targetIndex, smooth = true, wrapTransition = false) {
         if (!navTrack || !navViewport || !navCards.length) return;
         const candidate = findClosestNavCard(targetIndex);
         if (!candidate) return;
         virtualNavIndex = candidate.idx;
         highlightNavCard(candidate.card);
         scrollNavCardIntoView(candidate.card, smooth);
-        setTimeout(normalizeNavPosition, smooth ? 650 : 0);
+        setTimeout(
+          () => normalizeNavPosition(wrapTransition),
+          smooth ? 650 : 0
+        );
       }
 
       // Autoplay logic

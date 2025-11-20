@@ -5,86 +5,112 @@ block content
   main.main.user-portal-instance
     section.user-portal
       +userPortalMenu('billing')
-      .user-portal__content
-        .invoice-wrapper
-          .invoice-card
-            .invoice-header
-              .invoice-logo
-                img(src='/img/logo-white.png', alt='LLK Travel')
-              .invoice-title
-                h2.heading-secondary Hoá đơn
-                .invoice-number Mã hoá đơn: ##{booking.id.slice(-8).toUpperCase()}
-
-            .invoice-details
-              .invoice-customer
-                h3.invoice-subtitle Thông tin khách hàng
-                .invoice-info
-                  .invoice-info-item
-                    span.invoice-label Tên:
-                    span.invoice-value= booking.user.name
-                  .invoice-info-item
-                    span.invoice-label Email:
-                    span.invoice-value= booking.user.email
-              .invoice-booking
-                h3.invoice-subtitle Thông tin đặt tour
-                .invoice-info
-                  .invoice-info-item
-                    span.invoice-label Tour:
-                    span.invoice-value= booking.tour.name
-                  .invoice-info-item
-                    span.invoice-label Ngày khởi hành:
-                    span.invoice-value= booking.startDate ? new Date(booking.startDate).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' }) : booking.tour.startDates[0].toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })
-                  .invoice-info-item
-                    span.invoice-label Thời gian:
-                    span.invoice-value= `${booking.tour.duration} ngày`
-                  .invoice-info-item
-                    span.invoice-label Số lượng người:
-                    span.invoice-value= booking.participants
-
-            .invoice-table
-              - const baseTotal = booking.basePrice || booking.price;
-              - const baseUnit = (baseTotal || 0) / (booking.participants || 1);
-              table
-                thead
-                  tr
-                    th Mã tour
-                    th Đơn giá
-                    th Số lượng
-                    th Thành tiền
-                tbody
-                  tr
-                    td= booking.tour.name
-                    td= `${baseUnit.toLocaleString('vi-VN')} VND`
-                    td= booking.participants
-                    td= `${baseTotal.toLocaleString('vi-VN')} VND`
-                  if booking.services && booking.services.length
-                    each service in booking.services
-                      tr
-                        td= service.name
-                        td= `${(service.price || 0).toLocaleString('vi-VN')} VND`
-                        td= service.quantity
-                        td= `${(service.total || 0).toLocaleString('vi-VN')} VND`
-                tfoot
-                  if booking.servicesTotal
+      .invoice-wrapper
+        - const startDateValue = booking.startDate ? new Date(booking.startDate).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' }) : booking.tour.startDates[0].toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })
+        - const createdDateValue = new Date(booking.createdAt).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })
+        - const baseTotal = booking.basePrice || booking.price || 0
+        - const baseUnit = (baseTotal || 0) / (booking.participants || 1)
+        - const servicesTotal = booking.servicesTotal || 0
+        - const discountAmount = booking.discountAmount || 0
+        - const totalValue = typeof booking.price === 'number' ? booking.price : Math.max(baseTotal + servicesTotal - discountAmount, 0)
+        - const formattedTotal = `${totalValue.toLocaleString('vi-VN')} VND`
+        .invoice-card
+          .invoice-hero
+            .invoice-hero__body
+              .invoice-hero__title
+                h1.heading-secondary Hoá đơn đặt tour
+                span.invoice-hero__number Mã: ##{booking.id.slice(-8).toUpperCase()}
+              .invoice-hero__meta
+                span
+                  strong Ngày đặt:
+                  |  #{createdDateValue}
+                span
+                  strong Ngày khởi hành:
+                  |  #{startDateValue}
+                span
+                  strong Số ngày:
+                  |  #{booking.tour.duration} ngày
+            .invoice-hero__total
+              span.invoice-hero__total-label Tổng thanh toán
+              span.invoice-hero__total-value= formattedTotal
+          .invoice-summary
+            .invoice-info-card
+              h3.invoice-info-card__title Khách hàng
+              .invoice-info-card__list
+                .invoice-info-card__item
+                  span.label Tên
+                  span.value= booking.user.name
+                .invoice-info-card__item
+                  span.label Email
+                  span.value= booking.user.email
+            .invoice-info-card
+              h3.invoice-info-card__title Tour & lịch
+              .invoice-info-card__list
+                .invoice-info-card__item
+                  span.label Tour
+                  span.value= booking.tour.name
+                .invoice-info-card__item
+                  span.label Ngày khởi hành
+                  span.value= startDateValue
+                .invoice-info-card__item
+                  span.label Thời gian
+                  span.value= `${booking.tour.duration} ngày`
+                .invoice-info-card__item
+                  span.label Số lượng người
+                  span.value= booking.participants || 0
+                .invoice-info-card__item
+                  span.label Đơn giá cơ bản
+                  span.value= `${baseUnit.toLocaleString('vi-VN')} VND/người`
+          .invoice-table
+            table
+              thead
+                tr
+                  th Dịch vụ
+                  th Đơn giá
+                  th Số lượng
+                  th Thành tiền
+              tbody
+                tr
+                  td= booking.tour.name
+                  td= `${baseUnit.toLocaleString('vi-VN')} VND`
+                  td= booking.participants || 0
+                  td= `${baseTotal.toLocaleString('vi-VN')} VND`
+                if booking.services && booking.services.length
+                  each service in booking.services
                     tr
-                      td(colspan='3') Tổng dịch vụ
-                      td= `${booking.servicesTotal.toLocaleString('vi-VN')} VND`
-                  if booking.discountAmount && booking.discountAmount > 0
-                    tr
-                      td(colspan='3') Giảm giá
-                      td= `- ${(booking.discountAmount || 0).toLocaleString('vi-VN')} VND`
+                      td= service.name
+                      td= `${(service.price || 0).toLocaleString('vi-VN')} VND`
+                      td= service.quantity
+                      td= `${(service.total || 0).toLocaleString('vi-VN')} VND`
+              tfoot
+                if servicesTotal
                   tr
-                    td(colspan='3') Tổng thanh toán
-                    td= `${booking.price.toLocaleString('vi-VN')} VND`
-
-            .invoice-footer
-              .invoice-status
-                span.invoice-label Trạng thái:
-                span(class=`invoice-status-badge invoice-status-badge--${booking.paid ? 'paid' : 'unpaid'}`)= booking.paid ? 'Đã thanh toán' : 'Chưa thanh toán'
-              .invoice-date
-                span.invoice-label Ngày đặt:
-                span.invoice-value= new Date(booking.createdAt).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })
-
-          .invoice-actions
-            button.btn.btn--green.btn-print-invoice In hoá đơn
-            a.btn.btn--blue(href='/my-tours') Quay lại
+                    td(colspan='3') Tổng dịch vụ
+                    td= `${servicesTotal.toLocaleString('vi-VN')} VND`
+                if discountAmount && discountAmount > 0
+                  tr
+                    td(colspan='3') Giảm giá
+                    td= `- ${discountAmount.toLocaleString('vi-VN')} VND`
+                tr
+                  td(colspan='3') Tổng thanh toán
+                  td= formattedTotal
+          .invoice-highlights
+            .invoice-highlight
+              span.invoice-highlight__label Dịch vụ bổ sung
+              span.invoice-highlight__value= `${servicesTotal.toLocaleString('vi-VN')} VND`
+            .invoice-highlight
+              span.invoice-highlight__label Chiết khấu
+              span.invoice-highlight__value= discountAmount > 0 ? `- ${discountAmount.toLocaleString('vi-VN')} VND` : '0 VND'
+            .invoice-highlight
+              span.invoice-highlight__label Thanh toán cuối
+              span.invoice-highlight__value= formattedTotal
+          .invoice-footer
+            .invoice-status
+              span.invoice-label Trạng thái:
+              span(class=`invoice-status-badge invoice-status-badge--${booking.paid ? 'paid' : 'unpaid'}`)= booking.paid ? 'Đã thanh toán' : 'Chưa thanh toán'
+            .invoice-date
+              span.invoice-label Ngày tạo:
+              span.invoice-value= createdDateValue
+        .invoice-actions
+          button.btn.btn--green.btn-print-invoice In hoá đơn
+          a.btn.btn--blue(href='/my-tours') Quay lại

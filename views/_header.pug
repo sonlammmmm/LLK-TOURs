@@ -1,6 +1,5 @@
-- const landingPageActive = typeof pageClass === 'string' ? pageClass.includes('landing-page') : false;
-- const headerLogo = landingPageActive ? '/img/logo-white.png' : '/img/logo-blue.png';
-header.site-header(class=landingPageActive ? 'site-header--landing' : '')
+- const headerLogo = '/img/logo-white.png';
+header.site-header
   .site-header__inner
     a.site-header__brand(href='/')
       img(src=headerLogo alt='LLK logo' class='site-header__logo')
@@ -22,15 +21,9 @@ header.site-header(class=landingPageActive ? 'site-header--landing' : '')
             li
               a(href='#') Lịch sử phát triển
         li
-          a.site-nav__link(href='#') Liên hệ
+          a.site-nav__link(href='/chat') Liên hệ
 
     .site-header__actions
-      .site-header__hotline
-        i.fa-solid.fa-phone
-        .site-header__hotline-info
-          span Hotline 24/7
-          a(href='tel:0123456789') 0123 456 789
-
       if user
         .user-dropdown
           button.user-dropdown__toggle(type='button')
@@ -77,9 +70,9 @@ header.site-header(class=landingPageActive ? 'site-header--landing' : '')
                 span Đăng xuất
       else
         .site-header__auth
-          a.site-nav__link.site-nav__link--ghost(href='/login')
-            i.fa-solid.fa-lock
-            span  Đăng nhập
-          a.site-nav__link.site-nav__link--cta(href='/signup')
+          a.site-header__btn.site-header__btn--ghost(href='/login')
+            i.fa-solid.fa-lock-alt
+            span ĐĂNG NHẬP
+          a.site-header__btn.site-header__btn--accent(href='/signup')
             i.fa-solid.fa-pen-to-square
-            span  Đăng ký
+            span ĐĂNG KÝ

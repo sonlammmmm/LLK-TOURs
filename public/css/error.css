@@ -1,0 +1,131 @@
+#error-page {
+  min-height: 100vh;
+  height: 100vh;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body.error-page-body {
+  min-height: 100vh;
+  max-height: 100vh;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #01030a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+body.error-page-body .alert-container {
+  display: none;
+}
+
+#error-page .slider-ui {
+  pointer-events: none;
+  min-height: 100vh;
+  align-items: center;
+  padding-inline: clamp(1.25rem, 4vw, 4rem);
+}
+
+#error-page .slider-content-wrapper {
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  pointer-events: auto;
+}
+
+#error-page .slide-text-item {
+  text-align: left;
+  max-width: 580px;
+  padding: clamp(1rem, 2.6vw, 2rem) clamp(1.5rem, 4vw, 3rem);
+  background: rgba(1, 2, 7, 0.55);
+  border-radius: 32px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+  position: relative;
+  z-index: 1;
+}
+
+#error-page .slide-text-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+
+#error-page .text-location {
+  letter-spacing: 0.35em;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #7be0ff;
+}
+
+#error-page .text-heading {
+  margin: 0.8rem 0 1rem;
+  font-size: clamp(3rem, 8vw, 5rem);
+  letter-spacing: 0.02em;
+}
+
+#error-page .error__code {
+  font-size: 0.95rem;
+  margin: 0;
+  letter-spacing: 0.3em;
+  color: rgba(255, 255, 255, 0.65);
+  text-transform: uppercase;
+}
+
+#error-page .error__message {
+  font-size: clamp(1.6rem, 2.1vw, 2.2rem);
+  margin: 1rem 0 0.5rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+#error-page .error__note {
+  margin-top: 0.5rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: none;
+}
+
+#error-page .slider-actions {
+  margin-top: 2rem;
+}
+
+#error-page .btn-explore,
+#error-page .btn-outline {
+  text-transform: none;
+}
+
+#error-page .btn-explore i,
+#error-page .btn-outline i {
+  font-size: 1.1rem;
+}
+
+#error-page .btn-explore span,
+#error-page .btn-outline span {
+  font-size: 0.95rem;
+}
+
+#error-page .slide-bg {
+  height: 100vh;
+}
+
+@media (max-width: 768px) {
+  #error-page .slide-text-item {
+    max-width: 90%;
+    padding: 1.25rem;
+  }
+
+  #error-page .slider-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

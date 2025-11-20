@@ -13,7 +13,7 @@ block content
           .empty-tours
             h2.heading-secondary Bạn chưa có tour nào
             p.empty-tours-text Hãy khám phá hành trình mới và lưu lại chuyến đi đầu tiên của bạn.
-            a.my-tour-link(href='/') Khám phá tour
+            a.my-tour-link(href='/all') Khám phá tour
         else
           .my-tour-dashboard
             .my-tour-dashboard__intro
@@ -21,7 +21,7 @@ block content
                 h3.heading-tertiary Bảng điều khiển hành trình
                 p Cập nhật nhanh các chuyến đi, trạng thái và hóa đơn.
               .intro-actions
-                a.btn.btn--green(href='/') Khám phá tour mới
+                a.btn.btn--green(href='/all') Khám phá tour mới
                 a.btn.btn--outline(href='/my-billing') Lịch sử thanh toán
             .my-tour-dashboard__stats
               each stat in summaryStats
@@ -82,7 +82,7 @@ block content
                           button.my-tour-card__btn.my-tour-card__btn--accent.btn-add-review(type='button', data-tour-id=entry.tour.id)
                             svg
                               use(xlink:href='/img/icons.svg#icon-star')
-                            span Gửi đánh giá
+                            span Đánh giá
                         else if entry.userReview
                           button.my-tour-card__btn.my-tour-card__btn--accent.btn-edit-my-review(type='button',
                             data-review-id=entry.userReview.id,
@@ -92,7 +92,7 @@ block content
                           )
                             svg
                               use(xlink:href='/img/icons.svg#icon-edit-2')
-                            span Chỉnh sửa đánh giá
+                            span Sửa đánh giá
         .modal.hidden#review-modal
           .modal__content
             span.modal__close &times;
@@ -111,4 +111,4 @@ block content
                     input(type='radio', id=`star${i}`, name='rating', value=i)
                     label(for=`star${i}`) ★
               .form__group.form__group--actions
-                button.btn.btn--small.btn--green.btn-save-review Gửi đánh giá
+                button.btn.btn--small.btn--green.btn-save-review Đánh giá

@@ -323,6 +323,9 @@ const mapBox = document.getElementById('map');
 if (mapBox) {
   const locations = JSON.parse(mapBox.dataset.locations);
   displayMap(locations);
+  if (!window.location.hash) {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
 }
 
 // Header functionality

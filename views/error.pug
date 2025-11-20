@@ -1,9 +1,32 @@
 extends base
 
+block append head
+  link(rel='stylesheet' href='/css/landing.css')
+  link(rel='stylesheet' href='/css/error.css')
+
 block content
-  main.main
-    .error
-      .error__title
-        h2.heading-secondary.heading-secondary--error Có gì đó sai sai ở đây rồi   
-        h2.error__emoji 😢 🤯
-      .error__msg= msg
+  - hideHeader = true
+  - hideFooter = true
+  - hideChatFloat = true
+  - pageClass = 'error-page-body'
+  - const formattedCode = statusCode || 500
+  - const contactMessage = `Tôi cần hỗ trợ do lỗi ${formattedCode} trên LLK Travel`
+  - const contactHref = user && user.role === 'user' ? `/chat?prefill=${encodeURIComponent(contactMessage)}` : '/login'
+  section#error-page.slider-container
+    .slider-backgrounds
+      .slide-bg.is-active(style="background-image: linear-gradient(120deg, rgba(2, 6, 23, 0.95), rgba(4, 17, 69, 0.65)), url('/img/banner.jpg')")
+    .slider-ui
+      .slider-content-wrapper
+        .slide-text-item.is-active
+          span.text-location #{status ? status.toUpperCase() : 'LỖI'}
+          h1.text-heading Có gì đó sai ở đây rồi
+          p.error__code Mã lỗi: #{statusCode || 500}
+          p.error__message= msg
+          p.error__note Nhấn “Liên hệ hỗ trợ” để mở chat với tin nhắn sẵn sàng và phản hồi ngay lập tức.
+          .slider-actions
+            a.btn-explore(href='/')
+              i.fas.fa-house
+              span Trở về trang chủ
+            a.btn-outline(href=contactHref)
+              i.fas.fa-headset
+              span Liên hệ hỗ trợ

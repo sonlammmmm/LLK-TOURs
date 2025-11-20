@@ -25,7 +25,7 @@ block content
             if reviews.length === 0
               .reviews-empty
                 p Bạn chưa có đánh giá nào. Khám phá tour và để lại cảm nhận.
-                a.btn.btn--green(href='/') Khám phá tour
+                a.btn.btn--green(href='/all') Khám phá tour
             else
               each review in reviews
                 .review-item
@@ -55,7 +55,7 @@ block content
         .modal.hidden#review-modal
           .modal__content
             span.modal__close &times;
-            h2.modal__title Chỉnh sửa đánh giá
+            h2.modal__title Sửa đánh giá
             form.form.form-edit-review
               input#review-id(type='hidden')
               input#review-tour-id(type='hidden')

@@ -148,7 +148,7 @@ app.use('/api/v1/services', serviceRouter);
 app.use('/api/v1/promotions', promotionRouter);
 
 app.all('*', (req, res, next) => {
-  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+  next(new AppError(`Không tìm thấy ${req.originalUrl} trên server!`, 404));
 });
 
 app.use((err, req, res, next) => {

@@ -19,6 +19,7 @@ let currentPage = 1;
 let isLoading = false;
 let hasMore = true;
 const ROOM_LIMIT = 6;
+const PRIORITY_THRESHOLD = 5;
 
 // LocalStorage keys
 const LS_KEY = 'LLK_ADMINCHAT_CURRENT_USER';
@@ -31,6 +32,7 @@ const getAvatarSrc = (user) =>
 const usersMap = new Map();
 const unreadCount = new Map();
 const renderedMsgKeys = new Set();
+const seenMessageKeys = new Set();
 
 const makeMsgKey = (m) =>
   `${m.senderId}|${m.receiverId}|${m.message || m.content}|${new Date(
@@ -105,6 +107,24 @@ function updateUnreadBadge(userId) {
   } else if (badge) {
     badge.remove();
   }
+  updatePriorityIndicator(userId);
+}
+
+function updatePriorityIndicator(userId) {
+  const li = usersMap.get(userId);
+  if (!li) return;
+  const count = unreadCount.get(userId) || 0;
+  const existing = li.querySelector('.admin-chat-room__priority');
+  if (count >= PRIORITY_THRESHOLD) {
+    if (!existing) {
+      const badge = document.createElement('span');
+      badge.className = 'admin-chat-room__priority';
+      badge.textContent = 'Ưu tiên';
+      li.appendChild(badge);
+    }
+  } else if (existing) {
+    existing.remove();
+  }
 }
 
 function appendUserToList(user, prepend = false) {
@@ -142,6 +162,7 @@ function appendUserToList(user, prepend = false) {
   usersMap.set(user._id, li);
   updateUnreadBadge(user._id);
   updateStats();
+  updatePriorityIndicator(user._id);
 }
 
 // ========== LOAD DANH SÁCH USER ==========
@@ -322,6 +343,9 @@ chatForm.addEventListener('submit', (e) => {
 
 // ========== SOCKET REALTIME ==========
 socket.on('newMessage', (msg) => {
+  const msgKey = makeMsgKey(msg);
+  if (seenMessageKeys.has(msgKey)) return;
+  seenMessageKeys.add(msgKey);
   // Từ nay server broadcast vào phòng 'admins', nên mọi tin do user gửi đều tới đây
   if (msg.role === 'user') {
     appendUserToList(
