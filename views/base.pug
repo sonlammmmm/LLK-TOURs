@@ -19,7 +19,11 @@ html
       link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css")
       title LLK Travel | #{title}
       block styles
-  body(class= hideHeader ? 'llk-admin-body' : '')
+  -
+    const bodyClasses = [];
+    if (hideHeader) bodyClasses.push('llk-admin-body');
+    if (pageClass) bodyClasses.push(pageClass);
+  body(class=bodyClasses.join(' '))
     div.alert-container
     // HEADER
     if !hideHeader
@@ -33,7 +37,7 @@ html
       include _footer
 
     // ========== NÚT CHAT NỔI CHO USER ==========
-    if user && user.role === 'user'
+    if user && user.role === 'user' && !hideChatFloat
       a#chat-float.chat-floating-btn(href='/chat' title='Chat với Admin')
         i.fas.fa-comments
 

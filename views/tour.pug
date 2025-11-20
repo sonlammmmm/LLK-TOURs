@@ -6,16 +6,12 @@ block append head
   link(href='https://api.mapbox.com/mapbox-gl-js/v3.12.0/mapbox-gl.css' rel='stylesheet')
 
 block content
-  - const startDateItems = (tour.startDates || []).map(item => {
-  -   const candidate = item && typeof item === 'object' && item.date ? item.date : item
-  -   const extracted = candidate && candidate.$date ? candidate.$date : candidate
-  -   const dateObj = extracted ? new Date(extracted) : null
-  -   return { original: item, value: extracted, dateObj }
-  - }).filter(entry => entry.dateObj && !Number.isNaN(entry.dateObj.getTime()))
-  - const upcomingDates = startDateItems.filter(entry => entry.dateObj > new Date()).sort((a, b) => a.dateObj - b.dateObj)
-  - const nextDateEntry = upcomingDates[0]
-  - const hasStartDate = Boolean(nextDateEntry)
-  - const nextDateDisplay = hasStartDate ? nextDateEntry.dateObj.toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Đang cập nhật'
+  - const meta = tourStartMeta || {}
+  - const bookingDateOptions = Array.isArray(meta.bookingDateOptions) ? meta.bookingDateOptions : []
+  - const primaryBookingOption = meta.primaryBookingOption || null
+  - const hasUpcomingStart = Boolean(meta.hasUpcomingStart)
+  - const hasAvailableStart = Boolean(meta.hasAvailableStart)
+  - const nextDateDisplay = meta.nextDateDisplay || 'Đang cập nhật'
   - const bookingHref = user && user.role === 'user' ? `/book-tour/${tour._id}` : '/login'
   - const contactMessage = `Tôi muốn hỏi về Tour ${tour.name}`
   - const userContactHref = user && user.role === 'user' ? `/chat?prefill=${encodeURIComponent(contactMessage)}` : '/login'
@@ -40,7 +36,7 @@ block content
         .tour-pill
           i.fas.fa-clock
           span= `${tour.duration} ngày`
-        if hasStartDate
+        if hasUpcomingStart
           .tour-pill
             i.fas.fa-calendar-alt
             span= `Khởi hành: ${nextDateDisplay}`
@@ -55,18 +51,22 @@ block content
     .quick-booking
       span.quick-booking__eyebrow Đặt tour nhanh
       h3.quick-booking__price= `${tour.price.toLocaleString('vi-VN')} VNĐ/người`
-      p.quick-booking__note= hasStartDate ? 'Giữ chỗ ngay để đồng hành trong chuyến đi sắp tới.' : 'Hiện chưa có lịch khởi hành, hãy liên hệ để được cập nhật.'
-      if hasStartDate
+      p.quick-booking__note= hasAvailableStart ? 'Giữ chỗ ngay để đồng hành trong chuyến đi sắp tới.' : (hasUpcomingStart ? 'Các lịch khởi hành sắp tới hiện đã kín chỗ. Liên hệ với concierge để được ưu tiên khi mở thêm.' : 'Hiện chưa có lịch khởi hành, hãy liên hệ để được cập nhật.')
+      if hasAvailableStart
         label.quick-booking__label(for='quickBookingDate') Chọn ngày khởi hành
         div.quick-booking__control
           i.fas.fa-calendar-day
           select#quickBookingDate.quick-booking__select
-            each dateOption in upcomingDates
-              - const readable = dateOption.dateObj.toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })
-              option(value=dateOption.value selected=dateOption === nextDateEntry)= readable
+            each dateOption in bookingDateOptions
+              - const readable = dateOption.dateFormatted || new Date(dateOption.date).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })
+              - const optionValue = dateOption.dateISO || new Date(dateOption.date).toISOString()
+              option(value=optionValue selected=dateOption === primaryBookingOption)= readable
         a.btn.btn--green.quick-booking__btn(href=bookingHref) Đăng ký ngay
       else
-        p.quick-booking__empty Chúng tôi sẽ gửi thông tin lịch mới ngay khi có. Liên hệ với admin để được hỗ trợ thêm.
+        if hasUpcomingStart
+          p.quick-booking__empty Các lịch khởi hành sắp tới hiện đã kín chỗ. Liên hệ với concierge để được hỗ trợ hoặc chờ thông báo mở chỗ.
+        else
+          p.quick-booking__empty Chúng tôi sẽ gửi thông tin lịch mới ngay khi có. Liên hệ với concierge để được hỗ trợ thêm.
         a.btn.btn--contact.quick-booking__btn(href=userContactHref)
           i.fas.fa-headset
           span Liên hệ với admin
@@ -84,8 +84,8 @@ block content
   main.tour-main
     .tour-layout
       section.tour-section
-        span.tour-section__eyebrow Bản tin nhanh
-        h2.heading-secondary Tinh tuý từ hành trình này
+        span.tour-section__eyebrow Thông tin
+        h2.heading-secondary Tổng quát hành trình này
         .tour-metrics
           .tour-metric
             span.tour-metric__label Thời lượng
@@ -94,7 +94,7 @@ block content
           .tour-metric
             span.tour-metric__label Khởi hành tiếp theo
             strong.tour-metric__value= nextDateDisplay
-            span.tour-metric__meta= hasStartDate ? 'Sẵn sàng nhận chỗ' : 'Đang cập nhật lịch trình'
+            span.tour-metric__meta= hasUpcomingStart ? 'Sẵn sàng nhận chỗ' : 'Đang cập nhật lịch trình'
           .tour-metric
             span.tour-metric__label Số chỗ
             strong.tour-metric__value= `${tour.maxGroupSize} khách`
@@ -135,7 +135,7 @@ block content
               span.map-badge
                 i.fas.fa-clock
                 span= `${tour.duration} ngày`
-              if hasStartDate
+              if hasUpcomingStart
                 span.map-badge.map-badge--accent
                   i.fas.fa-calendar-day
                   span= nextDateDisplay
@@ -189,7 +189,7 @@ block content
         span.tour-reviews__eyebrow Khách hàng nói gì?
         h3= `Điểm trung bình ${tour.ratingsAverage}/5`
         p= `${tour.ratingsQuantity} khách đã trải nghiệm tour này`
-        if hasStartDate
+        if hasAvailableStart
           a.btn.btn--green(href=bookingHref) Đăng ký ngay
         else
           a.btn.btn--contact(href=userContactHref)
@@ -237,7 +237,7 @@ block content
         h2= `Chốt lịch tour "${tour.name}" ngay hôm nay`
         p= `Chỉ từ ${tour.price.toLocaleString('vi-VN')} VNĐ cho ${tour.duration} ngày trải nghiệm cùng LLK Travel.`
       .cta-modern__actions
-        if hasStartDate
+        if hasAvailableStart
           if user && user.role === 'user'
             a.btn.btn--green(href=`/book-tour/${tour._id}`) Đăng ký ngay
           else

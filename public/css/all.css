@@ -1,0 +1,376 @@
+/* ==== EMPTY STATE CHO TRANG ALL ==== */
+.all-empty {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+  background: #fff;
+  border-radius: 1.8rem;
+  box-shadow: 0 1rem 2rem rgba(3, 9, 30, 0.08);
+  text-align: center;
+}
+
+.all-empty h2 {
+  margin: 0 0 1rem;
+  font-size: 2rem;
+}
+
+.all-empty p {
+  margin: 0 0 1.5rem;
+  color: #4e5672;
+}
+
+/* ==== HERO TRANG ALL ==== */
+.all-hero {
+  padding: 4rem 1.5rem 3.5rem;
+  background: linear-gradient(145deg, #0b1b40, #1f3def);
+  color: #fff;
+}
+
+.all-hero__inner {
+  max-width: 118rem;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2rem;
+  align-items: center;
+}
+
+.all-hero__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.all-hero__eyebrow {
+  letter-spacing: 0.4rem;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.all-hero__content h1 {
+  margin: 0;
+  font-size: clamp(2.8rem, 2vw + 1.2rem, 3.4rem);
+}
+
+.all-hero__content p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.all-hero__note {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ==== KHUNG CHÍNH + SIDEBAR FILTER ==== */
+.all-main {
+  padding: 4rem 1.5rem 5rem;
+  background: #f6f7fb;
+}
+
+.all-main__wrapper {
+  max-width: 140rem;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 3rem;
+}
+
+.all-filters {
+  background: #fff;
+  border-radius: 1.6rem;
+  padding: 2.5rem;
+  box-shadow: 0 1.8rem 3rem rgba(12, 19, 45, 0.08);
+  position: sticky;
+  top: calc(6rem + 1rem);
+  align-self: start;
+  z-index: 5;
+}
+
+.all-filters__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.all-filters__label {
+  display: block;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #5f6687;
+  margin-bottom: 0.4rem;
+}
+
+.all-filters__section select,
+.all-filters__section input[type='text'] {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #e0e2eb;
+  font-size: 1rem;
+  background: #fff;
+}
+
+.all-filters__section input[type='range'] {
+  width: 100%;
+  accent-color: #ff914d;
+}
+
+.all-filters__helper {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #5c6478;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.all-filters__price-values {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: #4a506b;
+}
+
+.all-filters__price-values span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-weight: 600;
+}
+
+.all-filters__price-values small {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #8c91a9;
+}
+
+/* ==== LƯỚI CARD TOUR ==== */
+.all-grid {
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+}
+
+/* ==== RESPONSIVE CHO TRANG ALL ==== */
+@media (max-width: 1200px) {
+  .all-main__wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .all-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .all-filters {
+    position: static;
+    top: auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .all-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .all-filters {
+    padding: 1.8rem;
+  }
+}
+
+/* ==== TOUR CARD ==== */
+.all-tour-card {
+  border-radius: 1.8rem;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1.5rem 4rem rgba(12, 19, 45, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.all-tour-card__media {
+  position: relative;
+  height: 220px;
+  background-size: cover;
+  background-position: center;
+}
+
+.all-tour-card__badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.all-tour-card__badge--soldout {
+  background: #f35855;
+}
+
+.all-tour-card__badge--alert {
+  background: linear-gradient(135deg, #ff9c46, #f35855);
+}
+
+.all-tour-card__body {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.all-tour-card__heading h3 {
+  margin: 0;
+  font-size: 2.15rem;
+  color: #0c1b42;
+}
+
+.all-tour-card__heading span {
+  color: #5d6a8c;
+  font-size: 1rem;
+}
+
+.all-tour-card__summary {
+  margin: 0;
+  color: #4d567c;
+  min-height: 3.2rem;
+  font-size: 1.15rem;
+  line-height: 1.6;
+}
+
+.all-tour-card__details {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  color: #5d6a8c;
+  font-size: 1rem;
+}
+
+.all-tour-card__details span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.all-tour-card__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+
+.all-tour-card__rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #f5a623;
+}
+
+.all-tour-card__support {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.all-tour-card__support strong {
+  font-size: 0.8rem;
+  color: #6f7a9a;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.all-tour-card__support span {
+  font-size: 1.05rem;
+  color: #0c1b42;
+}
+
+.all-tour-card__support .all-tour-card__slots span {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.all-tour-card__actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.all-tour-card__actions .btn.btn--green {
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
+  min-width: 140px;
+}
+
+.all-tour-card__actions .btn--contact {
+  background: linear-gradient(135deg, #ff6f61, #ffbb56);
+  color: #fff;
+  padding: 0.85rem 1.4rem;
+}
+
+.all-tour-card__footer {
+  padding: 1.2rem 2rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  border-top: 1px solid #e8ecf6;
+}
+
+.all-tour-card__footer-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  color: #4b5170;
+}
+
+.all-tour-card__footer-info strong {
+  font-size: 1.1rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #6b738f;
+}
+
+.all-tour-card__footer-info span {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #0c1b42;
+}
+
+.all-tour-card__details-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #1c3d88;
+  font-weight: 600;
+}
+
+.all-tour-card__details-link i {
+  font-size: 1rem;
+}
+
+.all-tour-card__price {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.all-tour-card__price strong {
+  font-size: 1.3rem;
+  color: #0b1b40;
+}
+
+.all-tour-card__price small {
+  font-size: 1.05rem;
+  color: #5c637a;
+}

@@ -485,7 +485,8 @@ export const initTourAdminInteractions = () => {
                 availableSlots: slotsValue
               }
             ]),
-            maxGroupSize: maxSize
+            maxGroupSize: maxSize,
+            appendStartDates: true
           }
         });
         showAlert('success', 'Đã thêm ngày khởi hành mới');

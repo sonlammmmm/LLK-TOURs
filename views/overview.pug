@@ -4,132 +4,322 @@ block append head
   link(rel='stylesheet' href='/css/landing.css')
 
 block content
-  - const safeTours = Array.isArray(tours) ? tours : [];
-  - const safeLocations = Array.isArray(uniqueLocations) ? uniqueLocations : [];
-  - const totalTours = safeTours.length;
-  - const totalRatings = safeTours.reduce((sum, tour) => sum + (tour.ratingsAverage || 0), 0);
-  - const averageRating = totalTours ? (totalRatings / totalTours).toFixed(1) : '0';
-  - const trendingTours = safeTours.slice().sort((a, b) => (b.ratingsAverage || 0) - (a.ratingsAverage || 0)).slice(0, Math.min(3, totalTours));
-  - const heroLocations = safeLocations.slice(0, 8);
-  - const highlightLocations = safeLocations.slice(0, 6);
-  - const contactPrefill = 'Tôi cần tư vấn các hành trình đặc sắc tại LLK Travel';
-  - const contactHref = user && user.role === 'user' ? `/chat?prefill=${encodeURIComponent(contactPrefill)}` : '/login';
-  - const searchName = (searchParams && searchParams.name) || '';
-  - const searchDate = (searchParams && searchParams.startDates) || '';
-  - const searchLocation = (searchParams && searchParams.startLocation) || '';
+  - hideFooter = true
+  - hideChatFloat = true
+  - const fallbackImage = '/img/banner.jpg';
+  
+  //- Logic xử lý dữ liệu Tour (giữ nguyên)
+  -
+    const toursArray = Array.isArray(tours) ? tours : [];
+    const getSlots = (tour) => {
+      const values = [tour.available_slots, tour.availableSlots, tour.remainingSlots, tour.maxGroupSize];
+      for (const value of values) {
+        if (typeof value === 'number' && !Number.isNaN(value) && value > 0) return value;
+      }
+      return 0;
+    };
+    const getSales = (t) => t.sales_count ?? t.salesCount ?? t.ratingsQuantity ?? 0;
+    // Lọc tour còn chỗ và lấy top 5 bán chạy
+    const sliderTours = toursArray
+      .filter(t => getSlots(t) > 0)
+      .sort((a, b) => getSales(b) - getSales(a))
+      .slice(0, 5);
 
-  section.landing-hero
-    .landing-hero__inner
-      .landing-hero__content
-        span.landing-hero__eyebrow Ưu tiên trải nghiệm
-        h1 LLK Travel | Kết nối hành trình Việt Nam tinh tế
-        p Chúng tôi thiết kế hành trình tinh gọn, giàu cảm xúc cho những người yêu khám phá và muốn du lịch thông minh.
-        .landing-hero__stats
-          article
-            strong= totalTours || 0
-            span Hành trình đẳng cấp
-          article
-            strong= safeLocations.length || 0
-            span Điểm đến đa dạng
-          article
-            strong= `${averageRating}/5`
-            span Đánh giá trung bình
-        .landing-hero__actions
-          a.btn.btn--green(href='/all') Khám phá tất cả tour
-          a.btn.btn--contact(href=contactHref)
-            i.fas.fa-headset
-            span Nhận tư vấn ngay
-      .landing-hero__search
-        h3 Tạo hành trình phù hợp với bạn
-        p Chọn chủ đề, thời gian và điểm khởi hành, chúng tôi sẽ gợi ý chuyến đi trên nền tảng duy nhất.
-        form.landing-search(action='/search' method='GET')
-          .landing-search__grid
-            input(type='text' name='name' aria-label='Tên tour' placeholder='Tên tour hoặc chủ đề' value=searchName)
-            input(type='date' name='startDates' aria-label='Ngày khởi hành' value=searchDate)
-            input(type='text' name='startLocation' aria-label='Điểm khởi hành' list='hero-locations' placeholder='Điểm khởi hành' value=searchLocation)
-            button.btn.btn--blue(type='submit')
-              i.fas.fa-search
-              span Tìm tour
-          datalist#hero-locations
-            each location in heroLocations
-              option(value=location)
+  if sliderTours.length > 0
+    section#cinematic-slider.slider-container(data-autoplay='6000')
+      
+      //- 1. BACKGROUNDS LAYER
+      .slider-backgrounds
+        each tour, idx in sliderTours
+          - const bgImage = tour.imageCover ? `/img/tours/${tour.imageCover}` : fallbackImage;
+          .slide-bg(class=idx === 0 ? 'is-active' : '' data-index=idx style=`background-image:url('${bgImage}')`)
 
-  if noResults
-    section.landing-empty
-      h2 Chúng tôi đang cập nhật thêm hành trình
-      p Đội ngũ LLK Travel sẽ mở thêm các nhóm khởi hành cho những hành trình được săn đón nhất, hãy quay lại sau hoặc khám phá toàn bộ danh sách bên dưới.
-      a.btn.btn--green(href='/all') Khởi động lại hành trình
+      //- 2. UI & TEXT LAYER
+      .slider-ui
+        //- Search Box
+        form.slider-search(action='/tours' method='GET')
+          input(type='text' name='name' placeholder='Tìm điểm đến...')
+          button(type='submit') ->
+
+        .slider-content-wrapper
+          each tour, idx in sliderTours
+            - const maxSlots = tour.maxGroupSize || getSlots(tour) || '—';
+            - const durationLabel = tour.duration ? `${tour.duration} ngày` : 'Đang cập nhật';
+            - const ratingLabel = typeof tour.ratingsAverage === 'number' ? `${tour.ratingsAverage.toFixed(1)}/5` : 'Chưa có đánh giá';
+            - const priceLabel = typeof tour.price === 'number' ? `Chỉ từ ${tour.price.toLocaleString('vi-VN')} VNĐ` : 'Liên hệ để nhận giá';
+            .slide-text-item(class=idx === 0 ? 'is-active' : '' data-index=idx)
+              span.text-location= tour.startLocation && tour.startLocation.description ? tour.startLocation.description : 'Khám phá ngay'
+              h1.text-heading= tour.name
+              .text-meta
+                span.meta-pill #{maxSlots} chỗ tối đa
+                span.meta-pill= durationLabel
+                span.meta-pill Đánh giá #{ratingLabel}
+                span.meta-pill= priceLabel
+              .slider-actions
+                a.btn-explore(href=`/tour/${tour.slug}`)
+                  | Xem chi tiết
+                  svg(width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round")
+                    line(x1="5" y1="12" x2="19" y2="12")
+                    polyline(points="12 5 19 12 12 19")
+                a.btn-outline(href='/all') Khám phá thêm
+
+      //- 3. NAVIGATION LAYER
+      .slider-nav-wrapper
+        .slider-nav-viewport
+          .slider-nav
+            each tour, idx in sliderTours
+              - const thumbImage = tour.imageCover ? `/img/tours/${tour.imageCover}` : fallbackImage;
+              .nav-card(data-index=idx)
+                img(src=thumbImage alt=tour.name)
+                .nav-card-info
+                  h4= tour.name
+                  span 0#{idx + 1}
   else
-    section.landing-highlight
-      .landing-highlight__header
-        span.landing-section__eyebrow Hành trình nổi bật
-        h2 Những chuyến đi được yêu thích nhất
-        p Các hành trình này được chăm chút kỹ lưỡng, phù hợp để trải nghiệm nghỉ dưỡng, khám phá văn hóa và ẩm thực trong một hành trình chuẩn mực.
-      .landing-highlight__grid
-        each highlight in trendingTours
-          - const nextStart = highlight.nextStart;
-          - const nextDateLabel = nextStart ? nextStart.dateFormatted : 'Đang cập nhật';
-          - const availableSlots = nextStart && typeof nextStart.availableSlots === 'number' ? nextStart.availableSlots : highlight.maxGroupSize || 0;
-          - const isAlmostFull = nextStart && nextStart.isAlmostFull;
-          - const isSoldOut = nextStart && nextStart.availableSlots === 0;
-          article.landing-highlight__card
-            .landing-highlight__media(style=`background-image:url('/img/tours/${highlight.imageCover}')`)
-              if isSoldOut
-                span.landing-highlight__chip.landing-highlight__chip--soldout Hết chỗ
-              else if isAlmostFull
-                span.landing-highlight__chip.landing-highlight__chip--alert Gần hết chỗ
-              else if nextStart
-                span.landing-highlight__chip.landing-highlight__chip--info= `Khởi hành ${nextDateLabel}`
-            .landing-highlight__body
-              h3.landing-highlight__title= highlight.name
-              p.landing-highlight__summary= highlight.summary
-              .landing-highlight__meta
-                span
-                  i.fas.fa-clock
-                  |  #{highlight.duration || '?'} ngày
-                span
-                  i.fas.fa-map-marker-alt
-                  |  #{highlight.startLocation ? highlight.startLocation.description : 'Khởi hành linh hoạt'}
-              .landing-highlight__info
-                .landing-highlight__date
-                  strong Khởi hành tiếp theo
-                  span= nextDateLabel
-                .landing-highlight__slots
-                  strong Chỗ trống
-                  span= availableSlots
-              .landing-highlight__footer
-                .landing-highlight__price
-                  strong= highlight.price ? `${highlight.price.toLocaleString('vi-VN')} VNĐ` : 'Liên hệ'
-                  small /khách
-                .landing-highlight__rating
-                  i.fas.fa-star
-                  span= highlight.ratingsAverage ? highlight.ratingsAverage.toFixed(1) : '0'
-                  small= `(${highlight.ratingsQuantity || 0}) đánh giá`
-              a.btn.btn--white.landing-highlight__cta(href=`/tour/${highlight.slug}`) Xem chi tiết
+    section.slider-empty(style="height:100vh; display:grid; place-items:center; background:#0a0a0a; color:#fff;")
+      h2 Đang cập nhật hành trình mới...
 
-  if highlightLocations.length
-    section.landing-locations
-      h3 Điểm xuất phát được ưa chuộng
-      p Chúng tôi hoạt động từ các điểm sau; nếu bạn cần hỗ trợ, đội concierge sẵn sàng kết nối.
-      ul
-        each location in highlightLocations
-          li= location
+block append scripts
+  //- Load GSAP
+  script(src='https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js')
+  
+  script.
+    document.addEventListener('DOMContentLoaded', function () {
+      const slider = document.querySelector('#cinematic-slider');
+      if (!slider) return;
 
-  section.landing-article
-    .landing-article__inner
-      .landing-article__text
-        h3 Du lịch thông minh cùng LLK Travel
-        p Chúng tôi xây dựng mỗi hành trình xứng tầm tinh hoa, phối hợp giữa dịch vụ địa phương và chuẩn mực toàn cầu:
-        ul.landing-article__list
-          li Hành trình balance giữa khám phá và nghỉ dưỡng, quân tâm đến trải nghiệm từng giây.
-          li Hướng dẫn viên bản địa chuyên sâu, đội ngũ quản lý tại điểm luôn sẵn sàng xử lý chủ động.
-          li Bảo hiểm, phương tiện và khách sạn được đối tác uy tín kiểm duyệt hàng ngày.
-        p Khách hàng đánh giá LLK Travel là người đồng hành đủ tinh tế để thấu hiểu lịch trình và linh hoạt xử lý mọi thay đổi.
-      .landing-article__cta
-        h4 Cần ý tưởng riêng? Hãy nói với chúng tôi.
-        p Chọn dịch vụ tư vấn cao cấp để nhận kế hoạch personal hóa trong 24h.
-        .landing-article__actions
-          a.btn.btn--green(href='/all') Xem toàn bộ hành trình
-          a.btn.btn--contact(href=contactHref)
-            i.fas.fa-headset
-            span Tư vấn chuyên viên
+      // Elements
+      const backgrounds = slider.querySelectorAll('.slide-bg');
+      const textItems = slider.querySelectorAll('.slide-text-item');
+      const navViewport = slider.querySelector('.slider-nav-viewport');
+      const navTrack = navViewport ? navViewport.querySelector('.slider-nav') : null;
+      let navCards = navTrack ? Array.from(navTrack.children) : [];
+      const navBaseCount = navCards.length;
+      const hasGSAP = typeof window.gsap !== 'undefined';
+      let navCycleWidth = 0;
+      let virtualNavIndex = navBaseCount;
+      let activeNavCard = null;
+      
+      let currentIndex = 0;
+      let isAnimating = false;
+      const totalSlides = backgrounds.length;
+      const autoplayTime = 6000;
+      let timer;
+
+      // --- ANIMATION FUNCTIONS ---
+
+      function animateTextIn(index) {
+        const item = textItems[index];
+        const location = item.querySelector('.text-location');
+        const heading = item.querySelector('.text-heading');
+        const meta = item.querySelector('.text-meta');
+        const btn = item.querySelector('.btn-explore');
+        if (hasGSAP) {
+          gsap.set([location, heading, meta, btn], { y: 30, opacity: 0 });
+          gsap.to([location, heading, meta, btn], {
+            y: 0,
+            opacity: 1,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: "power3.out",
+            delay: 0.2
+          });
+        } else {
+          [location, heading, meta, btn].forEach((el) => {
+            if (!el) return;
+            el.style.opacity = '1';
+            el.style.transform = 'none';
+          });
+        }
+      }
+
+      function animateBg(index) {
+        const bg = backgrounds[index];
+        if (!bg) return;
+        if (hasGSAP) {
+          gsap.set(bg, { scale: 1.15, opacity: 0 });
+          gsap.to(bg, { opacity: 1, duration: 1 });
+          gsap.to(bg, { scale: 1, duration: 6, ease: "none" });
+        } else {
+          bg.style.opacity = '1';
+          bg.style.transform = 'scale(1)';
+        }
+      }
+
+      function goToSlide(index) {
+        if (isAnimating || index === currentIndex) return;
+        isAnimating = true;
+
+        const prevIndex = currentIndex;
+        currentIndex = index;
+
+        // 1. Xử lý Background cũ
+        const prevBg = backgrounds[prevIndex];
+        prevBg.classList.remove('is-active');
+        if (hasGSAP) {
+          gsap.to(prevBg, { opacity: 0, duration: 0.8 });
+        } else {
+          prevBg.style.opacity = '0';
+        }
+        
+        // 2. Xử lý Text cũ
+        const prevText = textItems[prevIndex];
+        if (hasGSAP) {
+          gsap.to(prevText.children, {
+            y: -30,
+            opacity: 0,
+            duration: 0.5,
+            stagger: 0.05,
+            onComplete: () => prevText.classList.remove('is-active')
+          });
+        } else {
+          prevText.classList.remove('is-active');
+        }
+
+        // 3. Xử lý Nav
+        moveNavToLogicalIndex(currentIndex);
+
+        // 4. Active Slide Mới
+        const nextBg = backgrounds[currentIndex];
+        const nextText = textItems[currentIndex];
+        nextBg.classList.add('is-active');
+        nextText.classList.add('is-active');
+        
+        // Chạy Animation cho Slide Mới
+        animateBg(currentIndex);
+        animateTextIn(currentIndex);
+
+        // Kết thúc trạng thái animating
+        setTimeout(() => { isAnimating = false; }, hasGSAP ? 1000 : 300);
+      }
+
+      // --- EVENTS ---
+
+      function nextSlide() {
+        const next = (currentIndex + 1) % totalSlides;
+        goToSlide(next);
+      }
+
+      function cloneNavCard(card) {
+        const clone = card.cloneNode(true);
+        clone.classList.remove('is-active');
+        return clone;
+      }
+
+      function setupNavCarousel() {
+        if (!navTrack || !navBaseCount) return;
+        const originals = navCards.slice();
+        const prependClones = originals.map(cloneNavCard).reverse();
+        prependClones.forEach((clone) => navTrack.insertBefore(clone, navTrack.firstChild));
+        const appendClones = originals.map(cloneNavCard);
+        appendClones.forEach((clone) => navTrack.appendChild(clone));
+        navCards = Array.from(navTrack.children);
+        navCards.forEach((card) => card.addEventListener('click', handleNavClick));
+        virtualNavIndex = navBaseCount;
+        requestAnimationFrame(() => {
+          navCycleWidth = calculateNavCycleWidth();
+          const initialCard = navCards[virtualNavIndex];
+          if (initialCard) {
+            highlightNavCard(initialCard);
+            scrollNavCardIntoView(initialCard, false);
+          }
+        });
+      }
+
+      function calculateNavCycleWidth() {
+        if (!navTrack) return 0;
+        const reference = navTrack.querySelectorAll('.nav-card[data-index="0"]');
+        if (reference.length >= 2) {
+          return reference[1].offsetLeft - reference[0].offsetLeft;
+        }
+        const style = window.getComputedStyle(navTrack);
+        const gap = parseFloat(style.columnGap || style.gap || '0');
+        const cardWidth = navCards[virtualNavIndex]?.offsetWidth || 0;
+        return navBaseCount * (cardWidth + gap);
+      }
+
+      function handleNavClick(event) {
+        const idx = Number(event.currentTarget.dataset.index);
+        if (Number.isNaN(idx)) return;
+        resetTimer();
+        goToSlide(idx);
+      }
+
+      function findClosestNavCard(targetIndex) {
+        let bestCard = null;
+        let bestDistance = Infinity;
+        navCards.forEach((card, idx) => {
+          if (Number(card.dataset.index) !== targetIndex) return;
+          const distance = Math.abs(idx - virtualNavIndex);
+          if (distance < bestDistance) {
+            bestDistance = distance;
+            bestCard = { card, idx };
+          }
+        });
+        return bestCard;
+      }
+
+      function highlightNavCard(card) {
+        if (activeNavCard) activeNavCard.classList.remove('is-active');
+        activeNavCard = card;
+        if (activeNavCard) activeNavCard.classList.add('is-active');
+      }
+
+      function scrollNavCardIntoView(card, smooth = true) {
+        if (!navViewport || !card) return;
+        const target = card.offsetLeft - (navViewport.clientWidth / 2 - card.offsetWidth / 2);
+        navViewport.scrollTo({ left: target, behavior: smooth ? 'smooth' : 'auto' });
+      }
+
+      function normalizeNavPosition() {
+        if (!navViewport || !navCycleWidth || !navBaseCount) return;
+        if (virtualNavIndex >= navBaseCount * 2) {
+          virtualNavIndex -= navBaseCount;
+          navViewport.scrollLeft -= navCycleWidth;
+        } else if (virtualNavIndex < navBaseCount) {
+          virtualNavIndex += navBaseCount;
+          navViewport.scrollLeft += navCycleWidth;
+        }
+      }
+
+      function moveNavToLogicalIndex(targetIndex, smooth = true) {
+        if (!navTrack || !navViewport || !navCards.length) return;
+        const candidate = findClosestNavCard(targetIndex);
+        if (!candidate) return;
+        virtualNavIndex = candidate.idx;
+        highlightNavCard(candidate.card);
+        scrollNavCardIntoView(candidate.card, smooth);
+        setTimeout(normalizeNavPosition, smooth ? 650 : 0);
+      }
+
+      // Autoplay logic
+      function startTimer() {
+        timer = setInterval(nextSlide, autoplayTime);
+      }
+      function resetTimer() {
+        clearInterval(timer);
+        startTimer();
+      }
+
+      // --- INIT ---
+      // Chạy animation cho slide đầu tiên ngay khi load
+      if (textItems.length) {
+        textItems[0].classList.add('is-active');
+        animateTextIn(0);
+      }
+      if (backgrounds.length) {
+        backgrounds[0].classList.add('is-active');
+        animateBg(0);
+      }
+      if (navTrack && navBaseCount) {
+        setupNavCarousel();
+        moveNavToLogicalIndex(0, false);
+      }
+      if (totalSlides > 1) {
+        startTimer();
+      }
+
+      window.addEventListener('resize', () => {
+        navCycleWidth = calculateNavCycleWidth();
+        moveNavToLogicalIndex(currentIndex, false);
+      });
+    });

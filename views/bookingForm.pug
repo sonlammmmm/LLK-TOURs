@@ -19,19 +19,16 @@ block content
     const formattedPrice = basePrice.toLocaleString('vi-VN');
     const primaryImage = tour.imageCover || 'tour-default.jpg';
     const tourDuration = Number(tour.duration) || 0;
-    let availableDates = [];
-    if (tour.startDates && tour.startDates.length > 0) {
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-      availableDates = tour.startDates.filter(sd => {
-        const d = new Date(sd.date);
-        return d >= now && (sd.availableSlots || 0) > 0;
-      });
-    }
+    const availableDates =
+      (bookingFormMeta && bookingFormMeta.availableDates) || [];
+    const backHref =
+      tour && tour.slug ? `/tour/${tour.slug}` : 'javascript:history.back()';
 
   main.main.booking-shell
     .booking-shell__background(style=`background-image:url('/img/tours/${primaryImage}')`)
     .booking-shell__overlay
+    a.booking-shell__back(href=backHref aria-label='Quay lại')
+      i.fas.fa-arrow-left
     form.booking-workspace(novalidate)
       input(type='hidden', name='tourId', value=`${tour._id}`)
       input#selectedDate(type='hidden', name='startDate', value='')
@@ -143,10 +140,6 @@ block content
                   span KHÁCH
                   strong#participants-number 1
                 button.booking-participants-btn.increase-btn(type='button', aria-label='Tăng số lượng') +
-              .participants-hint
-                span.text Còn lại
-                strong#participants-remaining= `${Math.max(maxGroup - 1, 0)} chỗ`
-                span.text= `trên tối đa ${maxGroup} khách`
 
         .booking-column.booking-column--services-group
           section.booking-card.booking-card--services
@@ -182,15 +175,20 @@ block content
                     if service.allowMultiple && service.chargeType === 'per-booking'
                       .service-quantity
                         label.service-quantity__label(for=`service-qty-${serviceId}`) Số lượng
-                        input.service-quantity-input(
-                          type='number',
-                          id=`service-qty-${serviceId}`,
-                          min=service.minQuantity || 1,
-                          max=service.maxQuantity || service.minQuantity || 1,
-                          value=service.minQuantity || 1,
-                          data-service-id=serviceId,
-                          disabled
-                        )
+                        .service-quantity__controls
+                          button.service-quantity__btn(type='button', aria-label='Giảm số lượng', data-service-id=serviceId, data-action='decrease')
+                            span -
+                          input.service-quantity-input(
+                            type='number',
+                            id=`service-qty-${serviceId}`,
+                            min=service.minQuantity || 1,
+                            max=service.maxQuantity || service.minQuantity || 1,
+                            value=service.minQuantity || 1,
+                            data-service-id=serviceId,
+                            disabled
+                          )
+                          button.service-quantity__btn(type='button', aria-label='Tăng số lượng', data-service-id=serviceId, data-action='increase')
+                            span +
               else
                 .booking-empty-state Không có dịch vụ bổ sung
 
@@ -216,7 +214,7 @@ block content
               span.payment-value#grand-total= `${formattedPrice} đ`
           .booking-actions
             a.btn.btn--gray(href=`/tour/${tour.slug}`) Xem thông tin
-            button.btn.btn--green#book-tour(
+            button.btn.btn--bluegradient#book-tour(
               type='button',
               data-tour-id=`${tour._id}`,
               data-max-size=`${maxGroup}`,

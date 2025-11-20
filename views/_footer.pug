@@ -1,56 +1,69 @@
 footer.footer
-  .footer__container
-    .footer__top
-      .footer__logo
+  .footer__shell
+    .footer__cta
+      .footer__cta-text
+        p.footer__eyebrow Hành trình đẳng cấp
+        h3 Hãy để LLK Tours thiết kế chuyến đi riêng cho bạn
+        p Chúng tôi đồng hành từ lúc lên ý tưởng đến khi bạn trở về với đầy ắp kỷ niệm.
+      .footer__cta-action
+        a.btn.btn--bluegradient(href='/tours') Khám phá hành trình mới nhất
+        p.footer__cta-support
+          span Liên hệ 24/7:
+          |  038****234
+
+    .footer__grid
+      .footer__brand
         img(src='/img/logo-blue.png' alt='LLK logo')
-        h3.footer__slogan Lưu giữ - Lắng đọng - Khám phá
-      .footer__contact
-        h4 Liên hệ (Contact)
+        p LLK Tours chuyên tổ chức hành trình mềm mại giữa cảm xúc và trải nghiệm.
+        .footer__brand-highlights
+          span
+            i.fas.fa-headset
+            |  Hỗ trợ trực tiếp 24/7
+          span
+            i.fas.fa-map-marker-alt
+            |  Hà Nội · TP. HCM · Đà Nẵng
+        .footer__payment
+          span Thanh toán an toàn
+          .payment-icons
+            i.fab.fa-cc-visa
+            i.fab.fa-cc-mastercard
+            i.fab.fa-cc-stripe
+
+      .footer__column
+        h4 Dịch vụ
+        ul
+          li: a(href='/tours/domestic') Tour trong nước
+          li: a(href='/tours/international') Tour quốc tế
+          li: a(href='/flights') Vé máy bay
+          li: a(href='/hotels') Khách sạn
+          li: a(href='/cars') Thuê xe
+
+      .footer__column
+        h4 Hỗ trợ khách hàng
         p
           i.fas.fa-map-marker-alt
-          | Khu Công nghệ cao Xa lộ Hà Nội, Hiệp Phú, Thủ Đức, Hồ Chí Minh, Việt Nam
+          |  Khu Công nghệ cao Xa lộ Hà Nội, Hiệp Phú, TP. Thủ Đức, TP. HCM
         p
           i.fas.fa-phone
-          | Số điện thoại: 038****234
+          |  038****234
         p
           i.fas.fa-envelope
-          | Email:
-          | transysonlam@gmail.com
-      .footer__links
-        h4 Dịch vụ (Services)
-        ul
-          li: a(href='#') Tour trong nước (Domestic Tours)
-          li: a(href='#') Tour quốc tế (International Tours)
-          li: a(href='#') Vé máy bay (Flight Tickets)
-          li: a(href='#') Khách sạn (Hotels)
-          li: a(href='#') Thuê xe (Car Rental)
-      .footer__about
-        h4 Về chúng tôi (About Us)
-        ul
-          li: a(href='#') Giới thiệu (About)
-          li: a(href='#') Tải ứng dụng (Download App)
-          li: a(href='#') Trở thành hướng dẫn viên (Become a Guide)
-          li: a(href='#') Tuyển dụng (Careers)
-          li: a(href='#') Liên hệ (Contact)
-    
-    .footer__middle
-      .footer__payment
-        h4 Thanh toán (Stripe)
-        .payment-icons
-          i.fab.fa-cc-visa
-          i.fab.fa-cc-mastercard
-          i.fab.fa-cc-stripe
-          //- img(src='/img/momo.png' alt='MoMo')
-      
-      .footer__social
-        h4 Kết nối (Connect)
-        .social-icons
-          a(href='https://www.facebook.com/sonlammmmmm/'): i.fab.fa-facebook
-          a(href='https://www.instagram.com/sonlammmmmm/'): i.fab.fa-instagram
+          |  transysonlam@gmail.com
+
+      .footer__column
+        h4 Đăng ký nhận tin
+        p Cập nhật chuyến đi mới, ưu đãi đặc quyền và cẩm nang du lịch từ LLK.
+        form.footer__news-form(action='#' method='post')
+          input(type='email' name='newsletter-email' placeholder='Email của bạn' required)
+          button.btn.btn--contact(type='submit') Đăng ký
+
+    .footer__bottom
+      p.footer__copyright &copy; 2025 LLK Tours. Giấy phép kinh doanh lữ hành quốc tế số: 01-001/2020/TCDL-GP LHQT
+      .footer__bottom-meta
+        .footer__social
+          a(href='https://www.facebook.com/sonlammmmmm/' target='_blank' rel='noreferrer'): i.fab.fa-facebook
+          a(href='https://www.instagram.com/sonlammmmmm/' target='_blank' rel='noreferrer'): i.fab.fa-instagram
           a(href='#'): i.fab.fa-youtube
           a(href='#'): i.fab.fa-tiktok
           a(href='#'): i.fab.fa-zalo
-    
-    .footer__bottom
-      p.footer__copyright &copy; 2025 by LLK Tours. Giấy phép kinh doanh lữ hành quốc tế số: 01-001/2020/TCDL-GP LHQT
-      p.footer__license Đã đăng ký Bộ Công Thương Việt Nam | Thành viên Hiệp hội Du lịch Việt Nam
+        p.footer__license Đã đăng ký Bộ Công Thương Việt Nam | Thành viên Hiệp hội Du lịch Việt Nam

@@ -6,6 +6,12 @@ const messageController = require('../controllers/messageController'); // 👈 t
 
 const router = express.Router();
 
+const setAuthLayout = (req, res, next) => {
+  res.locals.hideHeader = true;
+  res.locals.hideFooter = true;
+  next();
+};
+
 // Middleware gắn thông tin user đã đăng nhập nếu có
 router.use(authController.isLoggedIn);
 
@@ -14,8 +20,8 @@ router.get('/', viewsController.getOverview);
 router.get('/all', viewsController.getAllTours);
 router.get('/search', authController.isLoggedIn, viewsController.searchTours);
 router.get('/tour/:slug', authController.isLoggedIn, viewsController.getTour);
-router.get('/login', viewsController.getLoginForm);
-router.get('/signup', viewsController.getSignupForm);
+router.get('/login', setAuthLayout, viewsController.getLoginForm);
+router.get('/signup', setAuthLayout, viewsController.getSignupForm);
 router.get('/me', authController.protect, viewsController.getAccount);
 
 // Route hiển thị chat của user (có thể dùng riêng hoặc qua nút chat nổi)
@@ -49,8 +55,16 @@ router.get(
 );
 
 // -------------------- CÁC TRANG CHỨC NĂNG KHÁC --------------------
-router.get('/forgot-password', viewsController.getForgotPasswordForm);
-router.get('/reset-password/:token', viewsController.getResetPasswordForm);
+router.get(
+  '/forgot-password',
+  setAuthLayout,
+  viewsController.getForgotPasswordForm
+);
+router.get(
+  '/reset-password/:token',
+  setAuthLayout,
+  viewsController.getResetPasswordForm
+);
 
 router.get('/booking-success', viewsController.getBookingSuccess);
 

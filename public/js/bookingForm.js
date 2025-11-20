@@ -163,6 +163,9 @@ export const initBookingForm = () => {
   const quantityInputs = Array.from(
     document.querySelectorAll(".service-quantity-input")
   );
+  const quantityButtons = Array.from(
+    document.querySelectorAll(".service-quantity__btn")
+  );
   const promoChips = Array.from(document.querySelectorAll(".promo-chip"));
   const decreaseBtn = document.querySelector(".decrease-btn");
   const increaseBtn = document.querySelector(".increase-btn");
@@ -215,7 +218,7 @@ export const initBookingForm = () => {
     }
     const remaining = Math.max(getSlotLimit() - state.currentParticipants, 0);
     participantsSeatsRemaining.textContent =
-      remaining === 0 ? "0 cho" : `${remaining} cho`;
+      remaining === 0 ? `0 ch\u1ED7` : `${remaining} ch\u1ED7`;
   };
 
   const updateParticipantsUI = () => {
@@ -331,15 +334,35 @@ export const initBookingForm = () => {
     });
   };
 
+  const toggleServiceCardHighlight = checkbox => {
+    const card = checkbox.closest(".service-option");
+    if (card) {
+      card.classList.toggle("is-selected", checkbox.checked);
+    }
+  };
+
+  const getServiceCheckbox = serviceId =>
+    document.querySelector(
+      `.service-checkbox[data-service-id="${serviceId}"]`
+    );
+
+  const getQuantityInput = serviceId =>
+    document.querySelector(
+      `input.service-quantity-input[data-service-id="${serviceId}"]`
+    );
+
+  const ensureQuantityInputEnabled = serviceId => {
+    const input = getQuantityInput(serviceId);
+    if (input) input.disabled = false;
+    return input;
+  };
+
   const handleServiceSelection = checkbox => {
     const { serviceId } = checkbox.dataset;
     const service = ensureServiceRecord(serviceId, checkbox);
     if (!service) return;
 
-    const quantityInput = document.querySelector(
-      `input.service-quantity-input[data-service-id="${serviceId}"]`
-    );
-
+    const quantityInput = getQuantityInput(serviceId);
     if (checkbox.checked) {
       let quantity = 1;
       if (service.chargeType === "per-person") {
@@ -351,7 +374,7 @@ export const initBookingForm = () => {
           Math.max(value, min),
           service.maxQuantity || Number.MAX_SAFE_INTEGER
         );
-        quantityInput.disabled = false;
+        ensureQuantityInputEnabled(serviceId);
         quantityInput.value = quantity;
       }
       state.selectedServices.set(serviceId, { serviceId, quantity });
@@ -362,6 +385,7 @@ export const initBookingForm = () => {
 
     updateTotals();
     refreshPromotionIfNeeded();
+    toggleServiceCardHighlight(checkbox);
   };
 
   const handleQuantityChange = input => {
@@ -497,11 +521,50 @@ export const initBookingForm = () => {
   });
 
   serviceCheckboxes.forEach(checkbox => {
+    if (checkbox.checked) {
+      handleServiceSelection(checkbox);
+    } else {
+      toggleServiceCardHighlight(checkbox);
+    }
     checkbox.addEventListener("change", () => handleServiceSelection(checkbox));
   });
 
   quantityInputs.forEach(input => {
     input.addEventListener("input", () => handleQuantityChange(input));
+  });
+
+  const ensureServiceActive = serviceId => {
+    const checkbox = getServiceCheckbox(serviceId);
+    if (!checkbox) return null;
+    if (!checkbox.checked) {
+      checkbox.checked = true;
+      handleServiceSelection(checkbox);
+    } else if (checkbox.checked) {
+      ensureQuantityInputEnabled(serviceId);
+    }
+    return checkbox;
+  };
+
+  quantityButtons.forEach(button => {
+    button.addEventListener("click", evt => {
+      evt.preventDefault();
+      evt.stopPropagation();
+      const serviceId = button.dataset.serviceId;
+      const checkbox = ensureServiceActive(serviceId);
+      if (!checkbox) return;
+      const input = getQuantityInput(serviceId);
+      if (!input || input.disabled) return;
+      const min = parseInt(input.min || "1", 10) || 1;
+      const max =
+        parseInt(input.max || String(Number.MAX_SAFE_INTEGER), 10) ||
+        Number.MAX_SAFE_INTEGER;
+      const current = parseInt(input.value || String(min), 10) || min;
+      const delta = button.dataset.action === "decrease" ? -1 : 1;
+      const nextValue = Math.min(Math.max(current + delta, min), max);
+      if (nextValue === current) return;
+      input.value = nextValue;
+      handleQuantityChange(input);
+    });
   });
 
   promoChips.forEach(chip => {

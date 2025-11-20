@@ -1,7 +1,9 @@
-header.site-header
+- const landingPageActive = typeof pageClass === 'string' ? pageClass.includes('landing-page') : false;
+- const headerLogo = landingPageActive ? '/img/logo-white.png' : '/img/logo-blue.png';
+header.site-header(class=landingPageActive ? 'site-header--landing' : '')
   .site-header__inner
     a.site-header__brand(href='/')
-      img(src='/img/logo-blue.png' alt='LLK logo' class='site-header__logo')
+      img(src=headerLogo alt='LLK logo' class='site-header__logo')
 
     nav.site-nav
       ul.site-nav__list

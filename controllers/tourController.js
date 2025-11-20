@@ -145,6 +145,11 @@ exports.updateTour = catchAsync(async (req, res, next) => {
   const current = await Tour.findById(req.params.id);
   if (!current) return next(new AppError('Không tìm thấy tour', 404));
 
+  const appendStartDates =
+    req.body.appendStartDates === true ||
+    req.body.appendStartDates === 'true';
+  delete req.body.appendStartDates;
+
   // Ép kiểu số nếu có trong payload
   ['maxGroupSize', 'duration', 'price', 'priceDiscount'].forEach(f => {
     if (req.body[f] != null) req.body[f] = Number(req.body[f]);
@@ -168,7 +173,7 @@ exports.updateTour = catchAsync(async (req, res, next) => {
   }
 
   // ------------------------
-  // Merge startDates (giữ slot cũ nếu client không gửi availableSlots)
+  // Merge hoặc thay thế startDates tuỳ mode
   let incoming = req.body.startDates;
   if (typeof incoming === 'string') {
     incoming = tryParseJSON(incoming, 'startDates');
@@ -176,43 +181,34 @@ exports.updateTour = catchAsync(async (req, res, next) => {
   }
 
   if (Array.isArray(incoming)) {
-    const toKey = d => {
-      const raw = d && d.date != null ? d.date : d;
-      const dt = new Date(raw);
-      return dt.toISOString().split('T')[0]; // so sánh theo ngày
-    };
-
-    // Map hiện tại trong DB
+    const toKey = dateVal => dateVal.toISOString().split('T')[0];
     const existingMap = new Map(
-      (current.startDates || []).map(d => [
-        toKey(d),
-        {
-          date: new Date(d.date),
-          availableSlots: Number(d.availableSlots) || 0
-        }
-      ])
+      (current.startDates || []).map(d => {
+        const dateInstance = new Date(d.date);
+        return [
+          toKey(dateInstance),
+          {
+            date: dateInstance,
+            availableSlots: Math.max(0, Number(d.availableSlots) || 0)
+          }
+        ];
+      })
     );
+    const normalizedEntries = [];
 
-    // Bắt đầu từ dữ liệu hiện có
-    const mergedMap = new Map(existingMap);
-
-    // Merge từng phần tử trong payload
     incoming.forEach(d => {
-      const key = toKey(d);
-      const dateVal = new Date(d && d.date != null ? d.date : d);
+      const raw = d && d.date != null ? d.date : d;
+      const dateVal = new Date(raw);
+      if (!raw || Number.isNaN(dateVal.getTime())) return;
+      const key = toKey(dateVal);
       const prev = existingMap.get(key);
 
-      // Không nested ternary: tính slots rõ ràng
       let slots;
-      const hasSlots = d && d.availableSlots != null;
-
-      if (hasSlots) {
+      if (d && d.availableSlots != null) {
         slots = Number(d.availableSlots);
       } else if (prev) {
-        // giữ lại slot cũ nếu ngày đã tồn tại
         slots = prev.availableSlots;
       } else {
-        // ngày mới → mặc định maxGroupSize
         const mg =
           req.body.maxGroupSize != null
             ? Number(req.body.maxGroupSize)
@@ -220,18 +216,25 @@ exports.updateTour = catchAsync(async (req, res, next) => {
         slots = Number.isFinite(mg) ? mg : 0;
       }
 
-      mergedMap.set(key, {
-        date: dateVal,
-        availableSlots: Math.max(0, Number(slots) || 0)
-      });
+      normalizedEntries.push([
+        key,
+        {
+          date: dateVal,
+          availableSlots: Math.max(0, Number(slots) || 0)
+        }
+      ]);
     });
 
-    req.body.startDates = Array.from(mergedMap.values());
+    const targetMap = appendStartDates ? new Map(existingMap) : new Map();
+    normalizedEntries.forEach(([key, value]) => targetMap.set(key, value));
+
+    req.body.startDates = Array.from(targetMap.values());
   } else {
     // không gửi startDates → không sửa mảng cũ
     delete req.body.startDates;
   }
   // ------------------------
+
 
   const updated = await Tour.findByIdAndUpdate(req.params.id, req.body, {
     new: true,

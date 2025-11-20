@@ -11,23 +11,64 @@ const Review = require('../models/reviewModel');
 const formatStartDatesWithSlots = tour => {
   if (!tour.startDates) return [];
 
-  const now = new Date();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const maxGroup = Number(tour.maxGroupSize) || 0;
+
   return tour.startDates
-    .filter(dateObj => new Date(dateObj.date) > now)
-    .map(dateObj => ({
-      date: dateObj.date,
-      dateFormatted: new Date(dateObj.date).toLocaleDateString('vi-VN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      }),
-      availableSlots: dateObj.availableSlots,
-      isFull: dateObj.availableSlots === 0,
-      isAlmostFull:
-        dateObj.availableSlots > 0 &&
-        dateObj.availableSlots <= tour.maxGroupSize * 0.2
-    }))
+    .map(dateObj => {
+      const rawDate = dateObj && dateObj.date ? dateObj.date : dateObj;
+      const dateValue = new Date(rawDate);
+      if (!rawDate || Number.isNaN(dateValue.getTime())) return null;
+      if (dateValue < today) return null;
+
+      const slotsRaw =
+        dateObj && dateObj.availableSlots != null
+          ? Number(dateObj.availableSlots)
+          : maxGroup;
+      const availableSlots = Math.max(
+        0,
+        Number.isFinite(slotsRaw) ? slotsRaw : 0
+      );
+      const isFull = availableSlots <= 0;
+      const isAlmostFull =
+        availableSlots > 0 &&
+        maxGroup > 0 &&
+        availableSlots <= Math.max(1, Math.floor(maxGroup * 0.2));
+
+      return {
+        date: dateValue,
+        dateISO: dateValue.toISOString(),
+        dateFormatted: dateValue.toLocaleDateString('vi-VN', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        }),
+        availableSlots,
+        isFull,
+        isAlmostFull
+      };
+    })
+    .filter(Boolean)
     .sort((a, b) => new Date(a.date) - new Date(b.date));
+};
+
+const mapTourWithStartMeta = tour => {
+  const upcomingStartDates = formatStartDatesWithSlots(tour);
+  const nextAvailable = upcomingStartDates.find(date => !date.isFull) || null;
+  const fallbackStart = upcomingStartDates[0] || null;
+  const nextStart = nextAvailable || fallbackStart;
+  const hasAvailableStartDate = Boolean(nextAvailable);
+  const showSoldOutBadge =
+    upcomingStartDates.length > 0 && !hasAvailableStartDate;
+
+  return {
+    ...tour,
+    upcomingStartDates,
+    nextStart,
+    hasAvailableStartDate,
+    showSoldOutBadge
+  };
 };
 
 exports.alerts = (req, res, next) => {
@@ -40,19 +81,16 @@ exports.alerts = (req, res, next) => {
 
 exports.getOverview = catchAsync(async (req, res, next) => {
   const tours = await Tour.find().lean();
-  const toursWithMeta = tours.map(tour => {
-    const upcomingStartDates = formatStartDatesWithSlots(tour);
-    const nextStart = upcomingStartDates[0] || null;
-    return { ...tour, upcomingStartDates, nextStart };
-  });
+  const toursWithMeta = tours.map(mapTourWithStartMeta);
   const uniqueLocations = await Tour.distinct('startLocation.description');
 
   res.status(200).render('overview', {
-    title: 'Tất cả chuyến đi',
+    title: 'Trang chủ',
     tours: toursWithMeta,
     uniqueLocations,
     noResults: toursWithMeta.length === 0,
-    searchParams: req.query || {}
+    searchParams: req.query || {},
+    pageClass: 'landing-page'
   });
 });
 
@@ -156,17 +194,7 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
     return true;
   });
 
-  const toursWithMeta = filteredTours.map(tour => {
-    const upcomingStartDates = formatStartDatesWithSlots(tour);
-    const nextStart = upcomingStartDates[0] || null;
-    const hasStartDates =
-      Array.isArray(tour.startDates) && tour.startDates.length > 0;
-    const showSoldOutBadge = nextStart
-      ? nextStart.availableSlots === 0 ||
-        typeof nextStart.availableSlots !== 'number'
-      : hasStartDates;
-    return { ...tour, upcomingStartDates, nextStart, showSoldOutBadge };
-  });
+  const toursWithMeta = filteredTours.map(mapTourWithStartMeta);
 
   toursWithMeta.sort((a, b) => {
     const aHas = Boolean(a.nextStart);
@@ -186,7 +214,7 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
   };
 
   res.status(200).render('all', {
-    title: 'Tất cả tour',
+    title: 'Tất cả chuyến đi',
     tours: toursWithMeta,
     filterLocations,
     filters,
@@ -230,7 +258,8 @@ exports.searchTours = catchAsync(async (req, res, next) => {
     tours,
     uniqueLocations,
     searchParams: req.query,
-    noResults: tours.length === 0
+    noResults: tours.length === 0,
+    pageClass: 'landing-page'
   });
 });
 
@@ -247,11 +276,28 @@ exports.getTour = catchAsync(async (req, res, next) => {
 
   // Format ngày khởi hành với thông tin slot
   const startDatesWithSlots = formatStartDatesWithSlots(tour);
+  const bookingDateOptions = startDatesWithSlots.filter(
+    date => date && !date.isFull
+  );
+  const displayStartEntry =
+    bookingDateOptions[0] || startDatesWithSlots[0] || null;
+  const hasUpcomingStart = Boolean(displayStartEntry);
+  const hasAvailableStart = bookingDateOptions.length > 0;
+  const tourStartMeta = {
+    bookingDateOptions,
+    primaryBookingOption: bookingDateOptions[0] || null,
+    hasUpcomingStart,
+    hasAvailableStart,
+    nextDateDisplay: hasUpcomingStart
+      ? displayStartEntry.dateFormatted
+      : 'Đang cập nhật'
+  };
 
   res.status(200).render('tour', {
     title: `${tour.name}`,
     tour,
-    startDatesWithSlots // ✅ Truyền biến này vào view
+    startDatesWithSlots, // ✅ Truyền biến này vào view
+    tourStartMeta
   });
 });
 
@@ -706,6 +752,11 @@ exports.getBookingForm = catchAsync(async (req, res, next) => {
   }
 
   const startDatesWithSlots = formatStartDatesWithSlots(tour);
+  const bookingFormMeta = {
+    availableDates: startDatesWithSlots.filter(
+      date => date && !date.isFull && date.availableSlots > 0
+    )
+  };
 
   const services = await Service.find({
     status: 'active',
@@ -747,8 +798,11 @@ exports.getBookingForm = catchAsync(async (req, res, next) => {
     title: `Đặt tour: ${tour.name}`,
     tour,
     startDatesWithSlots,
+    bookingFormMeta,
     services,
-    userPromotions
+    userPromotions,
+    hideFooter: true,
+    pageClass: 'booking-page'
   });
 });
 
