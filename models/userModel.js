@@ -8,6 +8,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Vui lòng cho chúng tôi biết tên của bạn!']
   },
+  authProvider: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local'
+  },
+  googleId: {
+    type: String,
+    select: false
+  },
   email: {
     type: String,
     required: [true, 'Vui lòng cung cấp email của bạn'],
@@ -26,16 +35,27 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Vui lòng cung cấp mật khẩu'],
+    required: [
+      function() {
+        return this.authProvider === 'local';
+      },
+      'Vui lòng cung cấp mật khẩu'
+    ],
     minlength: 8,
     select: false
   },
   passwordConfirm: {
     type: String,
-    required: [true, 'Vui lòng xác nhận mật khẩu'],
+    required: [
+      function() {
+        return this.authProvider === 'local';
+      },
+      'Vui lòng xác nhận mật khẩu'
+    ],
     validate: {
-      // Chỉ hoạt động khi TẠO hoặc LƯU!!!
+      // Chỉ hoạt động khi TẠO hoặc LƯu!!!
       validator: function(el) {
+        if (this.authProvider !== 'local') return true;
         return el === this.password;
       },
       message: 'Mật khẩu không khớp!'
@@ -53,7 +73,7 @@ const userSchema = new mongoose.Schema({
 
 userSchema.pre('save', async function(next) {
   // Chỉ chạy hàm này nếu mật khẩu thực sự được sửa đổi
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password') || !this.password) return next();
 
   // Băm mật khẩu với chi phí 12
   this.password = await bcrypt.hash(this.password, 12);
@@ -83,7 +103,9 @@ userSchema.pre(/^find/, function(next) {
 });
 
 userSchema.methods.correctPassword = async (candidatePassword, userPassword) =>
-  await bcrypt.compare(candidatePassword, userPassword);
+  !candidatePassword || !userPassword
+    ? false
+    : await bcrypt.compare(candidatePassword, userPassword);
 
 userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
   if (this.passwordChangedAt) {

@@ -6,7 +6,10 @@ block adminContent
       h1.llk-admin-topbar__title= service ? `Chỉnh sửa dịch vụ: ${service.name}` : 'Tạo dịch vụ mới'
       p.llk-admin-topbar__subtitle Cấu hình dịch vụ bổ sung cho tour.
     .llk-admin-topbar__right
-      a.btn.btn--ghost(href='/admin/services') ← Quay lại danh sách
+      a.btn.btn--ghost(href='/admin/services')
+        svg(width='16', height='16')
+          use(xlink:href='/img/icons.svg#icon-arrow-left-circle')
+        |  Quay lại danh sách
 
   section.llk-admin-panel
     form.form.form-service
@@ -18,7 +21,7 @@ block adminContent
             label.form__label(for='name') Tên dịch vụ
             input#name.form__input(type='text', required, value=service ? service.name : '')
           .form__group
-            label.form__label(for='code') Mã dịch vụ (tùy chọn)
+            label.form__label(for='code') Mã dịch vụ (tuỳ chọn)
             input#code.form__input(type='text', value=service ? service.code : '')
           .form__group
             label.form__label(for='shortDescription') Mô tả ngắn
@@ -34,7 +37,7 @@ block adminContent
           .form__group
             label.form__label(for='chargeType') Loại tính phí
             select#chargeType.form__select
-              option(value='per-person', selected=service && service.chargeType === 'per-person') Theo người
+              option(value='per-person', selected=!service || service.chargeType === 'per-person') Theo người
               option(value='per-booking', selected=service && service.chargeType === 'per-booking') Theo lượt/booking
           .form__group
             label.form__checkbox
@@ -56,7 +59,7 @@ block adminContent
             label.form__label(for='status') Trạng thái
             select#status.form__select
               option(value='active', selected=!service || service.status === 'active') Đang hiển thị
-              option(value='inactive', selected=service && service.status === 'inactive') Đã ẩn
+              option(value='inactive', selected=service && service.status === 'inactive') Đã tắt
           .form__group
             label.form__label(for='displayOrder') Thứ tự hiển thị
             input#displayOrder.form__input(type='number', value=service ? service.displayOrder : 0)

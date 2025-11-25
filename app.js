@@ -39,11 +39,18 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
   res.locals.stripePublicKey = process.env.STRIPE_PUBLIC_KEY || '';
+  res.locals.googleClientId = process.env.GOOGLE_CLIENT_ID || '';
   next();
 });
 
 // Thiết lập tiêu đề HTTP bảo mật
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+    crossOriginEmbedderPolicy: false,
+    contentSecurityPolicy: false
+  })
+);
 
 app.use(
   helmet.contentSecurityPolicy({
@@ -56,7 +63,10 @@ app.use(
         'https://js.stripe.com',
         'https://cdn.jsdelivr.net/npm/chart.js',
         'https://api.mapbox.com',
-        'https://cdn.socket.io'
+        'https://cdn.socket.io',
+        'https://accounts.google.com',
+        'https://apis.google.com',
+        'https://www.gstatic.com'
       ],
       workerSrc: ["'self'", 'blob:', 'https://api.mapbox.com'],
       styleSrc: [
@@ -83,10 +93,24 @@ app.use(
         'ws://localhost:3000',
         'wss://localhost:3000',
         'https://api.mapbox.com',
-        'https://js.stripe.com'
+        'https://js.stripe.com',
+        'https://accounts.google.com',
+        'https://oauth2.googleapis.com',
+        'https://www.gstatic.com'
       ],
-      imgSrc: ["'self'", 'data:', 'https://api.mapbox.com'],
-      frameSrc: ["'self'", 'https://js.stripe.com'],
+      imgSrc: [
+        "'self'",
+        'data:',
+        'https://api.mapbox.com',
+        'https://lh3.googleusercontent.com',
+        'https://ssl.gstatic.com',
+        'https://www.gstatic.com'
+      ],
+      frameSrc: [
+        "'self'",
+        'https://js.stripe.com',
+        'https://accounts.google.com'
+      ],
       navigateSrc: ["'self'", 'https://checkout.stripe.com']
     }
   })

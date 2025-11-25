@@ -88,8 +88,8 @@ router.get(
 
 router.get(
   '/my-tours',
-  bookingController.createBookingCheckout,
   authController.protect,
+  bookingController.createBookingCheckout,
   setUserPortalLayout,
   viewsController.getMyTours
 );

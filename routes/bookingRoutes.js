@@ -4,14 +4,14 @@ const authController = require('../controllers/authController');
 
 const router = express.Router();
 
-router.get('/by-session/:sid', bookingController.getByStripeSession);
+router.use(authController.protect);
 
 router
   .route('/checkout-session/:tourId')
-  .get(authController.protect, bookingController.getCheckoutSession)
-  .post(authController.protect, bookingController.getCheckoutSession);
+  .get(bookingController.getCheckoutSession)
+  .post(bookingController.getCheckoutSession);
 
-router.use(authController.protect);
+router.get('/by-session/:sid', bookingController.getByStripeSession);
 
 router.get('/my', bookingController.getMyBookings);
 

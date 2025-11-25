@@ -6,7 +6,10 @@ block adminContent
       h1.llk-admin-topbar__title= promotion ? `Chỉnh sửa khuyến mãi: ${promotion.name}` : 'Tạo khuyến mãi mới'
       p.llk-admin-topbar__subtitle Quản lý mã giảm giá và ưu đãi.
     .llk-admin-topbar__right
-      a.btn.btn--ghost(href='/admin/promotions') ← Quay lại danh sách
+      a.btn.btn--ghost(href='/admin/promotions')
+        svg(width='16', height='16')
+          use(xlink:href='/img/icons.svg#icon-arrow-left-circle')
+        |  Quay lại danh sách
 
   section.llk-admin-panel
     form.form.form-promotion

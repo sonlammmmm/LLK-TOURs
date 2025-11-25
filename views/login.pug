@@ -11,9 +11,9 @@ block content
               img(src='/img/logo-blue.png' alt='LLK Travel logo')
             .auth-brand__text
               span LLK Travel
-              small LƯU GIỮU - LẮNG ĐỌNG - KHÁM PHÁ
+              small Lữ Hành - Khám Phá - Kết Nối
           h1.auth-panel__title Chào mừng trở lại
-          p.auth-panel__subtitle Truy cập bằng tài khoản LLK để tiếp tục quản lý tours và hỗ trợ khách hàng trong thời gian thực.
+          p.auth-panel__subtitle Truy cập bằng tài khoản LLK để tiếp tục quản lý tours và hỗ trợ khách hàng theo thời gian thực.
           form.form.form--login
             .auth-field
               label.auth-field__label(for='email') Email công việc
@@ -28,7 +28,19 @@ block content
               .auth-field__aside
                 a.auth-link(href='/forgot-password') Quên mật khẩu?
             button.btn.auth-btn(type='submit') Đăng nhập
+          .auth-divider
+            span Hoặc đăng nhập nhanh
+          .auth-social__actions
+            #google-signin-btn.auth-social__button
+              .auth-social__placeholder
+                i.fa-brands.fa-google
+                .auth-social__placeholder-text
+                  span Đang khởi tạo Google SSO...
+                  small Giữ cửa sổ này mở để hoàn tất
           .auth-meta
             span Chưa có tài khoản?
             a.auth-link(href='/signup') Tạo tài khoản mới
       +authShowcase()
+
+block scripts
+  script(src='https://accounts.google.com/gsi/client' async defer)

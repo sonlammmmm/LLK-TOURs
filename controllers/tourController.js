@@ -39,20 +39,62 @@ const tryParseJSON = (str, fieldName = 'payload') => {
 
 exports.uploadTourImages = upload.fields([
   { name: 'imageCover', maxCount: 1 },
-  { name: 'images', maxCount: 3 }
+  { name: 'images', maxCount: 6 }
 ]);
+
+const detectImageFormat = (file) => {
+  const fallback = { extension: 'jpg', format: 'jpeg' };
+  if (!file) return fallback;
+
+  const original = file.originalname?.toLowerCase() || '';
+  const extMatch = original.match(/\.([0-9a-z]+)$/i);
+  let extension = extMatch ? extMatch[1] : '';
+  const mime = file.mimetype || '';
+
+  if (!extension) {
+    if (mime.includes('jpeg') || mime.includes('jpg')) extension = 'jpg';
+    else if (mime.includes('png')) extension = 'png';
+    else if (mime.includes('webp')) extension = 'webp';
+    else if (mime.includes('gif')) extension = 'gif';
+  }
+
+  if (!extension) return fallback;
+
+  let format = extension === 'jpg' ? 'jpeg' : extension;
+  if (!['jpeg', 'png', 'webp', 'gif'].includes(format)) {
+    return fallback;
+  }
+
+  return { extension, format };
+};
+
+const applyFormatOptions = (instance, format) => {
+  switch (format) {
+    case 'jpeg':
+      return instance.jpeg({ quality: 90 });
+    case 'png':
+      return instance.png({ compressionLevel: 9 });
+    case 'webp':
+      return instance.webp({ quality: 85 });
+    case 'gif':
+      return instance.gif({ reoptimise: true });
+    default:
+      return instance;
+  }
+};
 
 exports.resizeTourImages = catchAsync(async (req, res, next) => {
   if (!req.files) return next();
 
   // 1) Ảnh bìa
   if (req.files.imageCover) {
-    req.body.imageCover = `tour-${req.params.id}-${Date.now()}-cover.jpeg`;
-    await sharp(req.files.imageCover[0].buffer)
-      .resize(2000, 1333)
-      .toFormat('jpeg')
-      .jpeg({ quality: 90 })
-      .toFile(`public/img/tours/${req.body.imageCover}`);
+    const coverFile = req.files.imageCover[0];
+    const { extension, format } = detectImageFormat(coverFile);
+    const coverFilename = `tour-${req.params.id || 'new'}-${Date.now()}-cover.${extension}`;
+    let pipeline = sharp(coverFile.buffer).resize(2000, 1333);
+    pipeline = applyFormatOptions(pipeline, format);
+    await pipeline.toFile(`public/img/tours/${coverFilename}`);
+    req.body.imageCover = coverFilename;
   }
 
   // 2) Các ảnh khác
@@ -61,13 +103,11 @@ exports.resizeTourImages = catchAsync(async (req, res, next) => {
 
     await Promise.all(
       req.files.images.map(async (file, i) => {
-        const filename = `tour-${req.params.id}-${Date.now()}-${i + 1}.jpeg`;
-
-        await sharp(file.buffer)
-          .resize(2000, 1333)
-          .toFormat('jpeg')
-          .jpeg({ quality: 90 })
-          .toFile(`public/img/tours/${filename}`);
+        const { extension, format } = detectImageFormat(file);
+        const filename = `tour-${req.params.id || 'new'}-${Date.now()}-${i + 1}.${extension}`;
+        let pipeline = sharp(file.buffer).resize(2000, 1333);
+        pipeline = applyFormatOptions(pipeline, format);
+        await pipeline.toFile(`public/img/tours/${filename}`);
 
         req.body.images.push(filename);
       })

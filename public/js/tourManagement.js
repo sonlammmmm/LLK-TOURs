@@ -101,6 +101,57 @@ const elFromHTML = (html) => {
   return div.firstElementChild;
 };
 
+const loadImage = (file) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = (err) => {
+      URL.revokeObjectURL(url);
+      reject(err);
+    };
+    img.src = url;
+  });
+
+const compressImage = async (file, options = {}) => {
+  if (!file || !file.type || !file.type.startsWith('image/')) return file;
+  const {
+    maxWidth = 1920,
+    maxHeight = 1080,
+    quality = 0.82,
+    maxSizeBytes = 1.5 * 1024 * 1024
+  } = options;
+  try {
+    const image = await loadImage(file);
+    const { width, height } = image;
+    const scale = Math.min(1, maxWidth / width, maxHeight / height);
+    if (scale === 1 && file.size <= maxSizeBytes) return file;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(width * scale);
+    canvas.height = Math.round(height * scale);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise((resolve) => {
+      canvas.toBlob(
+        (result) => resolve(result || file),
+        file.type || 'image/jpeg',
+        quality
+      );
+    });
+    if (!blob || blob === file) return file;
+    return new File([blob], file.name, {
+      type: blob.type,
+      lastModified: Date.now()
+    });
+  } catch (err) {
+    console.warn('Unable to compress image', err);
+    return file;
+  }
+};
+
 export const handleTourForm = () => {
   const form = document.querySelector('.form-tour');
   if (!form) return;
@@ -124,6 +175,192 @@ export const handleTourForm = () => {
   let currentStep = 1;
   const quickStartDateInput = document.getElementById('quick-start-date');
   const quickStartSlotsInput = document.getElementById('quick-start-slots');
+  const imageCoverInput = document.getElementById('imageCover');
+  const imagesInput = document.getElementById('images');
+  const resolvePreviewTarget = (input, fallbackSelector) => {
+    if (!input) return fallbackSelector ? document.querySelector(fallbackSelector) : null;
+    const selector = input.dataset?.previewTarget;
+    if (selector) {
+      const el = document.querySelector(selector);
+      if (el) return el;
+    }
+    return fallbackSelector ? document.querySelector(fallbackSelector) : null;
+  };
+  const coverPreviewEl = resolvePreviewTarget(imageCoverInput, '.image-cover-preview');
+  const galleryPreviewEl = resolvePreviewTarget(imagesInput, '.tour-images-preview');
+  const defaultCoverPreview = coverPreviewEl ? coverPreviewEl.innerHTML : '';
+  const defaultGalleryPreview = galleryPreviewEl ? galleryPreviewEl.innerHTML : '';
+  const guideOptionsTemplate = document.getElementById('guide-options-template');
+  const guideOptionsMarkup =
+    (guideOptionsTemplate && guideOptionsTemplate.innerHTML.trim()) ||
+    '<option value="">Ch\u1ecdn h\u01b0\u1edbng d\u1eabn vi\u00ean</option>';
+  if (guideOptionsTemplate) guideOptionsTemplate.remove();
+  const maxGalleryAttr =
+    imagesInput && imagesInput.dataset ? imagesInput.dataset.maxFiles : null;
+  const parsedMaxGallery =
+    maxGalleryAttr && !Number.isNaN(Number(maxGalleryAttr))
+      ? Number(maxGalleryAttr)
+      : NaN;
+  const maxGalleryImages =
+    Number.isFinite(parsedMaxGallery) && parsedMaxGallery > 0
+      ? parsedMaxGallery
+      : 6;
+  let pendingCoverFile = null;
+  let pendingGalleryFiles = [];
+
+  const insertBeforeEmptyState = (container, node) => {
+    if (!container || !node) return;
+    const empty = container.querySelector('.form-empty-state');
+    container.insertBefore(node, empty || null);
+  };
+
+  const toggleEmptyState = (container) => {
+    if (!container) return;
+    const empty = container.querySelector('.form-empty-state');
+    if (!empty) return;
+    const selector = container.dataset.itemSelector || '.form__group';
+    const hasItems = container.querySelectorAll(selector).length > 0;
+    empty.classList.toggle('is-hidden', hasItems);
+  };
+
+  const readFileAsDataURL = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const renderCoverPreview = async (file) => {
+    if (!coverPreviewEl) return;
+    if (!file) {
+      coverPreviewEl.innerHTML = defaultCoverPreview;
+      return;
+    }
+    try {
+      const dataUrl = await readFileAsDataURL(file);
+      coverPreviewEl.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = dataUrl;
+      img.alt = 'Ảnh bìa xem trước';
+      coverPreviewEl.appendChild(img);
+    } catch (err) {
+      console.error('Không thể hiển thị ảnh bìa:', err);
+      coverPreviewEl.innerHTML = defaultCoverPreview;
+    }
+  };
+
+  const renderGalleryPreview = async (files) => {
+    if (!galleryPreviewEl) return;
+    if (!files || !files.length) {
+      galleryPreviewEl.innerHTML = defaultGalleryPreview;
+      return;
+    }
+    galleryPreviewEl.innerHTML = '';
+    files.forEach(async (file, index) => {
+      try {
+        const dataUrl = await readFileAsDataURL(file);
+        const wrapper = document.createElement('div');
+        wrapper.className = 'image-preview-grid__item';
+        const img = document.createElement('img');
+        img.src = dataUrl;
+        img.alt = `Ảnh tour ${index + 1}`;
+        wrapper.appendChild(img);
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'image-preview-grid__remove';
+        removeBtn.dataset.index = String(index);
+        removeBtn.innerHTML = '×';
+        wrapper.appendChild(removeBtn);
+        galleryPreviewEl.appendChild(wrapper);
+      } catch (err) {
+        console.error('Không thể hiển thị preview ảnh tour:', err);
+      }
+    });
+  };
+
+  const clearImageSelection = (type) => {
+    if (type === 'cover') {
+      pendingCoverFile = null;
+      if (imageCoverInput) imageCoverInput.value = '';
+      renderCoverPreview(null);
+    } else if (type === 'gallery') {
+      pendingGalleryFiles = [];
+      if (imagesInput) imagesInput.value = '';
+      renderGalleryPreview([]);
+    }
+  };
+
+  if (form) {
+    const clearButtons = form.querySelectorAll('.image-upload__clear');
+    clearButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const type = btn.dataset.clearType;
+        clearImageSelection(type);
+      });
+    });
+  }
+
+  if (galleryPreviewEl) {
+    galleryPreviewEl.addEventListener('click', (e) => {
+      const removeBtn = e.target.closest('.image-preview-grid__remove');
+      if (!removeBtn) return;
+      e.preventDefault();
+      const index = Number(removeBtn.dataset.index);
+      if (Number.isNaN(index)) return;
+      pendingGalleryFiles.splice(index, 1);
+      if (!pendingGalleryFiles.length && imagesInput) {
+        imagesInput.value = '';
+      }
+      renderGalleryPreview(pendingGalleryFiles);
+    });
+  }
+
+  const getGalleryFiles = () => {
+    if (pendingGalleryFiles.length) {
+      return pendingGalleryFiles.slice(0, maxGalleryImages);
+    }
+    if (imagesInput && imagesInput.files && imagesInput.files.length > 0) {
+      return Array.from(imagesInput.files).slice(0, maxGalleryImages);
+    }
+    return [];
+  };
+
+  const syncEmptyStates = () => {
+    toggleEmptyState(locationsContainer);
+    toggleEmptyState(startDatesContainer);
+    toggleEmptyState(guidesContainer);
+  };
+
+  syncEmptyStates();
+
+  if (imageCoverInput) {
+    imageCoverInput.addEventListener('change', () => {
+      if (imageCoverInput.files && imageCoverInput.files[0]) {
+        pendingCoverFile = imageCoverInput.files[0];
+      } else {
+        pendingCoverFile = null;
+      }
+      renderCoverPreview(pendingCoverFile);
+    });
+  }
+
+  if (imagesInput) {
+    imagesInput.addEventListener('change', () => {
+      const files =
+        imagesInput.files && imagesInput.files.length
+          ? Array.from(imagesInput.files)
+          : [];
+      if (files.length > maxGalleryImages) {
+        showAlert(
+          'info',
+          `Chỉ sử dụng ${maxGalleryImages} ảnh đầu tiên trong lần tải này.`
+        );
+      }
+      pendingGalleryFiles = files.slice(0, maxGalleryImages);
+      renderGalleryPreview(pendingGalleryFiles);
+    });
+  }
 
   const goToStep = (step) => {
     const target = Math.min(Math.max(1, Number(step)), stepSections.length);
@@ -173,7 +410,7 @@ export const handleTourForm = () => {
 
   syncEmptyStartSlots();
 
-  /* ----- Thêm/Xoá địa điểm ----- */
+  /* ----- Thêm/Xóa địa điểm ----- */
   if (btnAddLocation && locationsContainer) {
     btnAddLocation.addEventListener('click', () => {
       const idx = locationsContainer.querySelectorAll('.location-item').length;
@@ -181,25 +418,26 @@ export const handleTourForm = () => {
         <div class="location-item" data-index="${idx}">
           <button class="location-item__remove" type="button">×</button>
           <div class="form__group">
-            <label class="form__label">Mô tả</label>
+            <label class="form__label">Tên chặng/điểm dừng</label>
             <input class="location-description form__input" type="text" required>
           </div>
           <div class="form__group">
-            <label class="form__label">Địa chỉ</label>
-            <input class="location-address form__input" type="text">
+            <label class="form__label">Địa chỉ/Ghi chú</label>
+            <input class="location-address form__input" type="text" placeholder="Ví dụ: Buổi sáng tại...">
           </div>
           <div class="form__group">
-            <label class="form__label">Tọa độ (kinh độ, vĩ độ)</label>
+            <label class="form__label">Tọa độ (lng, lat)</label>
             <input class="location-coordinates form__input" type="text" placeholder="106.695249, 10.775400">
             <small class="form__help">Định dạng: kinh độ, vĩ độ (VD: 106.695, 10.775)</small>
           </div>
           <div class="form__group">
-            <label class="form__label">Ngày thứ</label>
-            <input class="location-day form__input" type="number" min="1" required>
+            <label class="form__label">Ngày thực hiện</label>
+            <input class="location-day form__input" type="number" min="1" required placeholder="1">
           </div>
         </div>
       `);
-      locationsContainer.insertBefore(node, btnAddLocation);
+      insertBeforeEmptyState(locationsContainer, node);
+      toggleEmptyState(locationsContainer);
     });
 
     locationsContainer.addEventListener('click', (e) => {
@@ -207,12 +445,49 @@ export const handleTourForm = () => {
       if (!btn) return;
       const item = btn.closest('.location-item');
       if (item) item.remove();
+      toggleEmptyState(locationsContainer);
     });
   }
 
-  /* ----- Thêm/Xoá start date ----- */
+  /* ----- Thêm/Xóa ngày khởi hành ----- */
   if (btnAddStartDate && startDatesContainer) {
     btnAddStartDate.addEventListener('click', () => {
+      const quickDateValue = quickStartDateInput?.value?.trim();
+      if (!quickDateValue) {
+        showAlert('error', 'Vui lòng chọn ngày khởi hành trước khi thêm.');
+        quickStartDateInput?.focus();
+        return;
+      }
+
+      const trimmedSlotValue = quickStartSlotsInput?.value?.trim();
+      const fallbackSlotSource =
+        trimmedSlotValue || maxGroupSizeInput?.value?.trim() || '';
+      if (!fallbackSlotSource) {
+        showAlert(
+          'error',
+          'Vui lòng nhập số slot khả dụng hoặc sức chứa tối đa trước khi thêm.'
+        );
+        quickStartSlotsInput?.focus();
+        return;
+      }
+
+      const slotNumber = Number(fallbackSlotSource);
+      if (Number.isNaN(slotNumber) || slotNumber <= 0) {
+        showAlert('error', 'Số slot phải lớn hơn 0.');
+        quickStartSlotsInput?.focus();
+        return;
+      }
+
+      const normalizedDate = quickDateValue;
+      const hasDuplicate = Array.from(
+        startDatesContainer.querySelectorAll('.start-date')
+      ).some((input) => input.value === normalizedDate);
+      if (hasDuplicate) {
+        showAlert('error', 'Ngày khởi hành này đã tồn tại trong lịch.');
+        quickStartDateInput?.focus();
+        return;
+      }
+
       const idx = startDatesContainer.querySelectorAll('.start-date-item').length;
       const node = elFromHTML(`
         <div class="start-date-item" data-index="${idx}">
@@ -223,29 +498,22 @@ export const handleTourForm = () => {
           </div>
           <div class="form__group">
             <label class="form__label">Slot tối đa</label>
-            <input class="start-date-slots form__input" type="number" min="1" placeholder="Tối đa">
+            <input class="start-date-slots form__input" type="number" min="1" placeholder="Theo sức chứa tối đa">
           </div>
         </div>
       `);
 
       const dateField = node.querySelector('.start-date');
-      if (quickStartDateInput && quickStartDateInput.value) {
-        dateField.value = quickStartDateInput.value;
-        quickStartDateInput.value = '';
-      }
-
       const slotsField = node.querySelector('.start-date-slots');
-      const quickSlotsValue = quickStartSlotsInput?.value;
-      const fallbackSlots =
-        quickSlotsValue || maxGroupSizeInput?.value || '';
-      if (fallbackSlots) {
-        slotsField.value = fallbackSlots;
-      }
-      if (quickSlotsValue && quickStartSlotsInput) {
-        quickStartSlotsInput.value = '';
-      }
+      if (dateField) dateField.value = normalizedDate;
+      if (slotsField) slotsField.value = slotNumber;
 
-      startDatesContainer.appendChild(node);
+      if (quickStartDateInput) quickStartDateInput.value = '';
+      if (trimmedSlotValue && quickStartSlotsInput) quickStartSlotsInput.value = '';
+
+      insertBeforeEmptyState(startDatesContainer, node);
+      toggleEmptyState(startDatesContainer);
+      syncEmptyStartSlots();
     });
 
     startDatesContainer.addEventListener('click', (e) => {
@@ -253,28 +521,27 @@ export const handleTourForm = () => {
       if (!btn) return;
       const item = btn.closest('.start-date-item');
       if (item) item.remove();
+      toggleEmptyState(startDatesContainer);
     });
   }
 
-  /* ----- Thêm/Xoá guide ----- */
+  /* ----- Thêm/Xóa hướng dẫn viên ----- */
   if (btnAddGuide && guidesContainer) {
     btnAddGuide.addEventListener('click', () => {
       const idx = guidesContainer.querySelectorAll('.guide-item').length;
-      const options = Array.from(document.querySelectorAll('.guide-select option'))
-        .map((o) => `<option value="${o.value}">${o.textContent}</option>`)
-        .join('');
       const node = elFromHTML(`
         <div class="guide-item" data-index="${idx}">
           <button class="guide-item__remove" type="button">×</button>
           <div class="form__group">
             <label class="form__label">Hướng dẫn viên</label>
             <select class="guide-select form__input" required>
-              ${options}
+              ${guideOptionsMarkup}
             </select>
           </div>
         </div>
       `);
-      guidesContainer.insertBefore(node, btnAddGuide);
+      insertBeforeEmptyState(guidesContainer, node);
+      toggleEmptyState(guidesContainer);
     });
 
     guidesContainer.addEventListener('click', (e) => {
@@ -282,10 +549,11 @@ export const handleTourForm = () => {
       if (!btn) return;
       const item = btn.closest('.guide-item');
       if (item) item.remove();
+      toggleEmptyState(guidesContainer);
     });
   }
 
-  /* ----- Submit form ----- */
+/* ----- Submit form ----- */
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -302,7 +570,6 @@ export const handleTourForm = () => {
       const duration = getVal('#duration');
       const maxGroupSize = getVal('#maxGroupSize');
       const price = getVal('#price');
-      const priceDiscount = getVal('#priceDiscount');
       const summary = getVal('#summary');
       const description = getVal('#description');
       const parsedMaxGroupSize = Number(maxGroupSize);
@@ -314,7 +581,6 @@ export const handleTourForm = () => {
       if (duration) fd.set('duration', duration);
       if (maxGroupSize) fd.set('maxGroupSize', maxGroupSize);
       if (price) fd.set('price', price);
-      if (priceDiscount) fd.set('priceDiscount', priceDiscount);
       if (summary) fd.set('summary', summary);
       if (description) fd.set('description', description);
 
@@ -338,16 +604,28 @@ export const handleTourForm = () => {
         fd.set('startLocation', JSON.stringify(startLocation));
       }
 
-      // IMAGES
-      const imageCoverInput = document.getElementById('imageCover');
-      if (imageCoverInput && imageCoverInput.files.length > 0) {
-        fd.set('imageCover', imageCoverInput.files[0]);
+      // IMAGES + COVER (compressed)
+      const coverCandidate =
+        pendingCoverFile ||
+        (imageCoverInput &&
+          imageCoverInput.files &&
+          imageCoverInput.files.length > 0 &&
+          imageCoverInput.files[0]);
+      if (coverCandidate) {
+        const compressedCover = await compressImage(coverCandidate);
+        fd.set('imageCover', compressedCover);
       }
-      const imagesInput = document.getElementById('images');
-      if (imagesInput && imagesInput.files.length > 0) {
-        for (let i = 0; i < imagesInput.files.length; i++) {
-          fd.append('images', imagesInput.files[i]);
-        }
+      const galleryFiles = getGalleryFiles();
+      if (galleryFiles.length > maxGalleryImages) {
+        showAlert(
+          'info',
+          `Chỉ sử dụng ${maxGalleryImages} ảnh đầu tiên trong danh sách.`
+        );
+      }
+      const limitedGallery = galleryFiles.slice(0, maxGalleryImages);
+      for (const file of limitedGallery) {
+        const compressed = await compressImage(file);
+        fd.append('images', compressed);
       }
 
       // LOCATIONS (JSON string array)
@@ -430,7 +708,7 @@ export const handleTourForm = () => {
       showAlert('error', err?.message || 'Đã xảy ra lỗi khi lưu tour');
     } finally {
       if (saveBtn) {
-        saveBtn.textContent = 'Lưu';
+        saveBtn.textContent = 'Lưu tour';
         saveBtn.disabled = false;
       }
     }

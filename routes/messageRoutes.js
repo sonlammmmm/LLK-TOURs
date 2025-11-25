@@ -8,7 +8,11 @@ const router = express.Router();
 router.use(authController.protect);
 
 // API: Lấy lịch sử chat giữa admin và user
-router.get('/history/:userId', messageController.getChatHistory);
+router.get(
+  '/history/:userId',
+  authController.restrictTo('admin'),
+  messageController.getChatHistory
+);
 
 // API: Lấy danh sách user có tin nhắn (cho admin, có phân trang)
 router.get(

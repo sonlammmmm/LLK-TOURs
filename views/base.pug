@@ -6,11 +6,8 @@ html
       meta(name='viewport' content='width=device-width, initial-scale=1.0')
       link(rel='stylesheet' href='/css/style.css')
       link(rel='stylesheet' href='/css/userPortal.css')
-      link(rel='stylesheet' href='/css/userManagement.css')
-      link(rel='stylesheet' href='/css/bookingManagement.css')
       link(rel='stylesheet' href='/css/bookingDetail.css')
       link(rel='stylesheet' href='/css/bookingForm.css')
-      link(rel='stylesheet' href='/css/reviewManagement.css')
       link(rel='stylesheet' href='/css/bookingSuccess.css')
       link(rel='stylesheet' href='/css/dashboard.css')
       link(rel='stylesheet' href='/css/admin.css')
@@ -45,6 +42,7 @@ html
     script(src='https://cdn.jsdelivr.net/npm/chart.js')
     script.
       window.STRIPE_PUBLIC_KEY = !{JSON.stringify(stripePublicKey || '')};
+      window.GOOGLE_CLIENT_ID = !{JSON.stringify(googleClientId || '')};
     script(src='/dist/index.js')
     
     // ========== SOCKET.IO & CHAT SCRIPTS ==========

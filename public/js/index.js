@@ -1,6 +1,6 @@
 /* eslint-disable */
 import "@babel/polyfill"
-import { login, logout } from "./login"
+import { login, logout, initGoogleLogin } from "./login"
 import { updateSettings } from "./updateSettings"
 import { signup } from "./signup"
 import { bookTour } from "./stripe"
@@ -54,13 +54,15 @@ const serviceTable = document.querySelector(".service-table")
 initFileInputs()
 
 // DELEGATION
-if (loginForm)
+if (loginForm) {
+  initGoogleLogin()
   loginForm.addEventListener("submit", (e) => {
     e.preventDefault()
     const email = document.getElementById("email").value
     const password = document.getElementById("password").value
     login(email, password)
   })
+}
 
 if (signupForm)
   signupForm.addEventListener("submit", (e) => {
@@ -297,6 +299,89 @@ if (document.querySelector(".billing-list")) {
 if (document.querySelector(".reviews-list")) {
   initMyReviews()
 }
+
+const formatAdminCountText = (visible, total) =>
+  `Đang hiển thị <strong>${visible}</strong> trên tổng số <strong>${total}</strong>`
+
+const formatAdminEmptyText = (term, fallback) =>
+  term ? `Không tìm thấy kết quả cho "${term}".` : fallback
+
+const initAdminCollections = () => {
+  const panels = document.querySelectorAll("[data-collection]")
+
+  panels.forEach((panel) => {
+    const itemSelector = panel.dataset.collection
+    if (!itemSelector) return
+    const items = Array.from(panel.querySelectorAll(itemSelector))
+    if (!items.length) return
+
+    const searchInput = panel.querySelector("[data-collection-search]")
+    const filterControls = panel.querySelectorAll("[data-collection-filter]")
+    const counter = panel.querySelector(".count-display")
+    const noDataMessage = panel.querySelector(".no-data-message")
+    const totalCount = items.length
+    const defaultEmptyText = noDataMessage
+      ? noDataMessage.dataset.defaultText || noDataMessage.textContent.trim()
+      : ""
+
+    if (noDataMessage && !noDataMessage.dataset.defaultText) {
+      noDataMessage.dataset.defaultText = defaultEmptyText
+    }
+
+    const applyFilters = () => {
+      const searchRaw = searchInput ? searchInput.value.trim() : ""
+      const term = searchRaw.toLowerCase()
+      let visibleCount = 0
+
+      items.forEach((item) => {
+        const searchContent = item.dataset.search || ""
+        let matchesSearch = !term || searchContent.includes(term)
+        let matchesFilters = true
+
+        filterControls.forEach((control) => {
+          if (!matchesFilters) return
+          const field = control.dataset.filterField
+          const value = control.value
+          if (!field || !value) return
+          const datasetValue = item.dataset[field] || ""
+          matchesFilters = datasetValue === value
+        })
+
+        const shouldShow = matchesSearch && matchesFilters
+        item.style.display = shouldShow ? "" : "none"
+        if (shouldShow) visibleCount += 1
+      })
+
+      if (counter) {
+        counter.innerHTML = formatAdminCountText(visibleCount, totalCount)
+      }
+
+      if (noDataMessage) {
+        const fallbackText = noDataMessage.dataset.defaultText || defaultEmptyText
+
+        if (visibleCount === 0) {
+          noDataMessage.textContent = formatAdminEmptyText(searchRaw, fallbackText)
+          noDataMessage.classList.remove("hidden")
+        } else {
+          noDataMessage.textContent = fallbackText
+          noDataMessage.classList.add("hidden")
+        }
+      }
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener("input", applyFilters)
+    }
+
+    filterControls.forEach((control) => {
+      control.addEventListener("change", applyFilters)
+    })
+
+    applyFilters()
+  })
+}
+
+initAdminCollections()
 
 // Thêm code để ẩn/hiện nút đặt tour cố định
 document.addEventListener('DOMContentLoaded', function() {

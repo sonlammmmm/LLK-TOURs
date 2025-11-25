@@ -104,6 +104,11 @@ const bookingSchema = new mongoose.Schema({
       enum: ['percent', 'fixed']
     },
     discountValue: Number
+  },
+  softLock: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'BookingHold',
+    default: null
   }
 });
 
@@ -111,10 +116,12 @@ bookingSchema.index({ tour: 1 });
 bookingSchema.index({ user: 1 });
 // ✅ THÊM INDEX CHO WEBHOOK QUERY
 bookingSchema.index({ paymentMethod: 1, providerSessionId: 1 });
+bookingSchema.index({ softLock: 1 });
 
 // MIDDLEWARE: Giảm slot khi tạo booking
 bookingSchema.post('save', async doc => {
   try {
+    if (doc.softLock) return;
     const tour = await Tour.findById(doc.tour);
     if (tour) {
       await tour.decreaseSlots(doc.startDate, doc.participants);

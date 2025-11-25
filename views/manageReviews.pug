@@ -6,23 +6,57 @@ block adminContent
       h1.llk-admin-topbar__title Quản lý đánh giá
       p.llk-admin-topbar__subtitle Giám sát phản hồi khách hàng cho từng tour.
 
-  section.llk-admin-panel
-    .llk-admin-panel__toolbar
-      input.llk-admin-panel__search(type='text', placeholder='Tìm kiếm đánh giá...')
-      select.llk-admin-panel__filter
-        option(value='') Tất cả đánh giá
-        option(value='5') 5 sao
-        option(value='4') 4 sao
-        option(value='3') 3 sao
-        option(value='2') 2 sao
-        option(value='1') 1 sao
+  section.llk-admin-panel(
+    data-collection='.review-management__item'
+  )
+    - const reviewList = Array.isArray(reviews) ? reviews : [];
+    - const totalReviews = reviewList.length;
+    - const positiveReviews = reviewList.filter((r) => r.rating >= 4).length;
+    - const averageRating = totalReviews ? (reviewList.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1) : '0.0';
 
-    if reviews.length === 0
+    .llk-admin-panel__stats
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Tổng đánh giá
+        strong.llk-admin-stat-card__value #{totalReviews}
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Từ 4★ trở lên
+        strong.llk-admin-stat-card__value #{positiveReviews}
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Điểm trung bình
+        strong.llk-admin-stat-card__value #{averageRating}
+
+    if totalReviews > 0
+      .llk-admin-panel__toolbar
+        input.llk-admin-panel__search.search-input(
+          type='text'
+          placeholder='Tìm kiếm đánh giá...'
+          aria-label='Tìm kiếm đánh giá'
+          data-collection-search
+        )
+        select.llk-admin-panel__filter.filter-rating(
+          data-collection-filter
+          data-filter-field='rating'
+          aria-label='Lọc theo số sao'
+        )
+          option(value='') Tất cả đánh giá
+          option(value='5') 5 sao
+          option(value='4') 4 sao
+          option(value='3') 3 sao
+          option(value='2') 2 sao
+          option(value='1') 1 sao
+        p.count-display
+      p.no-data-message.llk-admin-empty.hidden(data-default-text='Không tìm thấy đánh giá phù hợp.') Không tìm thấy đánh giá phù hợp.
+
+    if totalReviews === 0
       p.llk-admin-empty Không có đánh giá nào.
     else
-      .review-management__list
-        each review in reviews
-          .review-management__item
+      .llk-admin-card-grid.review-management__list
+        each review in reviewList
+          - const searchText = `${review.user.name} ${review.tour.name} ${review.review}`.toLowerCase();
+          article.llk-admin-entity-card.review-management__item(
+            data-rating=review.rating
+            data-search=searchText
+          )
             .review-management__info
               .review-management__user
                 img.review-management__user-img(src=`/img/users/${review.user.photo}`, alt=`${review.user.name}`)
@@ -52,10 +86,10 @@ block adminContent
         input#review-id(type='hidden')
         .form__group
           label.form__label(for='review-text') Nội dung đánh giá
-          textarea#review-text.form__input(rows='5', required)
+          textarea#review-text.form__textarea(rows='6', required)
         .form__group
           label.form__label(for='review-rating') Xếp hạng
-          select#review-rating.form__input(required)
+          select#review-rating.form__select(required)
             option(value='5') 5 sao
             option(value='4') 4 sao
             option(value='3') 3 sao
@@ -65,4 +99,4 @@ block adminContent
           button.btn.btn--small.btn--green.btn-save-review Lưu
 
 block append scripts
-  script(src="/js/reviewManagement.js", type="module")
+  script(src='/js/reviewManagement.js', type='module')

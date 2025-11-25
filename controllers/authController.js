@@ -1,15 +1,22 @@
 const crypto = require('crypto');
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const Email = require('../utils/email');
 
+const googleClient = process.env.GOOGLE_CLIENT_ID
+  ? new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+  : null;
+
 const signToken = id =>
   jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN
   });
+
+const generateRandomPassword = () => crypto.randomBytes(32).toString('hex');
 
 const createSendToken = (user, statusCode, req, res) => {
   const token = signToken(user._id);
@@ -66,6 +73,75 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, req, res);
 });
 
+exports.googleLogin = catchAsync(async (req, res, next) => {
+  if (!googleClient || !process.env.GOOGLE_CLIENT_ID) {
+    return next(
+      new AppError('Đăng nhập Google chưa được cấu hình trên server.', 500)
+    );
+  }
+
+  const { credential } = req.body;
+  if (!credential) {
+    return next(new AppError('Thiếu mã xác thực Google.', 400));
+  }
+
+  let payload;
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+    payload = ticket.getPayload();
+  } catch (err) {
+    console.error('Google login error:', err);
+    return next(
+      new AppError('Xác thực Google không hợp lệ hoặc đã hết hạn.', 401)
+    );
+  }
+
+  const email = payload?.email;
+  const googleId = payload?.sub;
+  const name = payload?.name || (email ? email.split('@')[0] : '');
+
+  if (!email) {
+    return next(
+      new AppError('Google không trả về email hợp lệ. Vui lòng thử lại.', 400)
+    );
+  }
+
+  let user = await User.findOne({ email }).select('+password');
+
+  if (!user) {
+    const tempPassword = generateRandomPassword();
+    user = await User.create({
+      name: name || email,
+      email,
+      googleId,
+      authProvider: 'google',
+      password: tempPassword,
+      passwordConfirm: tempPassword
+    });
+  } else {
+    let shouldPersist = false;
+
+    if (!user.googleId && googleId) {
+      user.googleId = googleId;
+      shouldPersist = true;
+    }
+
+    if (user.authProvider !== 'google') {
+      user.authProvider = 'google';
+      shouldPersist = true;
+    }
+
+    if (shouldPersist) {
+      await user.save({ validateBeforeSave: false });
+    }
+  }
+
+  createSendToken(user, 200, req, res);
+});
+
 exports.logout = (req, res) => {
   res.cookie('jwt', 'loggedout', {
     expires: new Date(Date.now() + 10 * 1000),
@@ -75,8 +151,6 @@ exports.logout = (req, res) => {
 };
 
 exports.protect = catchAsync(async (req, res, next) => {
-  console.log('🔍 COOKIE JWT:', req.cookies.jwt);
-  console.log('🔍 AUTH HEADER:', req.headers.authorization);
   // 1) Lấy token và kiểm tra xem nó có tồn tại không
   let token;
   if (

@@ -8,11 +8,9 @@
 .booking-detail__section {
   margin-bottom: 2.5rem;
   padding-bottom: 2rem;
-  border-bottom: 1px solid #ddd;
 }
 
 .booking-detail__section:last-child {
-  border-bottom: none;
   margin-bottom: 0;
   padding-bottom: 0;
 }

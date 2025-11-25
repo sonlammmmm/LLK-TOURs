@@ -6,6 +6,14 @@ const factory = require('./handlerFactory');
 const AppError = require('../utils/appError');
 const { recordPromotionUsage } = require('../utils/promotionEngine');
 const { buildBookingFinancials } = require('../utils/bookingPricing');
+const {
+  acquireSoftLock,
+  releaseSoftLock,
+  linkSessionToSoftLock,
+  findActiveSoftLockBySession,
+  confirmSoftLock,
+  getSoftLockById
+} = require('../utils/bookingSoftLock');
 
 const bookingSessionPopulate = [
   { path: 'tour', select: 'name startDates duration' },
@@ -87,6 +95,26 @@ const createBookingFromStripeSession = async sessionId => {
   const participants =
     Number.isNaN(participantsRaw) || participantsRaw < 1 ? 1 : participantsRaw;
 
+  let softLockDoc = null;
+  try {
+    if (metadata.softLockId) {
+      softLockDoc = await getSoftLockById(metadata.softLockId);
+    }
+    if (!softLockDoc && session.id) {
+      softLockDoc = await findActiveSoftLockBySession(session.id);
+    }
+    if (
+      softLockDoc &&
+      (softLockDoc.user?.toString() !== metadata.userId ||
+        softLockDoc.tour?.toString() !== metadata.tourId)
+    ) {
+      softLockDoc = null;
+    }
+  } catch (lockErr) {
+    console.error('[SoftLock] Lookup error:', lockErr.message);
+    softLockDoc = null;
+  }
+
   const bookingPayload = {
     tour: metadata.tourId,
     user: metadata.userId,
@@ -102,7 +130,8 @@ const createBookingFromStripeSession = async sessionId => {
     servicesTotal: Number(metadata.servicesTotal || 0),
     subtotal: Number(metadata.subtotal || 0),
     discountAmount: Number(metadata.discountAmount || 0),
-    promotionSnapshot: buildPromotionSnapshot(metadata)
+    promotionSnapshot: buildPromotionSnapshot(metadata),
+    softLock: softLockDoc?._id
   };
 
   let booking;
@@ -112,6 +141,9 @@ const createBookingFromStripeSession = async sessionId => {
     booking = await Booking.create(bookingPayload);
     created = true;
   } catch (err) {
+    if (softLockDoc && err.code !== 11000) {
+      await releaseSoftLock(softLockDoc, 'booking-error');
+    }
     if (err.code === 11000) {
       booking = await findBookingBySessionId(session.id);
     } else {
@@ -127,6 +159,10 @@ const createBookingFromStripeSession = async sessionId => {
       discountAmount: Number(metadata.discountAmount || 0),
       code: metadata.promotionCode || ''
     });
+  }
+
+  if (created && softLockDoc) {
+    await confirmSoftLock(softLockDoc._id, booking?._id);
   }
 
   return booking;
@@ -177,7 +213,14 @@ const buildLineItems = (tour, pricing, req) => {
   return items;
 };
 
-const buildSessionMetadata = (req, tour, pricing, startKey, platform) => ({
+const buildSessionMetadata = (
+  req,
+  tour,
+  pricing,
+  startKey,
+  platform,
+  extras = {}
+) => ({
   userId: req.user.id.toString(),
   tourId: tour.id.toString(),
   participants: `${pricing.participants}`,
@@ -196,7 +239,8 @@ const buildSessionMetadata = (req, tour, pricing, startKey, platform) => ({
   promotionType: pricing.promotion?.discountType || '',
   promotionValue: `${pricing.promotion?.discountValue || ''}`,
   promotionAudience: pricing.promotion?.audience || '',
-  promotionPerUserLimit: `${pricing.promotionPerUserLimit || ''}`
+  promotionPerUserLimit: `${pricing.promotionPerUserLimit || ''}`,
+  softLockId: extras.softLockId || ''
 });
 
 const createDiscountCoupon = async discount => {
@@ -305,6 +349,39 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
     services: pricing.servicesPayload.length
   });
 
+  const servicesSnapshot = Array.isArray(selectedServices)
+    ? selectedServices
+    : [];
+  let softLockRecord = null;
+  try {
+    const lockResult = await acquireSoftLock({
+      tourId: tour.id,
+      userId: req.user.id,
+      startDate,
+      participants,
+      platform,
+      servicesSnapshot
+    });
+    if (!lockResult?.success) {
+      return next(
+        new AppError(
+          lockResult?.message ||
+            'Suất của lịch khởi hành này đang được giữ, vui lòng thử lại ngay sau đây.',
+          409
+        )
+      );
+    }
+    softLockRecord = lockResult.hold;
+  } catch (lockErr) {
+    console.error('[SoftLock] Acquire error:', lockErr.message);
+    return next(
+      new AppError(
+        'Không thể giữ chỗ tạm thời cho yêu cầu này. Vui lòng thử lại sau ít phút.',
+        409
+      )
+    );
+  }
+
   const successUrl =
     platform === 'web'
       ? `${process.env.PUBLIC_SUCCESS_URL}?status=success&sid={CHECKOUT_SESSION_ID}`
@@ -317,7 +394,9 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
 
   const lineItems = buildLineItems(tour, pricing, req);
   const couponId = await createDiscountCoupon(pricing.discountAmount);
-  const metadata = buildSessionMetadata(req, tour, pricing, startKey, platform);
+  const metadata = buildSessionMetadata(req, tour, pricing, startKey, platform, {
+    softLockId: softLockRecord?.id || ''
+  });
 
   let session;
   try {
@@ -334,6 +413,9 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
     });
     console.log('[Stripe] Session object:', session);
   } catch (err) {
+    if (softLockRecord) {
+      await releaseSoftLock(softLockRecord, 'stripe-session-error');
+    }
     console.error('[Stripe] Create session failed', {
       message: err.message,
       statusCode: err.statusCode,
@@ -342,6 +424,14 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
     return next(
       new AppError(err.message || 'Stripe error', err.statusCode || 500)
     );
+  }
+
+  if (softLockRecord && session?.id) {
+    try {
+      await linkSessionToSoftLock(softLockRecord.id, session.id);
+    } catch (linkErr) {
+      console.error('[SoftLock] Unable to attach session:', linkErr.message);
+    }
   }
 
   console.log(`[Stripe] Session created ${session.id}`);
@@ -355,12 +445,33 @@ exports.createBookingCheckout = catchAsync(async (req, res, next) => {
 
   if (!tour || !user || !price || !startDate) return next();
 
+  if (!req.user || req.user.id.toString() !== user.toString()) {
+    return next(
+      new AppError('Bạn không được phép xác nhận booking cho người khác.', 403)
+    );
+  }
+
+  const normalizedPrice = Number(price);
+  if (!Number.isFinite(normalizedPrice) || normalizedPrice <= 0) {
+    return next(new AppError('Giá booking không hợp lệ.', 400));
+  }
+
+  const normalizedParticipants =
+    Number.parseInt(participants, 10) > 0
+      ? Number.parseInt(participants, 10)
+      : 1;
+
+  const parsedStartDate = new Date(startDate);
+  if (Number.isNaN(parsedStartDate.getTime())) {
+    return next(new AppError('Ngày khởi hành không hợp lệ.', 400));
+  }
+
   const newBooking = await Booking.create({
     tour,
     user,
-    price,
-    participants: participants || 1,
-    startDate: new Date(startDate)
+    price: normalizedPrice,
+    participants: normalizedParticipants,
+    startDate: parsedStartDate
   });
 
   return res.redirect(`/booking-success?booking=${newBooking._id}`);
@@ -426,6 +537,18 @@ exports.getByStripeSession = catchAsync(async (req, res, next) => {
 
   if (!booking) {
     return res.status(200).json({ status: 'pending' });
+  }
+
+  const bookingUserId =
+    booking.user && booking.user.id
+      ? booking.user.id.toString()
+      : booking.user?.toString();
+
+  if (bookingUserId && bookingUserId !== req.user.id.toString()) {
+    return res.status(403).json({
+      status: 'forbidden',
+      message: 'Bạn không thể truy cập booking của người khác.'
+    });
   }
 
   res.status(200).json({ status: 'success', data: booking });

@@ -6,26 +6,66 @@ block adminContent
       h1.llk-admin-topbar__title Quản lý người dùng
       p.llk-admin-topbar__subtitle Theo dõi trạng thái và vai trò của tài khoản.
 
-  section.llk-admin-panel
-    .llk-admin-panel__toolbar
-      input.llk-admin-panel__search(type='text', placeholder='Tìm kiếm người dùng...')
-      select.llk-admin-panel__filter
-        option(value='') Tất cả vai trò
-        option(value='admin') Admin
-        option(value='lead-guide') Lead Guide
-        option(value='guide') Guide
-        option(value='user') User
-      select.llk-admin-panel__filter
-        option(value='') Tất cả trạng thái
-        option(value='active') Hoạt động
-        option(value='inactive') Không hoạt động
+  section.llk-admin-panel(
+    data-collection='.user-management__item'
+  )
+    - const userList = Array.isArray(users) ? users : [];
+    - const totalUsers = userList.length;
+    - const activeUsers = userList.filter((u) => u.active !== false).length;
+    - const guideUsers = userList.filter((u) => ['guide', 'lead-guide'].includes(u.role)).length;
 
-    if users.length === 0
+    .llk-admin-panel__stats
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Tổng người dùng
+        strong.llk-admin-stat-card__value #{totalUsers}
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Đang hoạt động
+        strong.llk-admin-stat-card__value #{activeUsers}
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Hướng dẫn viên
+        strong.llk-admin-stat-card__value #{guideUsers}
+
+    if totalUsers > 0
+      .llk-admin-panel__toolbar
+        input.llk-admin-panel__search.search-input(
+          type='text'
+          placeholder='Tìm kiếm người dùng...'
+          aria-label='Tìm kiếm người dùng'
+          data-collection-search
+        )
+        select.llk-admin-panel__filter.filter-role(
+          data-collection-filter
+          data-filter-field='role'
+          aria-label='Lọc theo vai trò'
+        )
+          option(value='') Tất cả vai trò
+          option(value='admin') Admin
+          option(value='lead-guide') Lead Guide
+          option(value='guide') Guide
+          option(value='user') User
+        select.llk-admin-panel__filter.filter-status(
+          data-collection-filter
+          data-filter-field='status'
+          aria-label='Lọc theo trạng thái'
+        )
+          option(value='') Tất cả trạng thái
+          option(value='active') Hoạt động
+          option(value='inactive') Không hoạt động
+        p.count-display
+      p.no-data-message.llk-admin-empty.hidden(data-default-text='Không tìm thấy người dùng phù hợp.') Không tìm thấy người dùng phù hợp.
+
+    if totalUsers === 0
       p.llk-admin-empty Không có người dùng nào.
     else
-      .user-management__list
-        each user in users
-          .user-management__item
+      .llk-admin-card-grid.user-management__list
+        each user in userList
+          - const isActive = user.active === undefined || user.active;
+          - const searchText = `${user.name} ${user.email}`.toLowerCase();
+          article.llk-admin-entity-card.user-management__item(
+            data-role=user.role
+            data-status=isActive ? 'active' : 'inactive'
+            data-search=searchText
+          )
             .user-management__info
               img.user-management__img(src=`/img/users/${user.photo}`, alt=`${user.name}`)
               .user-management__details
@@ -39,7 +79,7 @@ block adminContent
                     svg
                       use(xlink:href='/img/icons.svg#icon-briefcase')
                     span(class=`user-badge user-badge--${user.role}`)= user.role
-                  if user.active === undefined || user.active
+                  if isActive
                     span.user-management__status.user-management__status--active
                       svg
                         use(xlink:href='/img/icons.svg#icon-check')
@@ -51,10 +91,10 @@ block adminContent
                       | Không hoạt động
             .user-management__actions
               a.btn.btn--small.btn--blue(href=`/admin/users/${user.id}/edit`) Sửa
-              if user.active === undefined || user.active
+              if isActive
                 button.btn.btn--small.btn--red.btn-deactivate-user(data-user-id=`${user.id}`) Khóa ID
               else
                 button.btn.btn--small.btn--green.btn-activate-user(data-user-id=`${user.id}`) Kích hoạt
 
 block append scripts
-  script(src="/js/userManagement.js", type="module")
+  script(src='/js/userManagement.js', type='module')

@@ -1,6 +1,7 @@
 const Message = require('../models/messageModel');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
 
 // Trang admin chat
 exports.getAdminChatView = catchAsync(async (req, res) => {
@@ -93,8 +94,16 @@ exports.getUserChatView = catchAsync(async (req, res) => {
 });
 
 // API: lịch sử hội thoại của 1 user cụ thể (cho admin UI)
-exports.getChatHistory = catchAsync(async (req, res) => {
+exports.getChatHistory = catchAsync(async (req, res, next) => {
   const { userId } = req.params;
+  if (
+    req.user.role !== 'admin' &&
+    req.user._id.toString() !== userId.toString()
+  ) {
+    return next(
+      new AppError('Bạn không có quyền xem lịch sử chat của người khác.', 403)
+    );
+  }
   const messages = await Message.find({
     $or: [{ sender: userId }, { receiver: userId }]
   }).sort({ createdAt: 1 });

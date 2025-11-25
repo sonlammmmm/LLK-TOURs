@@ -900,6 +900,59 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   padding-top: 0.6rem;
   border-top: 1px dashed rgba(15, 23, 42, 0.12);
 }
+.invoice-page {
+  background: #f5f6fb;
+  min-height: 100vh;
+  padding: 9rem 1.5rem 3rem;
+}
+
+.invoice-header {
+  max-width: 1100px;
+  margin: 0 auto 0.75rem;
+  padding: 0.85rem 1.25rem;
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 20px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.invoice-header__info {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.invoice-header__tag {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16rem;
+  color: #5b5f7a;
+}
+
+.invoice-header__title {
+  margin: 0;
+  font-size: clamp(1.4rem, 2vw, 1.9rem);
+  color: #0f172a;
+}
+
+.invoice-subtitle {
+  font-size: 0.95rem;
+  color: #556077;
+}
+
+.invoice-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-left: auto;
+}
+
 .invoice-wrapper {
   max-width: 1100px;
   margin: 0 auto;
@@ -911,6 +964,26 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+}
+
+.invoice-page .invoice-wrapper {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.invoice-wrapper .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+}
+
+.invoice-wrapper .btn svg {
+  width: 2rem;
+  height: 2rem;
+  fill: currentColor;
 }
 
 .invoice-card {

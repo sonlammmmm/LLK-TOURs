@@ -6,7 +6,10 @@ block adminContent
       h1.llk-admin-topbar__title Chi tiết đặt tour
       p.llk-admin-topbar__subtitle Mã đặt tour: ##{booking.id.slice(-8).toUpperCase()}
     .llk-admin-topbar__right
-      a.btn.btn--ghost(href='/admin/bookings') ← Quay lại danh sách
+      a.btn.btn--ghost(href='/admin/bookings')
+        svg(width='16', height='16')
+          use(xlink:href='/img/icons.svg#icon-arrow-left-circle')
+        |  Quay lại danh sách
 
   section.llk-admin-panel
     .llk-admin-detail-grid

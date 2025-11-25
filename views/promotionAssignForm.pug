@@ -3,16 +3,19 @@ extends adminLayout
 block adminContent
   .llk-admin-topbar
     .llk-admin-topbar__left
-      h1.llk-admin-topbar__title Gắn mã cho user
+      h1.llk-admin-topbar__title Gán mã cho người dùng
       p.llk-admin-topbar__subtitle Phát hành mã và giới hạn lượt theo từng tài khoản.
     .llk-admin-topbar__right
-      a.btn.btn--ghost(href='/admin/promotions') Quay lại danh sách khuyến mãi
+      a.btn.btn--ghost(href='/admin/promotions')
+        svg(width='16', height='16')
+          use(xlink:href='/img/icons.svg#icon-arrow-left-circle')
+        |  Quay lại danh sách
 
   section.llk-admin-panel
     .llk-admin-panel__header
       .llk-admin-panel__header-title
-        h2.heading-secondary Gắn mã #{promotion.code}
-        p.llk-admin-panel__header-subtitle #{promotion.name}
+        h2.heading-secondary Gán mã #{promotion.code}
+        p.llk-admin-panel__header-subtitle= promotion.name
       .llk-admin-panel__stats
         .llk-admin-stat-card
           span.llk-admin-stat-card__label Loại ưu đãi
@@ -23,8 +26,7 @@ block adminContent
               | #{promotion.discountValue.toLocaleString('vi-VN')} VND
         .llk-admin-stat-card
           span.llk-admin-stat-card__label Trạng thái
-          strong.llk-admin-stat-card__value
-            = promotion.status === 'active' ? 'Đang hoạt động' : 'Tạm ngưng'
+          strong.llk-admin-stat-card__value= promotion.status === 'active' ? 'Đang hoạt động' : 'Tạm ngưng'
 
     form.form.form-assign-promotion
       input(type='hidden', id='assign-promotion-id', value=promotion.id)
@@ -34,7 +36,7 @@ block adminContent
           .form__group
             label.form__label(for='assign-user') Người dùng
             select#assign-user.form__select(name='assign-user' multiple size='6')
-              option(value='' disabled selected)= '-- Chọn user --'
+              option(value='' disabled selected) -- Chọn user --
               each user in users
                 option(value=user.id)= `${user.name} (${user.email})`
             small.form__hint Giữ Ctrl (Cmd trên Mac) để chọn nhiều người cùng lúc.
@@ -50,4 +52,4 @@ block adminContent
             label.form__label(for='assign-note') Ghi chú
             textarea#assign-note.form__textarea(rows='3')
           .form__group
-            button.btn.btn--green.btn-assign-promotion(type='submit') Gắn mã cho user
+            button.btn.btn--green.btn-assign-promotion(type='submit') Gán mã cho user

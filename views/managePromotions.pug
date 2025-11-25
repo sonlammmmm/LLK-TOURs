@@ -4,21 +4,78 @@ block adminContent
   .llk-admin-topbar
     .llk-admin-topbar__left
       h1.llk-admin-topbar__title Quản lý khuyến mãi
-      p.llk-admin-topbar__subtitle Theo dõi mã giảm giá và ưu đãi đang chạy.
+      p.llk-admin-topbar__subtitle Theo dõi các mã giảm giá và ưu đãi đang chạy.
     .llk-admin-topbar__right
-      a.btn.btn--small.btn--green(href='/admin/promotions/new') Tạo khuyến mãi mới
+      a.btn.btn--small.btn--green(href='/admin/promotions/new')
+        svg(width='16', height='16')
+          use(xlink:href='/img/icons.svg#icon-plus-circle')
+        |  Tạo khuyến mãi mới
 
-  section.llk-admin-panel
-    if !promotions || promotions.length === 0
+  section.llk-admin-panel(
+    data-collection='.promo-card'
+  )
+    - const promoList = Array.isArray(promotions) ? promotions : [];
+    - const totalPromotions = promoList.length;
+    - const activePromotions = promoList.filter((p) => p.status === 'active').length;
+    - const unlimitedPromotions = promoList.filter((p) => !p.usageLimit).length;
+
+    .llk-admin-panel__stats.llk-admin-panel__stats--wide
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Tổng chiến dịch
+        strong.llk-admin-stat-card__value #{totalPromotions}
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Đang hoạt động
+        strong.llk-admin-stat-card__value #{activePromotions}
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Không giới hạn
+        strong.llk-admin-stat-card__value #{unlimitedPromotions}
+
+    if totalPromotions > 0
+      .llk-admin-panel__toolbar
+        input.llk-admin-panel__search.search-input(
+          type='text'
+          placeholder='Tìm kiếm khuyến mãi...'
+          aria-label='Tìm kiếm khuyến mãi'
+          data-collection-search
+        )
+        select.llk-admin-panel__filter.filter-status(
+          data-collection-filter
+          data-filter-field='status'
+          aria-label='Lọc theo trạng thái'
+        )
+          option(value='') Tất cả trạng thái
+          option(value='active') Đang hoạt động
+          option(value='inactive') Đã dừng
+        select.llk-admin-panel__filter(
+          data-collection-filter
+          data-filter-field='discount'
+          aria-label='Lọc theo loại ưu đãi'
+        )
+          option(value='') Tất cả loại ưu đãi
+          option(value='percent') Giảm theo %
+          option(value='fixed') Giảm theo số tiền
+        p.count-display
+          | Đang hiển thị 
+          strong #{totalPromotions}
+          |  trên tổng số 
+          strong #{totalPromotions}
+      p.no-data-message.llk-admin-empty.hidden Không tìm thấy khuyến mãi phù hợp.
+
+    if totalPromotions === 0
       p.llk-admin-empty Chưa có chương trình khuyến mãi nào.
     else
-      .promo-card-grid
-        each promo in promotions
+      .llk-admin-card-grid
+        each promo in promoList
           - const isActive = promo.status === 'active';
           - const discountLabel = promo.discountType === 'percent' ? `${promo.discountValue}%` : `${promo.discountValue.toLocaleString('vi-VN')} VND`;
           - const startLabel = promo.startDate ? new Date(promo.startDate).toLocaleDateString('vi-VN') : 'Không xác định';
           - const endLabel = promo.endDate ? new Date(promo.endDate).toLocaleDateString('vi-VN') : 'Không giới hạn';
-          article.promo-card
+          - const searchText = `${promo.name} ${promo.code} ${promo.description || ''}`.toLowerCase();
+          article.promo-card(
+            data-status=promo.status
+            data-discount=promo.discountType
+            data-search=searchText
+          )
             .promo-card__head
               .promo-card__title
                 span.promo-card__code= promo.code
@@ -40,8 +97,5 @@ block adminContent
                 |  #{promo.usageLimit ? promo.usageLimit : 'Không giới hạn'} lượt
             .promo-card__actions
               a.btn.btn--small.btn--blue(href=`/admin/promotions/${promo.id}/edit`) Chỉnh sửa
-              a.btn.btn--small.btn--orange(href=`/admin/promotions/${promo.id}/assign`) Gán mã
+              a.btn.btn--small.btn--green(href=`/admin/promotions/${promo.id}/assign`) Gán mã
               button.btn.btn--small.btn--red.btn-delete-promotion(data-promo-id=`${promo.id}`) Xóa
-
-
-

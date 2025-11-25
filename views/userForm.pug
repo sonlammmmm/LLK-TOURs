@@ -6,7 +6,10 @@ block adminContent
       h1.llk-admin-topbar__title= title
       p.llk-admin-topbar__subtitle Quản lý thông tin và vai trò tài khoản.
     .llk-admin-topbar__right
-      a.btn.btn--ghost(href='/admin/users') ← Quay lại danh sách
+      a.btn.btn--ghost(href='/admin/users')
+        svg(width='16', height='16')
+          use(xlink:href='/img/icons.svg#icon-arrow-left-circle')
+        |  Quay lại danh sách
 
   section.llk-admin-panel
     form.form.form-user(enctype='multipart/form-data')
@@ -19,7 +22,7 @@ block adminContent
             input#name.form__input(type='text', value=`${user ? user.name : ''}`, required)
           .form__group
             label.form__label(for='email') Email
-            input#email.form__input(type='email', value=`${user ? user.email : ''}`, required)
+            input#email.form__input(type='email', value=`${user ? user.email : ''}`, readonly, required)
           .form__group
             label.form__label(for='role') Vai trò
             select#role.form__input(required)
@@ -37,12 +40,50 @@ block adminContent
         .llk-admin-form-card
           h3.heading-tertiary Ảnh đại diện
           .form__group
+            - const currentPhoto = user && user.photo ? `/img/users/${user.photo}` : '/img/users/default.jpg';
             label.form__label(for='photo') Ảnh đại diện
-            if user && user.photo
-              .form__current-image
-                img(src=`/img/users/${user.photo}`, alt='Ảnh đại diện hiện tại')
-                p Ảnh đại diện hiện tại
+            .form__current-image
+              img#photo-preview(src=currentPhoto, alt='Ảnh đại diện', data-original=currentPhoto)
             input#photo.form__upload(type='file', accept='image/*')
             label(for='photo') Chọn ảnh đại diện
+            small.form__hint Định dạng JPG/PNG, dung lượng < 3MB.
       .form__group.right
         button.btn.btn--small.btn--green.btn-save-user= user ? 'Cập nhật' : 'Tạo mới'
+
+block append scripts
+  script.
+    (function () {
+      const photoInput = document.getElementById('photo');
+      const previewImg = document.getElementById('photo-preview');
+      if (!window.FileReader) return;
+      if (!photoInput || !previewImg) return;
+
+      const resetPreview = () => {
+        const original = previewImg.dataset.original;
+        if (original) previewImg.src = original;
+      };
+
+      const updatePreview = (file) => {
+        if (!file || !file.type.startsWith('image/')) {
+          resetPreview();
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          if (evt.target?.result) {
+            previewImg.src = evt.target.result;
+          }
+        };
+        reader.readAsDataURL(file);
+      };
+
+      photoInput.addEventListener('change', (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) {
+          resetPreview();
+          return;
+        }
+        updatePreview(file);
+      });
+    })();
