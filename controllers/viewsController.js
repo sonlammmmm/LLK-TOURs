@@ -60,7 +60,7 @@ const mapTourWithStartMeta = tour => {
   const nextStart = nextAvailable || fallbackStart;
   const hasAvailableStartDate = Boolean(nextAvailable);
   const showSoldOutBadge =
-    upcomingStartDates.length > 0 && !hasAvailableStartDate;
+    upcomingStartDates.length === 0 || !hasAvailableStartDate;
 
   return {
     ...tour,
@@ -69,6 +69,87 @@ const mapTourWithStartMeta = tour => {
     hasAvailableStartDate,
     showSoldOutBadge
   };
+};
+
+const normalizeText = value => {
+  if (value == null) return '';
+  let text = String(value);
+  if (typeof text.normalize === 'function') {
+    text = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+  return text
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'd')
+    .toLowerCase()
+    .trim();
+};
+
+const matchesSearchQuery = (tour, keyword) => {
+  if (!keyword) return true;
+  const normalizedKeyword = normalizeText(keyword);
+  if (!normalizedKeyword) return true;
+
+  const fields = [
+    tour.name,
+    tour.summary,
+    tour.description,
+    tour.slug,
+    tour.startLocation && tour.startLocation.description,
+    tour.startLocation && tour.startLocation.address
+  ];
+
+  if (Array.isArray(tour.locations)) {
+    tour.locations.forEach(location => {
+      if (!location) return;
+      fields.push(location.description, location.address);
+    });
+  }
+
+  return fields.some(value =>
+    normalizeText(value).includes(normalizedKeyword)
+  );
+};
+
+const toNumberOrZero = value => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const getCreatedTimestamp = tour => {
+  if (!tour || !tour.createdAt) return 0;
+  const createdDate = new Date(tour.createdAt);
+  return Number.isNaN(createdDate.getTime()) ? 0 : createdDate.getTime();
+};
+
+const sortComparators = {
+  'price-asc': (a, b) => toNumberOrZero(a.price) - toNumberOrZero(b.price),
+  'price-desc': (a, b) => toNumberOrZero(b.price) - toNumberOrZero(a.price),
+  'name-asc': (a, b) =>
+    (a.name || '').localeCompare(b.name || '', 'vi', { sensitivity: 'base' }),
+  'name-desc': (a, b) =>
+    (b.name || '').localeCompare(a.name || '', 'vi', { sensitivity: 'base' }),
+  'date-newest': (a, b) => getCreatedTimestamp(b) - getCreatedTimestamp(a),
+  'date-oldest': (a, b) => getCreatedTimestamp(a) - getCreatedTimestamp(b)
+};
+
+const ratingComparators = {
+  'rating-asc': (a, b) =>
+    toNumberOrZero(a.ratingsAverage) - toNumberOrZero(b.ratingsAverage),
+  'rating-desc': (a, b) =>
+    toNumberOrZero(b.ratingsAverage) - toNumberOrZero(a.ratingsAverage)
+};
+
+const sortByUpcomingStartAvailability = (a, b) => {
+  const aHas = Boolean(a.nextStart);
+  const bHas = Boolean(b.nextStart);
+  if (aHas === bHas) return 0;
+  return aHas ? -1 : 1;
+};
+
+const applySortComparator = (collection, comparator) => {
+  if (typeof comparator !== 'function') return false;
+  collection.sort(comparator);
+  return true;
 };
 
 exports.alerts = (req, res, next) => {
@@ -131,23 +212,15 @@ const hasStartDateOnOrAfter = (tour, targetDate) => {
 exports.getAllTours = catchAsync(async (req, res, next) => {
   const rawTours = await Tour.find().lean();
 
-  const filterLocations = Array.from(
-    new Set(
-      rawTours
-        .map(tour => tour.startLocation && tour.startLocation.description)
-        .filter(Boolean)
-    )
-  );
-
   const {
-    name = '',
-    startLocation = '',
     startDates = '',
     duration = '',
-    groupSize = '',
-    minPrice,
-    maxPrice
+    groupSize = ''
   } = req.query;
+  const searchQuery = req.query.search || req.query.name || '';
+  const ratingOrder = req.query.ratingOrder || '';
+  const sortKey = req.query.sort || '';
+  const { minPrice, maxPrice } = req.query;
 
   const parsedMin = parsePositiveNumber(minPrice) ?? 1000000;
   const parsedMax = parsePositiveNumber(maxPrice) ?? 50000000;
@@ -158,25 +231,7 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
     startDateFilter = null;
 
   const filteredTours = rawTours.filter(tour => {
-    if (name && !tour.name.toLowerCase().includes(name.toLowerCase())) {
-      return false;
-    }
-
-    if (
-      startLocation &&
-      !(
-        (tour.startLocation &&
-          tour.startLocation.description &&
-          tour.startLocation.description
-            .toLowerCase()
-            .includes(startLocation.toLowerCase())) ||
-        (tour.startLocation &&
-          tour.startLocation.address &&
-          tour.startLocation.address
-            .toLowerCase()
-            .includes(startLocation.toLowerCase()))
-      )
-    ) {
+    if (!matchesSearchQuery(tour, searchQuery)) {
       return false;
     }
 
@@ -196,27 +251,33 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
 
   const toursWithMeta = filteredTours.map(mapTourWithStartMeta);
 
-  toursWithMeta.sort((a, b) => {
-    const aHas = Boolean(a.nextStart);
-    const bHas = Boolean(b.nextStart);
-    if (aHas === bHas) return 0;
-    return aHas ? -1 : 1;
-  });
+  let sortApplied = applySortComparator(
+    toursWithMeta,
+    ratingComparators[ratingOrder]
+  );
+
+  if (!sortApplied) {
+    sortApplied = applySortComparator(toursWithMeta, sortComparators[sortKey]);
+  }
+
+  if (!sortApplied) {
+    toursWithMeta.sort(sortByUpcomingStartAvailability);
+  }
 
   const filters = {
-    name,
-    startLocation,
+    search: searchQuery,
     startDates,
     duration,
     groupSize,
     minPrice: finalMinPrice,
-    maxPrice: finalMaxPrice
+    maxPrice: finalMaxPrice,
+    ratingOrder,
+    sort: sortKey
   };
 
   res.status(200).render('all', {
     title: 'Tất cả chuyến đi',
     tours: toursWithMeta,
-    filterLocations,
     filters,
     noTours: toursWithMeta.length === 0
   });

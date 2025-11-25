@@ -228,24 +228,6 @@ block content
       if extraReviews.length
         button.tour-reviews__more(type='button' data-action='reviews-more') Xem thêm đánh giá
 
-  section.section-cta
-    .cta-modern
-      .cta-modern__copy
-        span.cta-modern__eyebrow Sẵn sàng khám phá
-        h2= `Chốt lịch tour "${tour.name}" ngay hôm nay`
-        p= `Chỉ từ ${tour.price.toLocaleString('vi-VN')} VNĐ cho ${tour.duration} ngày trải nghiệm cùng LLK Travel.`
-      .cta-modern__actions
-        if hasAvailableStart
-          if user && user.role === 'user'
-            a.btn.btn--green(href=`/book-tour/${tour._id}`) Đăng ký ngay
-          else
-            a.btn.btn--blue(href='/login') Đăng nhập để đặt tour
-        else
-          a.btn.btn--contact(href=userContactHref)
-            i.fas.fa-headset
-            span Liên hệ với admin
-        a.btn.btn--white(href='/all') Xem thêm tour khác
-
 block append scripts
   script.
     (() => {

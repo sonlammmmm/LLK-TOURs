@@ -6,11 +6,15 @@ block append head
 block content
   - const safeTours = Array.isArray(tours) ? tours : [];
   - const activeFilters = typeof filters === 'object' && filters ? filters : {};
-  - const heroNameValue = activeFilters.name || '';
-  - const heroStartDateValue = activeFilters.startDates || '';
-  - const heroLocationLabel = activeFilters.startLocation || 'Tất cả điểm khởi hành';
-  - const minPriceValue = activeFilters.minPrice || 1000000;
-  - const maxPriceValue = activeFilters.maxPrice || 50000000;
+  - const searchValue = activeFilters.search || '';
+  - const defaultMinPrice = 1000000;
+  - const defaultMaxPrice = 50000000;
+  - const minPriceValue = Number(activeFilters.minPrice) || defaultMinPrice;
+  - const maxPriceValue = Number(activeFilters.maxPrice) || defaultMaxPrice;
+  - const ratingValue = activeFilters.ratingOrder || '';
+  - const sortValue = activeFilters.sort || '';
+  - const sortOptions = [{ value: 'price-asc', label: 'Giá: Tăng dần' }, { value: 'price-desc', label: 'Giá: Giảm dần' }, { value: 'name-asc', label: 'Tên: A-Z' }, { value: 'name-desc', label: 'Tên: Z-A' }, { value: 'date-oldest', label: 'Cũ nhất' }, { value: 'date-newest', label: 'Mới nhất' }];
+  - const hasActiveFilters = Boolean(searchValue || activeFilters.duration || activeFilters.groupSize || ratingValue || minPriceValue !== defaultMinPrice || maxPriceValue !== defaultMaxPrice);
 
   section.all-hero
     .all-hero__inner
@@ -21,152 +25,274 @@ block content
         p.all-hero__note Chúng tôi hỗ trợ cá nhân hóa tuyến đi nếu bạn muốn kết hợp nhiều điểm đến.
   section.all-main
     .all-main__wrapper
-      aside.all-filters
-        form.all-filters__form(action='/all' method='GET')
-          h3 Lọc chuyến đi
-          .all-filters__section
-            label.all-filters__label(for='filterName') Tên tour
-            input#filterName(type='text' name='name' placeholder='VD: Hạ Long, Hà Nội' value=activeFilters.name)
-          .all-filters__section
-            label.all-filters__label(for='filterLocation') Khởi hành từ
-            select#filterLocation(name='startLocation')
-              option(value='') Tất cả
-              each location in filterLocations
-                option(
-                  value=location
-                  selected=activeFilters.startLocation === location
-                )= location
-          .all-filters__section
-            label.all-filters__label(for='filterDuration') Thời lượng
-            select#filterDuration(name='duration')
-              option(value='') Tất cả
-              option(value='2-4' selected=activeFilters.duration === '2-4') 2-4 ngày
-              option(value='5-7' selected=activeFilters.duration === '5-7') 5-7 ngày
-              option(value='8+' selected=activeFilters.duration === '8+') Từ 8 ngày
-          .all-filters__section
-            label.all-filters__label(for='filterGroup') Quy mô nhóm
-            select#filterGroup(name='groupSize')
-              option(value='') Tất cả
-              option(value='6-10' selected=activeFilters.groupSize === '6-10') 6-10 khách
-              option(value='11-20' selected=activeFilters.groupSize === '11-20') 11-20 khách
-              option(value='21+' selected=activeFilters.groupSize === '21+') Trên 20 khách
-          .all-filters__section
-            span.all-filters__label Giá tiền (VNĐ)
-            input#filterMinPrice(
-              type='range'
-              name='minPrice'
-              min='1000000'
-              max='50000000'
-              step='500000'
-              value=minPriceValue
-            )
-            input#filterMaxPrice(
-              type='range'
-              name='maxPrice'
-              min='1000000'
-              max='50000000'
-              step='500000'
-              value=maxPriceValue
-            )
-            .all-filters__price-values
-              span
-                small Tối thiểu
-                strong#filterMinPriceValue= minPriceValue.toLocaleString('vi-VN')
-              span
-                small Tối đa
-                strong#filterMaxPriceValue= maxPriceValue.toLocaleString('vi-VN')
-          .all-filters__section
-            button.btn.btn--green(type='submit') Áp dụng bộ lọc
+      .all-filters-shell
+        aside.all-filters
+          form#tourFiltersForm.all-filters__form(action='/all' method='GET')
+            input(type='hidden' name='sort' id='filterSortInput' value=sortValue)
+            h3.all-filters__title Lọc chuyến đi
+            .all-filters__section.all-filters__section--search
+              label.all-filters__label(for='filterSearch') Tìm kiếm tour
+              .all-filters__searchfield
+                input#filterSearch(
+                  type='search'
+                  name='search'
+                  placeholder='Nhập tên tour, địa điểm, mô tả...'
+                  value=searchValue
+                )
+                i.fas.fa-search
+            .all-filters__section
+              label.all-filters__label(for='filterDuration') Thời lượng
+              select#filterDuration(name='duration')
+                option(value='') Tất cả
+                option(value='2-4' selected=activeFilters.duration === '2-4') 2-4 ngày
+                option(value='5-7' selected=activeFilters.duration === '5-7') 5-7 ngày
+                option(value='8+' selected=activeFilters.duration === '8+') Từ 8 ngày
+            .all-filters__section
+              label.all-filters__label(for='filterGroup') Quy mô nhóm
+              select#filterGroup(name='groupSize')
+                option(value='') Tất cả
+                option(value='6-10' selected=activeFilters.groupSize === '6-10') 6-10 khách
+                option(value='11-20' selected=activeFilters.groupSize === '11-20') 11-20 khách
+                option(value='21+' selected=activeFilters.groupSize === '21+') Trên 20 khách
+            .all-filters__section
+              label.all-filters__label(for='filterRating') Đánh giá
+              select#filterRating(name='ratingOrder')
+                option(value='') Mặc định
+                option(value='rating-asc' selected=ratingValue === 'rating-asc') Thấp đến cao
+                option(value='rating-desc' selected=ratingValue === 'rating-desc') Cao đến thấp
+            .all-filters__section
+              span.all-filters__label Giá tiền (VNĐ)
+              .price-slider
+                .price-slider__inputs
+                  span.price-slider__track
+                    span.price-slider__range
+                  input#filterMinPrice(
+                    type='range'
+                    name='minPrice'
+                    min='1000000'
+                    max='50000000'
+                    step='500000'
+                    value=minPriceValue
+                  )
+                  input#filterMaxPrice(
+                    type='range'
+                    name='maxPrice'
+                    min='1000000'
+                    max='50000000'
+                    step='500000'
+                    value=maxPriceValue
+                  )
+              .all-filters__price-values
+                span.all-filters__price-field.all-filters__price-field--left
+                  label(for='filterMinPriceManual') Thấp nhất
+                  input#filterMinPriceManual(
+                    type='text'
+                    min='1000000'
+                    max='50000000'
+                    step='500000'
+                    value=minPriceValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                  )
+                span.all-filters__price-field.all-filters__price-field--right
+                  label(for='filterMaxPriceManual') Cao nhất
+                  input#filterMaxPriceManual(
+                    type='text'
+                    min='1000000'
+                    max='50000000'
+                    step='500000'
+                    value=maxPriceValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                  )
+            .all-filters__actions
+              button.btn.btn--green(type='submit') Áp dụng bộ lọc
+              if hasActiveFilters
+                a.all-filters__reset(href='/all') Xóa bộ lọc
 
-      if !safeTours.length
-        section.all-empty
-          h2 Không tìm thấy tour phù hợp
-          p Chúng tôi sẽ sớm đưa thêm nhiều hành trình mới. Hãy theo dõi lại hoặc liên hệ đội ngũ để nhận bản tin ưu đãi mới nhất.
-          a.btn.btn--green(href='/all') Khám phá lại sau
-      else
-        section.all-grid
-          each tour in safeTours
-            - const nextStart = tour.nextStart;
-            - const nextDateLabel = nextStart ? nextStart.dateFormatted : 'Đang cập nhật';
-            - const availableSlots = nextStart && typeof nextStart.availableSlots === 'number' ? nextStart.availableSlots : tour.maxGroupSize || 0;
-            - const canBook = Boolean(nextStart && nextStart.availableSlots > 0);
-            - const isSoldOutSlot = nextStart && (nextStart.availableSlots === 0 || typeof nextStart.availableSlots !== 'number');
-            - const hasUpcoming = Boolean(nextStart);
-            - const showSoldOutBadge = Boolean(tour.showSoldOutBadge);
-            - const bookingHref = user && user.role === 'user' ? `/book-tour/${tour._id}` : '/login';
-            - const tourContactHref = user && user.role === 'user' ? `/chat?prefill=${encodeURIComponent(`Tôi muốn hỏi về tour ${tour.name}`)}` : '/login';
-            - const stops = Array.isArray(tour.locations) ? tour.locations.length : 0;
-            article.all-tour-card(class={
-              'all-tour-card--soldout': showSoldOutBadge,
-              'all-tour-card--no-date': !hasUpcoming && !showSoldOutBadge
-            })
-              .all-tour-card__media(style=`background-image:url('/img/tours/${tour.imageCover}')`)
-                if showSoldOutBadge
-                  span.all-tour-card__badge.all-tour-card__badge--soldout Hết chỗ
-                else if nextStart && nextStart.isAlmostFull
-                  span.all-tour-card__badge.all-tour-card__badge--alert Gần hết chỗ
-              .all-tour-card__body
-                .all-tour-card__heading
-                  h3= tour.name
-                  span= tour.startLocation ? tour.startLocation.description : 'Khởi hành linh hoạt'
-                p.all-tour-card__summary= tour.summary
-                .all-tour-card__meta
-                  span
-                    i.fas.fa-clock
-                    |  #{tour.duration || '?'} ngày
-                  span
-                    i.fas.fa-map-marker-alt
-                    |  #{stops} điểm dừng
-                .all-tour-card__support
-                  .all-tour-card__price
-                    strong= tour.price ? `${tour.price.toLocaleString('vi-VN')} VNĐ` : 'Liên hệ'
-                    small /khách
-                  .all-tour-card__rating
-                    i.fas.fa-star
-                    span= tour.ratingsAverage ? tour.ratingsAverage.toFixed(1) : '0'
-                    small= `(${tour.ratingsQuantity || 0}) đánh giá`
-                .all-tour-card__actions
-                  if canBook
-                    a.btn.btn--green(href=bookingHref) Đặt tour
-                  a.btn.btn--contact(href=tourContactHref)
-                    i.fas.fa-headset
-                    span Tư vấn
-              .all-tour-card__footer
-                .all-tour-card__footer-info
-                  strong Khởi hành tiếp theo
-                  span= nextDateLabel
-                  small Chỗ trống #{availableSlots}/#{tour.maxGroupSize || 0}
-                a.all-tour-card__details-link(href=`/tour/${tour.slug}`)
-                  i.fas.fa-angle-right
-                  span Xem hành trình chi tiết
+      .all-results
+        if !safeTours.length
+          section.all-empty
+            h2 Không tìm thấy tour phù hợp
+            p Chúng tôi sẽ sớm đưa thêm nhiều hành trình mới. Hãy theo dõi lại hoặc liên hệ đội ngũ để nhận bản tin ưu đãi mới nhất.
+            a.btn.btn--green(href='/all') Khám phá lại sau
+        else
+          .all-sort
+            span.all-sort__label Sắp xếp theo:
+            .all-sort__options
+              each option in sortOptions
+                - const isActiveSort = sortValue === option.value;
+                button.all-sort__chip(
+                  type='button'
+                  data-sort-option=option.value
+                  class={ 'is-active': isActiveSort }
+                )= option.label
+          section.all-grid
+            each tour in safeTours
+              - const nextStart = tour.nextStart;
+              - const nextDateLabel = nextStart ? nextStart.dateFormatted : 'Đang cập nhật';
+              - const availableSlots = nextStart && typeof nextStart.availableSlots === 'number' ? nextStart.availableSlots : tour.maxGroupSize || 0;
+              - const canBook = Boolean(nextStart && nextStart.availableSlots > 0);
+              - const isSoldOutSlot = nextStart && (nextStart.availableSlots === 0 || typeof nextStart.availableSlots !== 'number');
+              - const hasUpcoming = Boolean(nextStart);
+              - const showSoldOutBadge = Boolean(tour.showSoldOutBadge);
+              - const bookingHref = user && user.role === 'user' ? `/book-tour/${tour._id}` : '/login';
+              - const tourContactHref = user && user.role === 'user' ? `/chat?prefill=${encodeURIComponent(`Tôi muốn hỏi về tour ${tour.name}`)}` : '/login';
+              - const stops = Array.isArray(tour.locations) ? tour.locations.length : 0;
+              article.all-tour-card(class={
+                'all-tour-card--soldout': showSoldOutBadge,
+                'all-tour-card--no-date': !hasUpcoming && !showSoldOutBadge
+              })
+                .all-tour-card__media(style=`background-image:url('/img/tours/${tour.imageCover}')`)
+                  if showSoldOutBadge
+                    span.all-tour-card__badge.all-tour-card__badge--soldout Hết chỗ
+                  else if nextStart && nextStart.isAlmostFull
+                    span.all-tour-card__badge.all-tour-card__badge--alert Gần hết chỗ
+                .all-tour-card__body
+                  .all-tour-card__heading
+                    h3= tour.name
+                    span= tour.startLocation ? tour.startLocation.description : 'Khởi hành linh hoạt'
+                  p.all-tour-card__summary= tour.summary
+                  .all-tour-card__meta
+                    span
+                      i.fas.fa-clock
+                      |  #{tour.duration || '?'} ngày
+                    span
+                      i.fas.fa-map-marker-alt
+                      |  #{stops} điểm dừng
+                  .all-tour-card__support
+                    .all-tour-card__price
+                      strong= tour.price ? `${tour.price.toLocaleString('vi-VN')} VNĐ` : 'Liên hệ'
+                      small /khách
+                    .all-tour-card__rating
+                      i.fas.fa-star
+                      span= tour.ratingsAverage ? tour.ratingsAverage.toFixed(1) : '0'
+                      small= `(${tour.ratingsQuantity || 0}) đánh giá`
+                  .all-tour-card__actions
+                    if canBook
+                      a.btn.btn--green(href=bookingHref) Đặt tour
+                    a.btn.btn--contact(href=tourContactHref)
+                      i.fas.fa-headset
+                      span Tư vấn
+                .all-tour-card__footer
+                  .all-tour-card__footer-info
+                    strong Khởi hành tiếp theo
+                    span= nextDateLabel
+                    small Chỗ trống #{availableSlots}/#{tour.maxGroupSize || 0}
+                  a.all-tour-card__details-link(href=`/tour/${tour.slug}`)
+                    i.fas.fa-angle-right
+                    span Xem hành trình chi tiết
 
 block append scripts
   script.
     (function () {
       var minInput = document.getElementById('filterMinPrice');
       var maxInput = document.getElementById('filterMaxPrice');
-      var minOutput = document.getElementById('filterMinPriceValue');
-      var maxOutput = document.getElementById('filterMaxPriceValue');
-      if (!minInput || !maxInput || !minOutput || !maxOutput) return;
+      var minManual = document.getElementById('filterMinPriceManual');
+      var maxManual = document.getElementById('filterMaxPriceManual');
+      var sliderRange = document.querySelector('.price-slider__range');
+      var sortButtons = document.querySelectorAll('[data-sort-option]');
+      var sortInput = document.getElementById('filterSortInput');
+      var filterForm = document.getElementById('tourFiltersForm');
+      if (minInput && maxInput) {
+        var sliderMin = Number(minInput.min) || 0;
+        var sliderMax = Number(maxInput.max) || 0;
 
-      var formatCurrency = function (value) {
-        return new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(value);
-      };
+        var formatCurrency = function (value) {
+          var numeric = Number(value);
+          if (!Number.isFinite(numeric)) return '0';
+          return Math.round(numeric)
+            .toString()
+            .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        };
 
-      var syncValues = function () {
-        var minValue = Number(minInput.value);
-        var maxValue = Number(maxInput.value);
-        if (minValue > maxValue) {
-          maxInput.value = minValue;
+        var updateSliderRange = function (minValue, maxValue) {
+          if (!sliderRange || sliderMax <= sliderMin) return;
+          var minPercent = ((minValue - sliderMin) / (sliderMax - sliderMin)) * 100;
+          var maxPercent = ((maxValue - sliderMin) / (sliderMax - sliderMin)) * 100;
+          var boundedMin = Math.max(0, Math.min(100, minPercent));
+          var boundedMax = Math.max(0, Math.min(100, maxPercent));
+          sliderRange.style.left = boundedMin + '%';
+          sliderRange.style.right = (100 - boundedMax) + '%';
+        };
+
+        var syncValues = function () {
+          var minValue = Number(minInput.value);
+          var maxValue = Number(maxInput.value);
+          if (minValue > maxValue) {
+            maxInput.value = minValue;
+            maxValue = minValue;
+          }
+          if (maxValue < minValue) {
+            minInput.value = maxValue;
+            minValue = maxValue;
+          }
+          if (minManual) {
+            minManual.value = formatCurrency(minValue);
+          }
+          if (maxManual) {
+            maxManual.value = formatCurrency(maxValue);
+          }
+          updateSliderRange(Number(minInput.value), Number(maxInput.value));
+        };
+
+        var clampValue = function (value, fallback) {
+          var numeric = Number(value);
+          if (!Number.isFinite(numeric)) return fallback;
+          return Math.min(sliderMax, Math.max(sliderMin, numeric));
+        };
+
+        var parseManualValue = function (input, fallback) {
+          if (!input) return fallback;
+          var raw = (input.value || '').toString().replace(/[^0-9]/g, '');
+          if (!raw) return fallback;
+          return Number(raw);
+        };
+
+        var handleManualInput = function () {
+          if (!minManual || !maxManual) return;
+          var manualMin = clampValue(
+            parseManualValue(minManual, Number(minInput.value)),
+            Number(minInput.value)
+          );
+          var manualMax = clampValue(
+            parseManualValue(maxManual, Number(maxInput.value)),
+            Number(maxInput.value)
+          );
+          if (manualMin > manualMax) {
+            if (this === minManual) {
+              manualMax = manualMin;
+            } else {
+              manualMin = manualMax;
+            }
+          }
+          minInput.value = manualMin;
+          maxInput.value = manualMax;
+          syncValues();
+        };
+
+        minInput.addEventListener('input', syncValues);
+        maxInput.addEventListener('input', syncValues);
+        if (minManual) {
+          minManual.addEventListener('input', handleManualInput);
+          minManual.addEventListener('change', handleManualInput);
         }
-        if (maxValue < minValue) {
-          minInput.value = maxValue;
+        if (maxManual) {
+          maxManual.addEventListener('input', handleManualInput);
+          maxManual.addEventListener('change', handleManualInput);
         }
-        minOutput.textContent = formatCurrency(minInput.value);
-        maxOutput.textContent = formatCurrency(maxInput.value);
-      };
+        syncValues();
+      }
 
-      minInput.addEventListener('input', syncValues);
-      maxInput.addEventListener('input', syncValues);
-      syncValues();
+      if (sortButtons && sortButtons.length && sortInput && filterForm) {
+        sortButtons.forEach(function (button) {
+          button.addEventListener('click', function () {
+            var optionValue = button.getAttribute('data-sort-option') || '';
+            var currentValue = sortInput.value || '';
+            var nextValue = currentValue === optionValue ? '' : optionValue;
+            sortInput.value = nextValue;
+            if (typeof filterForm.requestSubmit === 'function') {
+              filterForm.requestSubmit();
+            } else {
+              filterForm.submit();
+            }
+          });
+        });
+      }
     })();

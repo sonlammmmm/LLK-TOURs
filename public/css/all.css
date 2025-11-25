@@ -21,7 +21,7 @@
 
 /* ==== HERO TRANG ALL ==== */
 .all-hero {
-  padding: 4rem 1.5rem 3.5rem;
+  padding: 2rem 1.5rem 2rem;
   background: linear-gradient(145deg, #0b1b40, #1f3def);
   color: #fff;
 }
@@ -65,7 +65,7 @@
 
 /* ==== KHUNG CHÍNH + SIDEBAR FILTER ==== */
 .all-main {
-  padding: 4rem 1.5rem 5rem;
+  padding: 1.5rem 1.5rem 4rem;
   background: #f6f7fb;
 }
 
@@ -77,6 +77,20 @@
   gap: 3rem;
 }
 
+.all-filters-shell {
+  position: sticky;
+  top: calc(6rem + 2rem);
+  align-self: start;
+  padding-top: 2rem;
+}
+
+.all-results {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
 .all-filters {
   background: #fff;
   border-radius: 1.6rem;
@@ -86,6 +100,7 @@
   top: calc(6rem + 1rem);
   align-self: start;
   z-index: 5;
+  font-size: 1.2rem;
 }
 
 .all-filters__form {
@@ -94,28 +109,46 @@
   gap: 1.5rem;
 }
 
+.all-filters__title {
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  font-size: 1.4rem;
+  color: #0c1b42;
+}
+
+.all-filters__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
 .all-filters__label {
   display: block;
-  font-size: 0.8rem;
-  letter-spacing: 0.15em;
+  font-size: 1.05rem;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: #5f6687;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0;
 }
 
 .all-filters__section select,
-.all-filters__section input[type='text'] {
+.all-filters__section input[type='text'],
+.all-filters__section input[type='search'] {
   width: 100%;
-  padding: 0.95rem 1rem;
+  padding: 1.05rem 1.2rem;
   border-radius: 12px;
   border: 1px solid #e0e2eb;
-  font-size: 1rem;
+  font-size: 1.2rem;
   background: #fff;
+  font-weight: 600;
+  color: #111a3c;
 }
 
 .all-filters__section input[type='range'] {
   width: 100%;
-  accent-color: #ff914d;
+  accent-color: #2acb9f;
+  background: transparent;
 }
 
 .all-filters__helper {
@@ -129,24 +162,179 @@
 
 .all-filters__price-values {
   display: flex;
-  justify-content: space-between;
-  margin-top: 0.4rem;
-  font-size: 0.8rem;
+  gap: 1.2rem;
+  font-size: 1rem;
   color: #4a506b;
 }
 
-.all-filters__price-values span {
+.all-filters__price-field {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.4rem;
   font-weight: 600;
+  flex: 1;
 }
 
-.all-filters__price-values small {
-  font-size: 0.65rem;
+.all-filters__price-field--left {
+  text-align: left;
+  align-items: flex-start;
+}
+
+.all-filters__price-field--right {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.all-filters__price-field label {
+  font-size: 0.9rem;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
   color: #8c91a9;
+}
+
+.all-filters__price-field input {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #dfe3f3;
+  padding: 0.8rem 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0c1b42;
+  background: #fdfdff;
+  text-align: inherit;
+}
+
+.all-filters__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 0.5rem;
+  gap: 0.9rem;
+}
+
+.all-filters__actions .btn {
+  min-width: 200px;
+  width: 100%;
+  max-width: 260px;
+}
+
+.all-filters__reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.2rem;
+  border-radius: 999px;
+  border: 1px dashed #b8bfd7;
+  font-size: 1.1rem;
+  color: #6b7392;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.all-filters__reset:hover {
+  border-color: #1f3def;
+  color: #1f3def;
+}
+
+.all-filters__searchfield {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.all-filters__searchfield input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid #dfe3f3;
+  padding: 1rem 3rem 1rem 1.1rem;
+  font-size: 1.24rem;
+  font-weight: 600;
+  color: #0c1b42;
+  background: #fff;
+}
+
+.all-filters__searchfield i {
+  position: absolute;
+  right: 1.2rem;
+  color: #8b90aa;
+  font-size: 1.3rem;
+}
+
+.all-filters__searchfield input:focus {
+  outline: 2px solid rgba(31, 61, 239, 0.3);
+  border-color: #1f3def;
+}
+
+.price-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  padding: 0.5rem 0 0;
+}
+
+.price-slider__inputs {
+  position: relative;
+  height: 2.6rem;
+}
+
+.price-slider__track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: #ecf0fb;
+  overflow: hidden;
+  transform: translateY(-50%);
+}
+
+.price-slider__range {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(120deg, #2acb9f, #4ade80);
+  border-radius: inherit;
+}
+
+.price-slider__inputs input[type='range'] {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  pointer-events: none;
+  z-index: 2;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.price-slider__inputs input[type='range']::-webkit-slider-thumb {
+  pointer-events: auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: linear-gradient(135deg, #2acb9f, #4ade80);
+  box-shadow: 0 6px 12px rgba(42, 203, 159, 0.35);
+}
+
+.price-slider__inputs input[type='range']::-moz-range-thumb {
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: linear-gradient(135deg, #2acb9f, #4ade80);
+  box-shadow: 0 6px 12px rgba(42, 203, 159, 0.35);
+}
+
+.price-slider__inputs input[type='range']::-webkit-slider-runnable-track {
+  background: transparent;
+}
+
+.price-slider__inputs input[type='range']::-moz-range-track {
+  background: transparent;
 }
 
 /* ==== LƯỚI CARD TOUR ==== */
@@ -156,6 +344,56 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 2rem;
+}
+
+.all-sort {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  background: #fff;
+  border-radius: 1.4rem;
+  padding: 0.7rem 1.5rem;
+  box-shadow: 0 1.2rem 2.4rem rgba(12, 19, 45, 0.08);
+  margin-bottom: 0.3rem;
+}
+
+.all-sort__label {
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #1b2348;
+  flex: 0 0 auto;
+}
+
+.all-sort__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  flex: 1;
+}
+
+.all-sort__chip {
+  border: 1px solid #dfe3f3;
+  border-radius: 999px;
+  padding: 0.5rem 1.4rem;
+  font-size: 1.1rem;
+  background: #f6f7fb;
+  color: #1b2348;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.all-sort__chip:hover {
+  border-color: #b9c2df;
+  background: #eef2ff;
+}
+
+.all-sort__chip.is-active {
+  background: #1f3def;
+  color: #fff;
+  border-color: #1f3def;
+  box-shadow: 0 0.6rem 1.2rem rgba(31, 61, 239, 0.3);
 }
 
 /* ==== RESPONSIVE CHO TRANG ALL ==== */

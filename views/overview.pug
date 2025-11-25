@@ -38,7 +38,11 @@ block content
       .slider-ui
         //- Search Box
         form.slider-search(action='/all' method='GET')
-          input(type='text' name='name' placeholder='Bạn muốn đến nơi nào...?')
+          input.slider-search__input(
+            type='search'
+            name='search'
+            placeholder='Bạn muốn đến nơi nào...?'
+          )
           button(type='submit')
             i.fa-solid.fa-magnifying-glass
 
@@ -87,6 +91,7 @@ block append scripts
     document.addEventListener('DOMContentLoaded', function () {
       const slider = document.querySelector('#cinematic-slider');
       if (!slider) return;
+      const sliderSearchInput = slider.querySelector('.slider-search__input');
 
       // Elements
       const backgrounds = slider.querySelectorAll('.slide-bg');
@@ -105,6 +110,83 @@ block append scripts
       const totalSlides = backgrounds.length;
       const autoplayTime = 6000;
       let timer;
+
+      // Typing effect for the slider search placeholder
+      if (sliderSearchInput && !sliderSearchInput.value) {
+        const typingText = 'Bạn muốn đến nơi nào...?';
+        const typingDelay = 84; // 30% faster than the previous 120ms steps
+        const typingStartDelay = 400;
+        const typingLoopDelay = 5000;
+        let typingIndex = 0;
+        let typingTimeout;
+        let typingLoopTimeout;
+        let isTyping = false;
+
+        sliderSearchInput.placeholder = '';
+
+        const shouldPauseTyping = () =>
+          document.activeElement === sliderSearchInput || Boolean(sliderSearchInput.value);
+
+        const clearTypingTimers = () => {
+          clearTimeout(typingTimeout);
+          clearTimeout(typingLoopTimeout);
+        };
+
+        const setFullPlaceholder = () => {
+          sliderSearchInput.placeholder = typingText;
+        };
+
+        const stopTypingEffect = () => {
+          clearTypingTimers();
+          setFullPlaceholder();
+          isTyping = false;
+        };
+
+        const scheduleTypingCycle = (delay = typingLoopDelay) => {
+          clearTimeout(typingLoopTimeout);
+          if (shouldPauseTyping()) return;
+          typingLoopTimeout = setTimeout(() => {
+            startTyping();
+          }, delay);
+        };
+
+        const typeNextCharacter = () => {
+          if (shouldPauseTyping()) {
+            stopTypingEffect();
+            return;
+          }
+          sliderSearchInput.placeholder = typingText.slice(0, typingIndex + 1);
+          typingIndex += 1;
+          if (typingIndex < typingText.length) {
+            typingTimeout = setTimeout(typeNextCharacter, typingDelay);
+          } else {
+            setFullPlaceholder();
+            isTyping = false;
+            scheduleTypingCycle();
+          }
+        };
+
+        function startTyping() {
+          if (isTyping || shouldPauseTyping()) {
+            setFullPlaceholder();
+            return;
+          }
+          isTyping = true;
+          typingIndex = 0;
+          sliderSearchInput.placeholder = '';
+          typingTimeout = setTimeout(typeNextCharacter, typingDelay);
+        }
+
+        typingTimeout = setTimeout(startTyping, typingStartDelay);
+
+        sliderSearchInput.addEventListener('focus', stopTypingEffect);
+        sliderSearchInput.addEventListener('input', stopTypingEffect);
+        sliderSearchInput.addEventListener('blur', () => {
+          if (!sliderSearchInput.value) {
+            scheduleTypingCycle();
+          }
+        });
+      }
 
       // --- ANIMATION FUNCTIONS ---
 
@@ -263,9 +345,17 @@ block append scripts
       }
 
       function highlightNavCard(card) {
-        if (activeNavCard) activeNavCard.classList.remove('is-active');
+        if (!card) return;
+        if (card === activeNavCard) {
+          card.classList.add('is-active');
+          return;
+        }
+        const previousCard = activeNavCard;
         activeNavCard = card;
-        if (activeNavCard) activeNavCard.classList.add('is-active');
+        activeNavCard.classList.add('is-active');
+        if (previousCard && previousCard !== activeNavCard) {
+          previousCard.classList.remove('is-active');
+        }
       }
 
       function scrollNavCardIntoView(card, smooth = true) {
