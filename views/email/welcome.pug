@@ -1,8 +1,23 @@
 extends baseEmail
 
 block content
-  p Kính gửi Anh/Chị #{firstName},
-  p Chào mừng bạn đến với cộng đồng của chúng tôi! Để giúp mọi người dễ dàng kết nối và nhận diện bạn hơn, chúng tôi khuyến khích bạn tải lên ảnh đại diện của mình.
+  .hero
+    h1.hero-title Chào mừng #{firstName} đến với LLK Tours!
+    p.hero-subtitle Rất vui vì bạn đã gia nhập cộng đồng yêu du lịch trải nghiệm của chúng tôi.
+
+  .card
+    p LLK Tours luôn sẵn sàng đồng hành cùng bạn ở mỗi hành trình. Bắt đầu ngay với vài bước đơn giản:
+    ul.feature-list
+      li
+        strong Cập nhật hồ sơ:&nbsp;
+        | Thêm ảnh đại diện và thông tin liên hệ để concierge nhận diện bạn dễ dàng hơn.
+      li
+        strong Theo dõi tour yêu thích:&nbsp;
+        | Giữ chỗ sớm cho các lịch khởi hành hot và nhận thông báo ưu đãi riêng.
+      li
+        strong Kết nối hỗ trợ 24/7:&nbsp;
+        | Nhận tư vấn lịch trình cá nhân hoá bất cứ khi nào bạn cần.
+
   table.btn.btn-primary(role='presentation', border='0', cellpadding='0', cellspacing='0')
     tbody
       tr
@@ -11,7 +26,17 @@ block content
             tbody
               tr
                 td
-                  a(href=`${url}`, target='_blank') Hãy cập nhật hồ sơ cá nhân nhé
-  p Nếu bạn cần bất kỳ sự hỗ trợ nào hoặc có bất kỳ câu hỏi nào về các tour du lịch của chúng tôi, đừng ngần ngại liên hệ với đội ngũ hỗ trợ.
-  p Trân trọng,
-  p Đội ngũ LLK Tours
+                  a(href=`${url}`, target='_blank') Cập nhật hồ sơ ngay
+
+  .info-grid
+    .info-item
+      span.label Hotline
+      span.value 038 0000 234
+    .info-item
+      span.label Email
+      span.value transysonlam@gmail.com
+
+  .note-block
+    p Nếu cần hỗ trợ, bạn chỉ việc trả lời email này hoặc mở khung chat ngay trên website LLK Tours. Đội ngũ concierge luôn sẵn sàng đồng hành cùng bạn!
+
+  p.signature Thân mến,<br/>Đội ngũ LLK Tours

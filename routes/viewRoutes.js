@@ -25,6 +25,11 @@ const setUserPortalLayout = (req, res, next) => {
 // Middleware gắn thông tin user đã đăng nhập nếu có
 router.use(authController.isLoggedIn);
 
+// Bỏ qua các request tự động của trình duyệt DevTools để tránh log lỗi 404
+router.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) =>
+  res.status(204).send()
+);
+
 // -------------------- TRANG NGƯỜI DÙNG --------------------
 router.get('/', viewsController.getOverview);
 router.get('/all', viewsController.getAllTours);
