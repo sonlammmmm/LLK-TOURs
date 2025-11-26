@@ -26,13 +26,51 @@ export const updateSettings = async (data, type) => {
 
 // Thêm hàm hiển thị tên file sau khi chọn
 export const initFileInputs = () => {
-  // Xử lý hiển thị tên file khi chọn ảnh đại diện
+  // Xử lý hiển thị tên file và xem trước ảnh khi chọn ảnh đại diện
+  const formUserData = document.querySelector(".form-user-data")
   const photoInput = document.getElementById("photo")
+  const photoPreview = formUserData?.querySelector(".form__user-photo")
+  const fileNameDisplay = formUserData?.querySelector(".form__upload-filename")
+  const fileNamePlaceholder = fileNameDisplay?.dataset.placeholder || ""
+
+  if (photoPreview && !photoPreview.dataset.defaultSrc) {
+    photoPreview.dataset.defaultSrc = photoPreview.getAttribute("src") || ""
+  }
+
+  if (fileNameDisplay && !fileNameDisplay.textContent.trim()) {
+    fileNameDisplay.textContent = fileNamePlaceholder
+  }
+
+  const resetPhotoPreview = () => {
+    if (!photoPreview) return
+    if (photoPreview.dataset.defaultSrc) {
+      photoPreview.src = photoPreview.dataset.defaultSrc
+    }
+    photoPreview.classList.remove("is-previewing")
+  }
+
+  const setPhotoPreview = (file) => {
+    if (!photoPreview || !file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      photoPreview.src = event.target?.result || photoPreview.dataset.defaultSrc || ""
+      photoPreview.classList.add("is-previewing")
+    }
+    reader.onerror = () => resetPhotoPreview()
+    reader.readAsDataURL(file)
+  }
+
   if (photoInput) {
     photoInput.addEventListener("change", function () {
-      const fileName = this.files[0]?.name || "Không có file nào được chọn"
-      const fileLabel = this.nextElementSibling
-      fileLabel.textContent = fileName
+      const file = this.files[0]
+      if (fileNameDisplay) {
+        fileNameDisplay.textContent = file?.name || fileNamePlaceholder
+      }
+      if (file) {
+        setPhotoPreview(file)
+      } else {
+        resetPhotoPreview()
+      }
     })
   }
 

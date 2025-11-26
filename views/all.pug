@@ -7,14 +7,17 @@ block content
   - const safeTours = Array.isArray(tours) ? tours : [];
   - const activeFilters = typeof filters === 'object' && filters ? filters : {};
   - const searchValue = activeFilters.search || '';
-  - const defaultMinPrice = 1000000;
-  - const defaultMaxPrice = 50000000;
-  - const minPriceValue = Number(activeFilters.minPrice) || defaultMinPrice;
-  - const maxPriceValue = Number(activeFilters.maxPrice) || defaultMaxPrice;
+  - const sliderMin = 0;
+  - const computedMaxPrice = safeTours.reduce((max, tour) => Math.max(max, tour.price || 0), 0);
+  - const sliderMax = Math.max(50000000, computedMaxPrice);
+  - const isMinFilterActive = typeof activeFilters.minPrice === 'number';
+  - const isMaxFilterActive = typeof activeFilters.maxPrice === 'number';
+  - const minPriceValue = isMinFilterActive ? activeFilters.minPrice : sliderMin;
+  - const maxPriceValue = isMaxFilterActive ? activeFilters.maxPrice : sliderMax;
   - const ratingValue = activeFilters.ratingOrder || '';
   - const sortValue = activeFilters.sort || '';
   - const sortOptions = [{ value: 'price-asc', label: 'Giá: Tăng dần' }, { value: 'price-desc', label: 'Giá: Giảm dần' }, { value: 'name-asc', label: 'Tên: A-Z' }, { value: 'name-desc', label: 'Tên: Z-A' }, { value: 'date-oldest', label: 'Cũ nhất' }, { value: 'date-newest', label: 'Mới nhất' }];
-  - const hasActiveFilters = Boolean(searchValue || activeFilters.duration || activeFilters.groupSize || ratingValue || minPriceValue !== defaultMinPrice || maxPriceValue !== defaultMaxPrice);
+  - const hasActiveFilters = Boolean(searchValue || activeFilters.duration || activeFilters.groupSize || ratingValue || sortValue || isMinFilterActive || isMaxFilterActive);
 
   section.all-hero
     .all-hero__inner
@@ -69,16 +72,16 @@ block content
                   input#filterMinPrice(
                     type='range'
                     name='minPrice'
-                    min='1000000'
-                    max='50000000'
+                    min=sliderMin
+                    max=sliderMax
                     step='500000'
                     value=minPriceValue
                   )
                   input#filterMaxPrice(
                     type='range'
                     name='maxPrice'
-                    min='1000000'
-                    max='50000000'
+                    min=sliderMin
+                    max=sliderMax
                     step='500000'
                     value=maxPriceValue
                   )
@@ -87,8 +90,8 @@ block content
                   label(for='filterMinPriceManual') Thấp nhất
                   input#filterMinPriceManual(
                     type='text'
-                    min='1000000'
-                    max='50000000'
+                    min=sliderMin
+                    max=sliderMax
                     step='500000'
                     value=minPriceValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
                   )
@@ -96,8 +99,8 @@ block content
                   label(for='filterMaxPriceManual') Cao nhất
                   input#filterMaxPriceManual(
                     type='text'
-                    min='1000000'
-                    max='50000000'
+                    min=sliderMin
+                    max=sliderMax
                     step='500000'
                     value=maxPriceValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
                   )

@@ -1,28 +1,7 @@
 mixin authShowcase
   .auth-showcase
-    .auth-showcase__content
-      .auth-showcase__badge
-        i.fa-solid.fa-route
-        span Hành trình số hóa
-      h3.auth-showcase__title Kết nối điều hành tours thông minh
-      p.auth-showcase__text
-        | Khai thác hệ thống LLK Travel để đồng bộ điều hành, hướng dẫn viên và chăm sóc khách hàng trên một nền tảng duy nhất.
-      .auth-testimonial
-        i.fa-solid.fa-quote-left
-        p.auth-testimonial__quote
-          | Từ khi dùng LLK Travel, chúng tôi quản lý lịch tour và thông tin khách nhanh hơn rất nhiều.
-        .auth-testimonial__author
-          img(src='/img/users/default.jpg' alt='Người dùng LLK Travel')
-          .auth-testimonial__info
-            span.auth-testimonial__name Minh Châu
-            span.auth-testimonial__role Điều phối tour tại LLK Travel
-      .auth-showcase__divider
-      .auth-showcase__stats
-        .auth-stat
-          span.auth-stat__value 120+
-          span.auth-stat__label Tours đang hoạt động
-        .auth-stat
-          span.auth-stat__value 24/7
-          span.auth-stat__label Hỗ trợ nhanh
-    .auth-showcase__media
-      img(src='/img/banner.jpg' alt='Banner LLK Travel tạm thời')
+    .auth-showcase__banners
+      - const banners = ['/img/banner1.png', '/img/banner2.png', '/img/banner3.png']
+      each banner, index in banners
+        .auth-showcase__banner
+          img(src=banner alt=`Banner ${index + 1}`)

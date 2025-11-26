@@ -6,6 +6,8 @@ const AppError = require('../utils/appError');
 const factory = require('./handlerFactory');
 
 // Cấu hình multer
+const MAX_PHOTO_SIZE_MB = 2;
+const MAX_PHOTO_DIMENSION = 600;
 const multerStorage = multer.memoryStorage();
 
 const multerFilter = (req, file, cb) => {
@@ -21,7 +23,8 @@ const multerFilter = (req, file, cb) => {
 
 const upload = multer({
   storage: multerStorage,
-  fileFilter: multerFilter
+  fileFilter: multerFilter,
+  limits: { fileSize: MAX_PHOTO_SIZE_MB * 1024 * 1024 }
 });
 
 exports.uploadUserPhoto = upload.single('photo');
@@ -32,9 +35,13 @@ exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
   req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
 
   await sharp(req.file.buffer)
-    .resize(500, 500)
+    .resize(MAX_PHOTO_DIMENSION, MAX_PHOTO_DIMENSION, {
+      fit: 'cover',
+      position: 'center',
+      withoutEnlargement: true
+    })
     .toFormat('jpeg')
-    .jpeg({ quality: 90 })
+    .jpeg({ quality: 85, mozjpeg: true })
     .toFile(`public/img/users/${req.file.filename}`);
 
   next();
@@ -103,13 +110,20 @@ exports.getAllUsers = factory.getAll(User);
 
 // KHÔNG cập nhật mật khẩu bằng cách này!
 exports.updateUser = catchAsync(async (req, res, next) => {
-  // Xử lý trường hợp có file ảnh
+  const updatePayload = { ...req.body };
+
+  // X??- lA? tr?????ng h???p cA3 file ???nh
   if (req.file) {
-    req.body.photo = req.file.filename;
+    updatePayload.photo = req.file.filename;
   }
 
-  // Đánh dấu đây là route quản lý để không lọc người dùng không hoạt động
-  const query = User.findByIdAndUpdate(req.params.id, req.body, {
+  // KhA'ng cho phA?p c??-p nh??-t m??-t kh??cu qua route admin
+  ['password', 'passwordConfirm'].forEach(field => {
+    if (field in updatePayload) delete updatePayload[field];
+  });
+
+  // ??A?nh d???u ?A?y lA? route qu???n lA? ???? khA'ng l???c ng?????i dA1ng khA'ng ho???t ???Tng
+  const query = User.findByIdAndUpdate(req.params.id, updatePayload, {
     new: true,
     runValidators: true
   });
@@ -156,3 +170,4 @@ exports.activateUser = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteUser = factory.deleteOne(User);
+

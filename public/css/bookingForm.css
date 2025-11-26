@@ -11,6 +11,7 @@
   --booking-success: #16c79a;
   --booking-shadow: 0 20px 60px rgba(15, 23, 42, 0.1);
   --booking-radius: 24px;
+  --booking-compact-card-height: 150px;
   font-family: "Cobe", sans-serif;
   color: var(--booking-text);
 }
@@ -56,7 +57,8 @@ body.booking-page {
 .booking-shell__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(241, 244, 255, 0.95));
+  background: linear-gradient(180deg, rgba(9, 20, 62, 0.9), rgba(3, 14, 45, 0.95));
+  backdrop-filter: blur(0px);
   z-index: 1;
 }
 
@@ -165,13 +167,16 @@ form.booking-workspace {
 }
 
 .hero-content__inner {
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(6, 19, 60, 0.85);
   border-radius: 24px;
   padding: clamp(1.5rem, 3vw, 2rem);
   max-width: min(640px, 100%);
   width: 100%;
   box-shadow: 0 30px 50px rgba(15, 23, 42, 0.2);
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #f5f7ff;
+  text-shadow: 0 6px 30px rgba(2, 6, 20, 0.45);
 }
 
 .booking-column {
@@ -219,13 +224,14 @@ form.booking-workspace {
 }
 
 .hero-summary {
-  color: var(--booking-muted);
+  color: #fff;
   line-height: 1.6;
   margin: 0;
 }
 
+.hero-meta__item,
 .card-desc {
-  color: var(--booking-muted);
+  color: #fff;
 }
 
 .hero-meta {
@@ -239,26 +245,25 @@ form.booking-workspace {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 1rem;
-  color: var(--booking-muted);
+  color: #fff;
 }
 
 .hero-meta__item strong {
   display: block;
   font-size: 1.4rem;
-  color: var(--booking-text);
+  color: #fff;
   margin-top: 0.15rem;
 }
 
 .booking-card {
   border-radius: 28px;
-  border: 1px solid rgba(15, 23, 42, 0.12);
   padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: var(--booking-shadow);
-  color: var(--booking-text);
+  background: linear-gradient(180deg, rgba(11, 34, 92, 0.95), rgba(5, 13, 53, 0.95));
+  box-shadow: 0 20px 50px rgba(3, 8, 30, 0.55);
+  color: #f5f7ff;
   position: relative;
   z-index: 3;
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(12px);
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -281,7 +286,7 @@ form.booking-workspace {
 }
 
 .booking-card-stack--schedule .booking-card--participants {
-  min-height: 110px;
+  min-height: var(--booking-compact-card-height);
 }
 
 .booking-card__header {
@@ -295,13 +300,13 @@ form.booking-workspace {
 .booking-card__header h2 {
   margin: 0;
   font-size: 1.4rem;
-  color: var(--booking-text);
+  color: #fff;
   text-shadow: none;
 }
 
 .booking-card__header p {
   margin: 0.25rem 0 0;
-  color: var(--booking-muted);
+  color: rgba(255, 255, 255, 0.7);
   font-size: 1rem;
 }
 
@@ -316,7 +321,7 @@ form.booking-workspace {
   font-size: 1rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--booking-muted);
+  color: #fff;
   margin-bottom: 0.85rem;
 }
 
@@ -332,8 +337,9 @@ form.booking-workspace {
 
 .booking-date-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 0.65rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  align-items: stretch;
 }
 
 .booking-date-btn {
@@ -344,12 +350,14 @@ form.booking-workspace {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  color: var(--booking-text);
+  color: #031439;
   cursor: pointer;
   transition: border 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   position: relative;
   z-index: 5;
   box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+  width: 100%;
+  align-items: flex-start;
 }
 
 .booking-date-btn:hover {
@@ -357,8 +365,12 @@ form.booking-workspace {
 }
 
 .booking-date-btn.selected {
-  border-color: var(--booking-accent);
-  background: linear-gradient(180deg, var(--booking-accent-strong), var(--booking-accent));
+  border-color: rgba(12, 81, 217, 0.95);
+  background: linear-gradient(
+    180deg,
+    rgba(15, 109, 240, 0.95),
+    rgba(12, 81, 217, 0.95)
+  );
   color: #fff;
   box-shadow: 0 15px 35px rgba(13, 38, 110, 0.35);
 }
@@ -373,12 +385,13 @@ form.booking-workspace {
 .booking-date-weekday,
 .booking-date-month {
   font-size: 1rem;
-  color: var(--booking-muted);
+  color: rgba(15, 109, 240, 0.7);
 }
 
 .booking-date-day {
   font-size: 1.6rem;
   font-weight: 700;
+  color: #031439;
 }
 
 .booking-date-slotline {
@@ -416,13 +429,14 @@ form.booking-workspace {
   flex: 1;
   overflow-y: auto;
   padding-right: 0.5rem;
+  align-items: center;
 }
 
 .booking-card--participants {
-  background: rgba(255, 255, 255, 0.88);
-  color: var(--booking-text);
+  background: linear-gradient(180deg, rgba(11, 34, 92, 0.95), rgba(5, 13, 53, 0.95));
+  color: #f5f7ff;
   padding: 1rem;
-  min-height: 110px;
+  min-height: var(--booking-compact-card-height);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -434,25 +448,29 @@ form.booking-workspace {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+  width: 100%;
+  align-items: center;
 }
 
 .service-option {
   border-radius: 18px;
   border: 1px solid var(--booking-border);
   padding: 1rem 1.1rem;
-  background: rgba(255, 255, 255, 0.9);
+  background: #fff;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+  color: #031439;
   box-shadow: 0 10px 25px rgba(15, 23, 42, 0.1);
   cursor: pointer;
+  width: min(460px, 100%);
   transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease,
     background 0.2s ease, color 0.2s ease;
 }
 
 .service-option:hover {
   transform: translateY(-3px);
-  border-color: var(--booking-accent);
+  border-color: rgba(12, 81, 217, 0.95);
   box-shadow: 0 18px 30px rgba(15, 23, 42, 0.18);
 }
 
@@ -483,7 +501,7 @@ form.booking-workspace {
 
 .service-option__desc {
   font-size: 1rem;
-  color: var(--booking-muted);
+  color: rgba(3, 20, 57, 0.65);
 }
 
 .service-option__main {
@@ -520,21 +538,22 @@ form.booking-workspace {
 .badge {
   padding: 0.35rem 0.85rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(3, 20, 57, 0.2);
   font-size: 1rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--booking-muted);
+  color: rgba(3, 20, 57, 0.8);
+  background: rgba(15, 23, 42, 0.04);
 }
 
 .badge--outline {
-  background: rgba(3, 6, 21, 0.6);
+  background: rgba(15, 23, 42, 0.08);
 }
 
 .service-option__badges .badge {
-  border-color: var(--booking-border);
+  border-color: rgba(3, 20, 57, 0.2);
   background: rgba(15, 23, 42, 0.04);
-  color: var(--booking-muted);
+  color: rgba(3, 20, 57, 0.7);
 }
 
 .service-option__badges .badge--outline {
@@ -552,7 +571,7 @@ form.booking-workspace {
   font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.25em;
-  color: var(--booking-muted);
+  color: rgba(3, 20, 57, 0.65);
 }
 
 .service-quantity__controls {
@@ -565,9 +584,9 @@ form.booking-workspace {
   flex: 1;
   padding: 0.65rem 0.9rem;
   border-radius: 14px;
-  border: 1px solid var(--booking-border);
+  border: 1px solid rgba(3, 20, 57, 0.16);
   background: #fff;
-  color: var(--booking-text);
+  color: #031439;
   text-align: center;
   font-weight: 600;
   font-size: 1rem;
@@ -586,9 +605,9 @@ form.booking-workspace {
   width: 38px;
   height: 38px;
   border-radius: 999px;
-  border: 1px solid var(--booking-border);
+  border: 1px solid rgba(3, 20, 57, 0.2);
   background: #fff;
-  color: var(--booking-text);
+  color: #031439;
   font-size: 1.1rem;
   display: flex;
   align-items: center;
@@ -646,14 +665,15 @@ form.booking-workspace {
   border-radius: 999px;
   border: 1px solid var(--booking-border);
   background: #fff;
-  color: var(--booking-text);
+  color: rgba(14, 51, 138, 0.4);
+  font-weight: 700;
   box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
   font-size: 1.3rem;
   cursor: pointer;
 }
 
 .booking-participants-btn:hover {
-  border-color: var(--booking-accent);
+  border-color: rgba(14, 51, 138, 0.4);
 }
 
 .participants-count strong {
@@ -682,7 +702,7 @@ form.booking-workspace {
 
 .participants-hint strong {
   font-size: 1rem;
-  color: var(--booking-text);
+  color: #fff;
 }
 
 .promotion-block {
@@ -692,7 +712,7 @@ form.booking-workspace {
 }
 
 .promotion-block label {
-  color: var(--booking-text);
+  color: #fff;
   font-weight: 500;
   font-size: 1rem;
 }
@@ -710,8 +730,9 @@ form.booking-workspace {
   border-radius: 14px;
   border: 1px solid var(--booking-border);
   background: #fff;
-  color: var(--booking-text);
-  font-size: 1rem;
+  color: #0c3a75;
+  font-size: 1.3rem;
+  font-weight: 600;
 }
 
 .promo-chip {
@@ -730,11 +751,11 @@ form.booking-workspace {
 }
 
 .booking-card--promo {
-  min-height: 110px;
+  min-height: var(--booking-compact-card-height);
   padding: 1rem;
   border-color: var(--booking-border-strong);
-  background: rgba(255, 255, 255, 0.88);
-  color: var(--booking-text);
+  background: linear-gradient(180deg, rgba(11, 34, 92, 0.95), rgba(5, 13, 53, 0.95));
+  color: #f5f7ff;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -752,7 +773,7 @@ form.booking-workspace {
   gap: 1.2rem;
   position: relative;
   grid-column: 1 / -1;
-  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
 }
 
 .payment-summary {
@@ -831,6 +852,10 @@ form.booking-workspace {
   .booking-card--promo,
   section.booking-card.booking-card--participants {
     grid-column: span 1;
+  }
+
+  .booking-date-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   }
 
   .payment-summary {

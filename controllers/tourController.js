@@ -42,7 +42,7 @@ exports.uploadTourImages = upload.fields([
   { name: 'images', maxCount: 6 }
 ]);
 
-const detectImageFormat = (file) => {
+const detectImageFormat = file => {
   const fallback = { extension: 'jpg', format: 'jpeg' };
   if (!file) return fallback;
 
@@ -60,7 +60,7 @@ const detectImageFormat = (file) => {
 
   if (!extension) return fallback;
 
-  let format = extension === 'jpg' ? 'jpeg' : extension;
+  const format = extension === 'jpg' ? 'jpeg' : extension;
   if (!['jpeg', 'png', 'webp', 'gif'].includes(format)) {
     return fallback;
   }
@@ -90,7 +90,8 @@ exports.resizeTourImages = catchAsync(async (req, res, next) => {
   if (req.files.imageCover) {
     const coverFile = req.files.imageCover[0];
     const { extension, format } = detectImageFormat(coverFile);
-    const coverFilename = `tour-${req.params.id || 'new'}-${Date.now()}-cover.${extension}`;
+    const coverFilename = `tour-${req.params.id ||
+      'new'}-${Date.now()}-cover.${extension}`;
     let pipeline = sharp(coverFile.buffer).resize(2000, 1333);
     pipeline = applyFormatOptions(pipeline, format);
     await pipeline.toFile(`public/img/tours/${coverFilename}`);
@@ -104,7 +105,8 @@ exports.resizeTourImages = catchAsync(async (req, res, next) => {
     await Promise.all(
       req.files.images.map(async (file, i) => {
         const { extension, format } = detectImageFormat(file);
-        const filename = `tour-${req.params.id || 'new'}-${Date.now()}-${i + 1}.${extension}`;
+        const filename = `tour-${req.params.id || 'new'}-${Date.now()}-${i +
+          1}.${extension}`;
         let pipeline = sharp(file.buffer).resize(2000, 1333);
         pipeline = applyFormatOptions(pipeline, format);
         await pipeline.toFile(`public/img/tours/${filename}`);
@@ -186,8 +188,7 @@ exports.updateTour = catchAsync(async (req, res, next) => {
   if (!current) return next(new AppError('Không tìm thấy tour', 404));
 
   const appendStartDates =
-    req.body.appendStartDates === true ||
-    req.body.appendStartDates === 'true';
+    req.body.appendStartDates === true || req.body.appendStartDates === 'true';
   delete req.body.appendStartDates;
 
   // Ép kiểu số nếu có trong payload
@@ -274,7 +275,6 @@ exports.updateTour = catchAsync(async (req, res, next) => {
     delete req.body.startDates;
   }
   // ------------------------
-
 
   const updated = await Tour.findByIdAndUpdate(req.params.id, req.body, {
     new: true,

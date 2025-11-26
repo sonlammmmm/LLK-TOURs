@@ -89,7 +89,6 @@ router.get(
 router.get(
   '/my-tours',
   authController.protect,
-  bookingController.createBookingCheckout,
   setUserPortalLayout,
   viewsController.getMyTours
 );

@@ -24,10 +24,12 @@ block content
                 p.form__input #{user.email}
                 input#email(type='hidden', name='email', value=`${user.email}`)
               .form__group.form__photo-upload
-                img.form__user-photo(src=`/img/users/${user.photo}`, alt='User photo')
-                input.form__upload(type='file', accept='image/*', id='photo', name='photo')
-                label(for='photo') Chọn ảnh mới
-              .form__group.form__group--actions
+                .form__photo-preview
+                  img.form__user-photo(src=`/img/users/${user.photo}`, alt='User photo', data-default-src=`/img/users/${user.photo}`)
+                .form__photo-actions
+                  input.form__upload(type='file', accept='image/*', id='photo', name='photo')
+                  label.form__upload-label(for='photo') Chọn ảnh mới
+                  small.form__photo-hint Hỗ trợ file ảnh tối đa 2MB
                 button.btn.btn--small.btn--blue Cập nhật thông tin
 
           article.user-portal__card

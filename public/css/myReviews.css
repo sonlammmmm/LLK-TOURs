@@ -17,8 +17,8 @@
 }
 
 .reviews-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.5rem;
 }
 
@@ -28,6 +28,7 @@
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
   overflow: hidden;
   transition: all 0.3s;
+  width: 100%;
 }
 
 .review-item:hover {
@@ -113,6 +114,10 @@
 @media only screen and (max-width: 768px) {
   .reviews-filter {
     flex-direction: column;
+  }
+
+  .reviews-list {
+    grid-template-columns: 1fr;
   }
 
   .review-item__header {

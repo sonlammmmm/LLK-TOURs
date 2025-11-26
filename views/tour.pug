@@ -18,6 +18,11 @@ block content
   - const totalStops = tour.locations && tour.locations.length ? tour.locations.length : 0
   - const galleryImages = Array.isArray(tour.images) ? tour.images : []
   - const ratingLabel = `${tour.ratingsAverage} / 5⭐ (${tour.ratingsQuantity} đánh giá)`
+  - const ratingAverageRaw = typeof tour.ratingsAverage === 'number' ? tour.ratingsAverage : Number(tour.ratingsAverage)
+  - const ratingAverageValue = Number.isFinite(ratingAverageRaw) ? ratingAverageRaw : 0
+  - const ratingAverageRounded = Math.round(ratingAverageValue * 10) / 10
+  - const ratingAverageDisplay = Number.isFinite(ratingAverageRounded) ? ratingAverageRounded.toFixed(1) : '0.0'
+  - const ratingAverageStars = Math.min(5, Math.max(0, Math.round(ratingAverageValue)))
   - const allReviews = Array.isArray(tour.reviews) ? tour.reviews.slice() : []
   - const sortedReviews = allReviews.sort((a, b) => (b.rating || 0) - (a.rating || 0))
   - const maxInitialReviews = 9
@@ -61,7 +66,7 @@ block content
               - const readable = dateOption.dateFormatted || new Date(dateOption.date).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })
               - const optionValue = dateOption.dateISO || new Date(dateOption.date).toISOString()
               option(value=optionValue selected=dateOption === primaryBookingOption)= readable
-        a.btn.btn--green.quick-booking__btn(href=bookingHref) Đăng ký ngay
+        a.btn.btn--green.quick-booking__btn(href=bookingHref data-booking-href=bookingHref) Đăng ký ngay
       else
         if hasUpcomingStart
           p.quick-booking__empty Các lịch khởi hành sắp tới hiện đã kín chỗ. Liên hệ với concierge để được hỗ trợ hoặc chờ thông báo mở chỗ.
@@ -185,14 +190,13 @@ block content
     .tour-reviews__inner
       .tour-reviews__summary
         span.tour-reviews__eyebrow Khách hàng nói gì?
-        h3= `Điểm trung bình ${tour.ratingsAverage}/5`
-        p= `${tour.ratingsQuantity} khách đã trải nghiệm tour này`
-        if hasAvailableStart
-          a.btn.btn--green(href=bookingHref) Đăng ký ngay
-        else
-          a.btn.btn--contact(href=userContactHref)
-            i.fas.fa-headset
-            span Liên hệ với admin
+        h3.tour-reviews__score
+          span.tour-reviews__score-value= ratingAverageDisplay
+          span.tour-reviews__score-scale /5
+        .tour-reviews__summary-stars
+          each star in [1,2,3,4,5]
+            i(class=star <= ratingAverageStars ? 'fas fa-star' : 'far fa-star')
+        p.tour-reviews__summary-text= tour.ratingsQuantity ? `${tour.ratingsQuantity} lượt đánh giá xác thực từ khách đã tham gia.` : 'Chưa có đánh giá nào cho tour này.'
       .tour-reviews__grid
         if initialReviews.length
           each review in initialReviews
@@ -241,3 +245,26 @@ block append scripts
         });
       }
     })();
+    document.addEventListener('DOMContentLoaded', () => {
+      const quickBookingBtn = document.querySelector('.quick-booking__btn[data-booking-href]');
+      const dateSelect = document.getElementById('quickBookingDate');
+
+      if (!quickBookingBtn || !dateSelect) return;
+
+      const baseHref = quickBookingBtn.dataset.bookingHref || '';
+      if (!baseHref.includes('/book-tour/')) return;
+
+      quickBookingBtn.addEventListener('click', event => {
+        const selectedDate = dateSelect.value;
+        if (!selectedDate) return;
+
+        event.preventDefault();
+        try {
+          const url = new URL(baseHref, window.location.origin);
+          url.searchParams.set('startDate', selectedDate);
+          window.location.href = url.pathname + url.search;
+        } catch {
+          window.location.href = `${baseHref}?startDate=${encodeURIComponent(selectedDate)}`;
+        }
+      });
+    });

@@ -50,11 +50,15 @@ exports.assignPromotionToUser = catchAsync(async (req, res, next) => {
     }
   }
 
-  const processedUserIds = Array.isArray(userIds)
-    ? userIds
-    : typeof userIds === 'string' && userIds.length
-    ? [userIds]
-    : [];
+  const processedUserIds = (() => {
+    if (Array.isArray(userIds)) {
+      return userIds;
+    }
+    if (typeof userIds === 'string' && userIds.length) {
+      return [userIds];
+    }
+    return [];
+  })();
 
   const normalizedIds = new Set([...processedUserIds, userId].filter(Boolean));
 

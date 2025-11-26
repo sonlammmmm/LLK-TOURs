@@ -212,20 +212,21 @@ const hasStartDateOnOrAfter = (tour, targetDate) => {
 exports.getAllTours = catchAsync(async (req, res, next) => {
   const rawTours = await Tour.find().lean();
 
-  const {
-    startDates = '',
-    duration = '',
-    groupSize = ''
-  } = req.query;
+  const { startDates = '', duration = '', groupSize = '' } = req.query;
   const searchQuery = req.query.search || req.query.name || '';
   const ratingOrder = req.query.ratingOrder || '';
   const sortKey = req.query.sort || '';
   const { minPrice, maxPrice } = req.query;
 
-  const parsedMin = parsePositiveNumber(minPrice) ?? 1000000;
-  const parsedMax = parsePositiveNumber(maxPrice) ?? 50000000;
-  const finalMinPrice = Math.min(parsedMin, parsedMax);
-  const finalMaxPrice = Math.max(parsedMin, parsedMax);
+  const parsedMin = parsePositiveNumber(minPrice);
+  const parsedMax = parsePositiveNumber(maxPrice);
+  const hasMinPrice = parsedMin != null;
+  const hasMaxPrice = parsedMax != null;
+
+  const minPriceFloor = hasMinPrice ? parsedMin : 0;
+  const maxPriceCeil = hasMaxPrice ? parsedMax : Number.MAX_SAFE_INTEGER;
+  const finalMinPrice = Math.min(minPriceFloor, maxPriceCeil);
+  const finalMaxPrice = Math.max(minPriceFloor, maxPriceCeil);
   let startDateFilter = startDates ? new Date(startDates) : null;
   if (startDateFilter && Number.isNaN(startDateFilter.getTime()))
     startDateFilter = null;
@@ -269,8 +270,8 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
     startDates,
     duration,
     groupSize,
-    minPrice: finalMinPrice,
-    maxPrice: finalMaxPrice,
+    minPrice: hasMinPrice ? finalMinPrice : null,
+    maxPrice: hasMaxPrice ? finalMaxPrice : null,
     ratingOrder,
     sort: sortKey
   };
@@ -298,10 +299,17 @@ exports.searchTours = catchAsync(async (req, res, next) => {
 
   if (startDates) {
     const searchDate = new Date(startDates);
-    searchQuery.startDates = {
-      $gte: searchDate,
-      $lt: new Date(searchDate.getTime() + 24 * 60 * 60 * 1000)
-    };
+    if (!Number.isNaN(searchDate.getTime())) {
+      const nextDate = new Date(searchDate.getTime() + 24 * 60 * 60 * 1000);
+      searchQuery.startDates = {
+        $elemMatch: {
+          date: {
+            $gte: searchDate,
+            $lt: nextDate
+          }
+        }
+      };
+    }
   }
 
   if (startLocation) {
@@ -399,8 +407,10 @@ exports.getMyTours = catchAsync(async (req, res, next) => {
       if (!tour) return null;
       const startDate = booking.startDate ? new Date(booking.startDate) : null;
       const fallbackDate =
-        tour.startDates && tour.startDates.length
-          ? new Date(tour.startDates[0])
+        tour.startDates &&
+        tour.startDates.length &&
+        tour.startDates[0]?.date
+          ? new Date(tour.startDates[0].date)
           : null;
       const displayDate = startDate || fallbackDate;
       let endDate = null;
