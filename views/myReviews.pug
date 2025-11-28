@@ -23,9 +23,10 @@ block content
 
           .reviews-list
             if reviews.length === 0
-              .reviews-empty
-                p Bạn chưa có đánh giá nào. Khám phá tour và để lại cảm nhận.
-                a.btn.btn--green(href='/all') Khám phá tour
+              .reviews-empty.empty-tours
+                h2.heading-secondary Bạn chưa có đánh giá nào
+                p.empty-tours-text Khám phá tour và để lại cảm nhận.
+                a.my-tour-link(href='/all') Khám phá tour
             else
               each review in reviews
                 .review-item

@@ -17,7 +17,7 @@ block content
   - const userContactHref = user && user.role === 'user' ? `/chat?prefill=${encodeURIComponent(contactMessage)}` : '/login'
   - const totalStops = tour.locations && tour.locations.length ? tour.locations.length : 0
   - const galleryImages = Array.isArray(tour.images) ? tour.images : []
-  - const ratingLabel = `${tour.ratingsAverage} / 5⭐ (${tour.ratingsQuantity} đánh giá)`
+  - const ratingLabel = `${tour.ratingsAverage} / 5 (${tour.ratingsQuantity} đánh giá)`
   - const ratingAverageRaw = typeof tour.ratingsAverage === 'number' ? tour.ratingsAverage : Number(tour.ratingsAverage)
   - const ratingAverageValue = Number.isFinite(ratingAverageRaw) ? ratingAverageRaw : 0
   - const ratingAverageRounded = Math.round(ratingAverageValue * 10) / 10
@@ -49,7 +49,7 @@ block content
           i.fas.fa-users
           span= `${tour.maxGroupSize} khách`
         .tour-pill
-          i.fas.fa-star
+          i.fas.fa-star(aria-hidden='true')
           span= ratingLabel
 
   .quick-booking-floating
@@ -125,7 +125,7 @@ block content
             i.fas.fa-user-tie
             span Hướng dẫn viên địa phương giàu kinh nghiệm đồng hành
           li
-            i.fas.fa-shield-heart
+            i.fas.fa-shield
             span Bảo hiểm du lịch & hỗ trợ 24/7
 
       section.tour-section.tour-map-wrapper

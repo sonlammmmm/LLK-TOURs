@@ -81,7 +81,7 @@ const tourSchema = new mongoose.Schema(
         }
       ],
       set: function(v) {
-        // ✅ Nếu nhận chuỗi JSON
+        //Nếu nhận chuỗi JSON
         if (typeof v === 'string') {
           try {
             const parsed = JSON.parse(v);
@@ -116,15 +116,13 @@ const tourSchema = new mongoose.Schema(
           }
         }
 
-        // ✅ Nếu nhận mảng string ISO dates
+        //Nếu nhận mảng string ISO dates
         if (Array.isArray(v) && typeof v[0] === 'string') {
           return v.map(d => ({
             date: new Date(d),
             availableSlots: this.maxGroupSize || 0
           }));
         }
-
-        // ✅ Nếu đã là mảng object hợp lệ
         return v;
       }
     },
@@ -220,7 +218,6 @@ tourSchema.pre('save', function(next) {
 
 tourSchema.pre(/^find/, function(next) {
   this.find({ secretTour: { $ne: true } });
-  this.start = Date.now();
   next();
 });
 
@@ -229,16 +226,6 @@ tourSchema.pre(/^find/, function(next) {
     path: 'guides',
     select: '-__v -passwordChangedAt'
   });
-  next();
-});
-
-tourSchema.post(/^find/, function(docs, next) {
-  console.log(`Query took ${Date.now() - this.start} milliseconds!`);
-  next();
-});
-
-tourSchema.pre('aggregate', function(next) {
-  console.log(this.pipeline());
   next();
 });
 

@@ -2274,7 +2274,7 @@ textarea {
 }
 
 .footer__brand-highlights i {
-  color: #ffdc7a;
+  color: var(--primary-light);
   font-size: 1.6rem;
 }
 
@@ -2331,7 +2331,7 @@ textarea {
 }
 
 .footer__column ul li a:hover {
-  color: #ffd65c;
+  color: var(--primary-light);
 }
 
 .footer__column p {

@@ -99,16 +99,25 @@
 }
 
 .reviews-empty {
-  text-align: center;
-  padding: 3rem;
-  background-color: #f7f7f7;
-  border-radius: 8px;
+  grid-column: 1 / -1;
+  width: 100%;
 }
 
-.reviews-empty p {
-  font-size: 1.6rem;
-  color: #777;
-  margin-bottom: 1.5rem;
+.reviews-empty.empty-tours {
+  max-width: 560px;
+  justify-self: center;
+}
+
+.reviews-empty .my-tour-link {
+  margin-top: 0.5rem;
+}
+
+.reviews-empty--filter {
+  margin-top: 0;
+}
+
+.reviews-empty--filter p {
+  margin-bottom: 0;
 }
 
 @media only screen and (max-width: 768px) {

@@ -166,7 +166,7 @@ exports.normalizeMultipartJSON = (req, res, next) => {
         if (d && d.availableSlots != null) {
           out.availableSlots = Number(d.availableSlots);
         } else if (req.method === 'POST') {
-          // ✅ Chỉ default khi CREATE
+          //Chỉ default khi CREATE
           out.availableSlots = Number(req.body.maxGroupSize) || 0;
         }
         return out;
@@ -196,7 +196,7 @@ exports.updateTour = catchAsync(async (req, res, next) => {
     if (req.body[f] != null) req.body[f] = Number(req.body[f]);
   });
 
-  // ✅ Parse an toàn nếu client gửi JSON string
+  // Parse an toàn nếu client gửi JSON string
   if (typeof req.body.startLocation === 'string') {
     const parsed = tryParseJSON(req.body.startLocation, 'startLocation');
     if (parsed) req.body.startLocation = parsed;
@@ -349,14 +349,6 @@ exports.createTour = catchAsync(async (req, res, next) => {
   // Đảm bảo duration, price, priceDiscount là số
   ['duration', 'price', 'priceDiscount'].forEach(f => {
     if (req.body[f]) req.body[f] = Number(req.body[f]);
-  });
-
-  console.log('✅ Dữ liệu tạo tour sau khi xử lý:', {
-    name: req.body.name,
-    startDates: req.body.startDates,
-    startLocation: req.body.startLocation,
-    locations: req.body.locations,
-    guides: req.body.guides
   });
 
   const newTour = await Tour.create(req.body);

@@ -394,9 +394,16 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
 
   const lineItems = buildLineItems(tour, pricing, req);
   const couponId = await createDiscountCoupon(pricing.discountAmount);
-  const metadata = buildSessionMetadata(req, tour, pricing, startKey, platform, {
-    softLockId: softLockRecord?.id || ''
-  });
+  const metadata = buildSessionMetadata(
+    req,
+    tour,
+    pricing,
+    startKey,
+    platform,
+    {
+      softLockId: softLockRecord?.id || ''
+    }
+  );
 
   let session;
   try {

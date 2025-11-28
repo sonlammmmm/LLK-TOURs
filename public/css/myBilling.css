@@ -105,15 +105,25 @@
 }
 
 .billing-empty {
-  text-align: center;
-  padding: 3rem;
-  background-color: #f7f7f7;
-  border-radius: 8px;
+  grid-column: 1 / -1;
+  width: 100%;
 }
 
-.billing-empty p {
-  font-size: 1.6rem;
-  color: #777;
+.billing-empty.empty-tours {
+  max-width: 560px;
+  justify-self: center;
+}
+
+.billing-empty .my-tour-link {
+  margin-top: 0.5rem;
+}
+
+.billing-empty--filter {
+  margin-top: 0;
+}
+
+.billing-empty--filter p {
+  margin-bottom: 0;
 }
 
 .billing-item__id {

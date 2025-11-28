@@ -187,8 +187,8 @@ export const initReviewsFilter = () => {
 
     if (!emptyMessage && Array.from(reviewItems).every((item) => item.style.display === "none")) {
       const emptyEl = document.createElement("div")
-      emptyEl.className = "reviews-empty reviews-empty--filter"
-      emptyEl.innerHTML = "<p>Không tìm thấy đánh giá nào phù hợp.</p>"
+      emptyEl.className = "reviews-empty empty-tours reviews-empty--filter"
+      emptyEl.innerHTML = "<p class='empty-tours-text'>Không tìm thấy đánh giá nào phù hợp.</p>"
       reviewsList.appendChild(emptyEl)
     } else if (emptyMessage && emptyMessage.classList.contains("reviews-empty--filter")) {
       if (Array.from(reviewItems).some((item) => item.style.display === "block")) {

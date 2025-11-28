@@ -1,17 +1,24 @@
 footer.footer
   .footer__shell
+    .footer__cta
+      .footer__cta-text
+        h3 Sẵn sàng cho hành trình tiếp theo?
+        p Nhận gợi ý cá nhân hóa và lịch khởi hành phù hợp từ đội chuyên viên hành trình LLK bằng tiếng Việt bất cứ khi nào bạn cần.
+      .footer__cta-action
+        a.btn.btn--green(href='/chat') Trò chuyện với chuyên viên LLK
+        .footer__cta-support Hotline 24/7: #[span 038****234]
 
     .footer__grid
       .footer__brand
         img(src='/img/logo-blue.png' alt='LLK logo')
-        p LLK Tours chuyên tổ chức hành trình mềm mại giữa cảm xúc và trải nghiệm.
+        p LLK Tours chuyên tổ chức hành trình mượt mà, trọn cảm xúc với đội ngũ chuyên gia bản địa.
         .footer__brand-highlights
           span
             i.fas.fa-headset
-            |  Hỗ trợ trực tiếp 24/7
+            | Hỗ trợ trực tiếp 24/7
           span
             i.fas.fa-map-marker-alt
-            |  Hà Nội · TP. HCM · Đà Nẵng
+            | Hà Nội • TP. HCM • Đà Nẵng
         .footer__payment
           span Thanh toán an toàn
           .payment-icons
@@ -29,23 +36,25 @@ footer.footer
           li: a(href='/cars') Thuê xe
 
       .footer__column
-        h4 Hỗ trợ khách hàng
-        p
-          i.fas.fa-map-marker-alt
-          |  Khu Công nghệ cao Xa lộ Hà Nội, Hiệp Phú, TP. Thủ Đức, TP. HCM
-        p
-          i.fas.fa-phone
-          |  038****234
-        p
-          i.fas.fa-envelope
-          |  transysonlam@gmail.com
+        h4 Trung tâm khách hàng
+        ul
+          li: a(href='/me') Tài khoản của tôi
+          li: a(href='/my-tours') Tour đã đặt
+          li: a(href='/my-billing') Hóa đơn thanh toán
+          li: a(href='/my-reviews') Đánh giá của tôi
+          li: a(href='/chat') Chat trực tuyến với admin
 
       .footer__column
-        h4 Đăng ký nhận tin
-        p Cập nhật chuyến đi mới, ưu đãi đặc quyền và cẩm nang du lịch từ LLK.
-        form.footer__news-form(action='#' method='post')
-          input(type='email' name='newsletter-email' placeholder='Email của bạn' required)
-          button.btn.btn--contact(type='submit') Đăng ký
+        h4 Liên hệ & hỗ trợ
+        p
+          i.fas.fa-map-marker-alt
+          | Khu Công nghệ cao Xa lộ Hà Nội, Hiệp Phú, TP. Thủ Đức, TP. HCM
+        p
+          i.fas.fa-phone
+          | 038****234
+        p
+          i.fas.fa-envelope
+          | transysonlam@gmail.com
 
     .footer__bottom
       p.footer__copyright &copy; 2025 LLK Tours. Giấy phép kinh doanh lữ hành quốc tế số: 01-001/2020/TCDL-GP LHQT

@@ -39,7 +39,6 @@ const bookingSchema = new mongoose.Schema({
     enum: ['stripe'],
     default: 'stripe'
   },
-  // ✅ THÊM TRƯỜNG NÀY
   providerSessionId: {
     type: String,
     unique: true,
@@ -114,7 +113,7 @@ const bookingSchema = new mongoose.Schema({
 
 bookingSchema.index({ tour: 1 });
 bookingSchema.index({ user: 1 });
-// ✅ THÊM INDEX CHO WEBHOOK QUERY
+//THÊM INDEX CHO WEBHOOK QUERY
 bookingSchema.index({ paymentMethod: 1, providerSessionId: 1 });
 bookingSchema.index({ softLock: 1 });
 
@@ -127,7 +126,7 @@ bookingSchema.post('save', async doc => {
       await tour.decreaseSlots(doc.startDate, doc.participants);
     }
   } catch (err) {
-    console.error('❌ Lỗi khi giảm slot:', err.message);
+    console.error('Lỗi khi giảm slot:', err.message);
   }
 });
 
@@ -147,11 +146,11 @@ bookingSchema.post('findOneAndDelete', async function() {
           this._deletedBooking.participants
         );
         console.log(
-          `✅ Đã hoàn ${this._deletedBooking.participants} slot cho tour ${tour.name}`
+          `Đã hoàn ${this._deletedBooking.participants} slot cho tour ${tour.name}`
         );
       }
     } catch (err) {
-      console.error('❌ Lỗi khi hoàn slot:', err.message);
+      console.error('Lỗi khi hoàn slot:', err.message);
     }
   }
 });
@@ -177,16 +176,16 @@ bookingSchema.post('findOneAndUpdate', async function(doc) {
         await tour.increaseSlots(oldStartDate, oldParticipants);
         await tour.decreaseSlots(newStartDate, newParticipants);
         console.log(
-          `✅ Đã chuyển ${newParticipants} slot từ ${oldStartDate} sang ${newStartDate}`
+          `Đã chuyển ${newParticipants} slot từ ${oldStartDate} sang ${newStartDate}`
         );
       } else if (oldParticipants !== newParticipants) {
         const difference = newParticipants - oldParticipants;
         if (difference > 0) {
           await tour.decreaseSlots(newStartDate, difference);
-          console.log(`✅ Đã giảm thêm ${difference} slot`);
+          console.log(`Đã giảm thêm ${difference} slot`);
         } else {
           await tour.increaseSlots(newStartDate, Math.abs(difference));
-          console.log(`✅ Đã hoàn ${Math.abs(difference)} slot`);
+          console.log(`Đã hoàn ${Math.abs(difference)} slot`);
         }
       }
     } catch (err) {

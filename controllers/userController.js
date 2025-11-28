@@ -170,4 +170,3 @@ exports.activateUser = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteUser = factory.deleteOne(User);
-

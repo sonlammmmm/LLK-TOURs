@@ -105,9 +105,7 @@ const matchesSearchQuery = (tour, keyword) => {
     });
   }
 
-  return fields.some(value =>
-    normalizeText(value).includes(normalizedKeyword)
-  );
+  return fields.some(value => normalizeText(value).includes(normalizedKeyword));
 };
 
 const toNumberOrZero = value => {
@@ -332,7 +330,7 @@ exports.searchTours = catchAsync(async (req, res, next) => {
   });
 });
 
-// ✅ CẬP NHẬT: Thêm thông tin slot
+//CẬP NHẬT: Thêm thông tin slot
 exports.getTour = catchAsync(async (req, res, next) => {
   const tour = await Tour.findOne({ slug: req.params.slug }).populate({
     path: 'reviews',
@@ -365,7 +363,7 @@ exports.getTour = catchAsync(async (req, res, next) => {
   res.status(200).render('tour', {
     title: `${tour.name}`,
     tour,
-    startDatesWithSlots, // ✅ Truyền biến này vào view
+    startDatesWithSlots,
     tourStartMeta
   });
 });
@@ -407,9 +405,7 @@ exports.getMyTours = catchAsync(async (req, res, next) => {
       if (!tour) return null;
       const startDate = booking.startDate ? new Date(booking.startDate) : null;
       const fallbackDate =
-        tour.startDates &&
-        tour.startDates.length &&
-        tour.startDates[0]?.date
+        tour.startDates && tour.startDates.length && tour.startDates[0]?.date
           ? new Date(tour.startDates[0].date)
           : null;
       const displayDate = startDate || fallbackDate;

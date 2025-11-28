@@ -33,8 +33,8 @@ export const initMyBilling = () => {
 
     if (!emptyMessage && Array.from(billingItems).every((item) => item.style.display === "none")) {
       const emptyEl = document.createElement("div")
-      emptyEl.className = "billing-empty billing-empty--filter"
-      emptyEl.innerHTML = "<p>Không tìm thấy hóa đơn nào phù hợp.</p>"
+      emptyEl.className = "billing-empty empty-tours billing-empty--filter"
+      emptyEl.innerHTML = "<p class='empty-tours-text'>Không tìm thấy hóa đơn nào phù hợp.</p>"
       billingList.appendChild(emptyEl)
     } else if (emptyMessage && emptyMessage.classList.contains("billing-empty--filter")) {
       if (Array.from(billingItems).some((item) => item.style.display === "block")) {
