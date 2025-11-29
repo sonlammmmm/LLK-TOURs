@@ -77,13 +77,6 @@ block content
               .booking-card__header
 
                 h2 Chọn ngày khởi hành
-
-              .booking-dates-toolbar
-
-                span.booking-dates-total= `${availableDates.length} đợt lên đường`
-
-                span.booking-dates-note Chọn nhanh để giữ chỗ
-
               if availableDates.length
 
                 .booking-dates-body
@@ -172,7 +165,6 @@ block content
                           span.badge.badge--outline Nhiều lần
                     if service.allowMultiple && service.chargeType === 'per-booking'
                       .service-quantity
-                        label.service-quantity__label(for=`service-qty-${serviceId}`) Số lượng
                         .service-quantity__controls
                           button.service-quantity__btn(type='button', aria-label='Giảm số lượng', data-service-id=serviceId, data-action='decrease')
                             span -
@@ -210,15 +202,37 @@ block content
             .payment-row.total-row
               span.payment-label Tổng thanh toán dự kiến
               span.payment-value#grand-total= `${formattedPrice} đ`
+          .payment-methods
+            label.payment-option.payment-option--stripe
+              span.payment-option__logo
+              input.payment-option__control(
+                type='radio',
+                name='paymentMethod',
+                value='stripe',
+                checked=true
+              )
+              .payment-option__content
+                strong Stripe
+                span Thanh toán qua Stripe
+            label.payment-option.payment-option--disabled
+              span.payment-option__logo
+              input.payment-option__control(
+                type='radio',
+                name='paymentMethod',
+                value='future',
+                disabled=true
+              )
+              .payment-option__content
+                strong Sắp cập nhật
+                span Hình thức thanh toán khác đang được xây dựng
           .booking-actions
-            a.btn.btn--gray(href=`/tour/${tour.slug}`) Xem thông tin
-            button.btn.btn--bluegradient#book-tour(
+            button.btn.btn--ghost-white#book-tour(
               type='button',
               data-tour-id=`${tour._id}`,
               data-max-size=`${maxGroup}`,
               data-price=`${basePrice}`,
               disabled=false
-            ) Thanh toán Stripe
+            ) Thanh toán
 
 block scripts
   -

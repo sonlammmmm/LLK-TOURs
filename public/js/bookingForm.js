@@ -169,6 +169,7 @@ export const initBookingForm = () => {
   const promoChips = Array.from(document.querySelectorAll(".promo-chip"));
   const decreaseBtn = document.querySelector(".decrease-btn");
   const increaseBtn = document.querySelector(".increase-btn");
+  const bookingWorkspaceForm = document.querySelector("form.booking-workspace");
 
   if (
     !bookTourBtn ||
@@ -293,6 +294,15 @@ export const initBookingForm = () => {
     grandTotalEl.textContent = formatCurrency(grandTotal);
   };
 
+  const updatePromoFieldState = () => {
+    if (!bookingWorkspaceForm || !promotionInput) return;
+    if (promotionInput.value && promotionInput.value.trim()) {
+      bookingWorkspaceForm.classList.add("promo-filled");
+    } else {
+      bookingWorkspaceForm.classList.remove("promo-filled");
+    }
+  };
+
   const resetPromotion = (reason = "") => {
     state.discountAmount = 0;
     state.promotionCode = null;
@@ -306,6 +316,7 @@ export const initBookingForm = () => {
       removePromoBtn.disabled = true;
     }
     updateTotals();
+    updatePromoFieldState();
   };
 
   const refreshPromotionIfNeeded = async () => {
@@ -572,6 +583,7 @@ export const initBookingForm = () => {
       if (promotionInput) {
         promotionInput.value = chip.dataset.code || "";
         promotionInput.focus();
+        updatePromoFieldState();
       }
     });
   });
@@ -596,9 +608,14 @@ export const initBookingForm = () => {
     });
   }
 
+  if (promotionInput) {
+    promotionInput.addEventListener("input", updatePromoFieldState);
+  }
+
   updateParticipantsUI();
   updateTotals();
   setSelectedDateMeta(null);
+  updatePromoFieldState();
 
   bookTourBtn.disabled = true;
 
