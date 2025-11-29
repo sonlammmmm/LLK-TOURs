@@ -1,3 +1,5 @@
+@import './typography.css';
+
 #error-page {
   min-height: 100vh;
   height: 100vh;
@@ -61,7 +63,7 @@ body.error-page-body .alert-container {
 
 #error-page .text-location {
   letter-spacing: 0.35em;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   color: #7be0ff;
 }
@@ -73,7 +75,7 @@ body.error-page-body .alert-container {
 }
 
 #error-page .error__code {
-  font-size: 0.95rem;
+  font-size: var(--font-size-xs);
   margin: 0;
   letter-spacing: 0.3em;
   color: rgba(255, 255, 255, 0.65);
@@ -90,7 +92,7 @@ body.error-page-body .alert-container {
 #error-page .error__note {
   margin-top: 0.5rem;
   color: rgba(255, 255, 255, 0.7);
-  font-size: 0.95rem;
+  font-size: var(--font-size-xs);
   letter-spacing: 0.08em;
   text-transform: none;
 }
@@ -106,12 +108,12 @@ body.error-page-body .alert-container {
 
 #error-page .btn-explore i,
 #error-page .btn-outline i {
-  font-size: 1.1rem;
+  font-size: var(--font-size-xs);
 }
 
 #error-page .btn-explore span,
 #error-page .btn-outline span {
-  font-size: 0.95rem;
+  font-size: var(--font-size-xs);
 }
 
 #error-page .slide-bg {

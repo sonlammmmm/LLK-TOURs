@@ -1,3 +1,5 @@
+@import './typography.css';
+
 :root {
   --portal-bg: #eef2ff;
   --portal-panel-bg: #ffffff;
@@ -141,24 +143,24 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 }
 
 .user-portal__menu-avatar-placeholder {
-  font-size: 3.6rem;
-  font-weight: 600;
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-semibold);
   color: #ffffff;
 }
 
 .user-portal__menu-meta strong {
-  font-size: 2.1rem;
+  font-size: var(--font-size-xl);
   display: block;
   letter-spacing: 0.02em;
 }
 
 .user-portal__menu-meta span {
-  font-size: 1.425rem;
+  font-size: var(--font-size-md);
   color: rgba(255, 255, 255, 0.8);
 }
 
 .user-portal__menu-tag {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   padding: 0.3rem 0.9rem;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.2);
@@ -191,8 +193,8 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   text-decoration: none;
   color: #fff;
   padding: 0.85rem 1rem;
-  font-size: 1.5rem;
-  font-weight: 500;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
 }
 
 .user-portal__menu-link svg {
@@ -250,7 +252,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 
 .user-portal__content-heading p {
   color: var(--portal-muted);
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
 }
 
 .user-portal__grid {
@@ -276,13 +278,13 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 }
 
 .user-portal__card-title h2 {
-  font-size: 1.5rem;
+  font-size: var(--font-size-md);
   margin-bottom: 0.5rem;
 }
 
 .user-portal__card-title p {
   color: var(--portal-muted);
-  font-size: 0.95rem;
+  font-size: var(--font-size-xs);
 }
 
 .form__group {
@@ -296,19 +298,19 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 
 .form__group--actions .btn {
   width: 220px;
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   align-self: flex-end;
 }
 
 .form__label {
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: var(--portal-muted);
   margin-bottom: 0.3rem;
   display: block;
 }
 
 .form__input {
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   border-radius: 0.9rem;
   border: 1px solid rgba(15, 23, 42, 0.2);
   padding: 0.8rem 1rem;
@@ -412,19 +414,19 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 }
 
 .chat-partner__label {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: rgba(16, 42, 108, 0.6);
 }
 
 .chat-partner__name {
-  font-size: 1.35rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .chat-partner__status {
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: rgba(16, 42, 108, 0.7);
 }
 
@@ -436,7 +438,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 .chat-panel__heading-copy p {
   color: var(--portal-muted);
   margin-top: 0.1rem;
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
 }
 
 .chat-conversation-wrapper {
@@ -453,7 +455,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   height: clamp(360px, 55vh, 480px);
   overflow-y: auto;
   padding-right: 0.4rem;
-  font-size: 1.4rem;
+  font-size: var(--font-size-md);
   line-height: 1.6;
   scrollbar-width: thin;
   scrollbar-color: rgba(16, 42, 108, 0.4) rgba(15, 23, 42, 0.04);
@@ -485,7 +487,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   display: flex;
   align-items: center;
   gap: 1rem;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--portal-muted);
@@ -536,7 +538,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   background: #f0f2ff;
   border: 1px solid rgba(15, 23, 42, 0.05);
   text-align: left;
-  font-size: 1.1rem;
+  font-size: var(--font-size-xs);
 }
 
 .chat-message--me .chat-message__bubble {
@@ -553,7 +555,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  font-size: 1.1rem;
+  font-size: var(--font-size-xs);
   margin-bottom: 0.6rem;
   color: rgba(15, 23, 42, 0.65);
 }
@@ -563,17 +565,17 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 }
 
 .chat-message__name {
-  font-weight: 700;
-  font-size: 1.5em;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-md);
 }
 
 .chat-message__time {
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
 }
 
 .chat-message__text {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   line-height: 1.8;
   word-break: break-word;
 }
@@ -609,7 +611,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   flex: 1;
   border: none;
   padding: 0.6rem 0.5rem;
-  font-size: 1.8rem;
+  font-size: var(--font-size-lg);
   background: transparent;
 }
 
@@ -623,7 +625,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   border-radius: 999px;
   padding: 0 1.8rem;
   border: none;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -680,13 +682,13 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 }
 
 .billing-item__tour {
-  font-weight: 600;
-  font-size: 1.2rem;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
 }
 
 .billing-item__date span {
   display: block;
-  font-size: 0.9rem;
+  font-size: var(--font-size-xs);
   color: var(--portal-muted);
 }
 
@@ -703,19 +705,19 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 
 .billing-item__label {
   color: var(--portal-muted);
-  font-size: 0.85rem;
+  font-size: var(--font-size-xs);
 }
 
 .billing-item__value {
-  font-weight: 600;
-  font-size: 1.1rem;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
 }
 
 .billing-status-badge {
-  font-size: 0.9rem;
+  font-size: var(--font-size-xs);
   padding: 0.2rem 0.8rem;
   border-radius: 999px;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .billing-status--paid {
@@ -778,16 +780,16 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 }
 
 .promo-card__code {
-  font-weight: 700;
-  font-size: 1.4rem;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-md);
   color: var(--portal-accent);
 }
 
 .badge {
   padding: 0.2rem 0.9rem;
   border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .badge--neutral {
@@ -796,13 +798,13 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 }
 
 .promo-card__title {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   margin: 0.4rem 0 0.2rem;
 }
 
 .promo-card__desc {
   color: var(--portal-muted);
-  font-size: 0.95rem;
+  font-size: var(--font-size-xs);
   margin: 0;
 }
 
@@ -813,7 +815,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  font-size: 0.9rem;
+  font-size: var(--font-size-xs);
   color: var(--portal-muted);
 }
 
@@ -878,7 +880,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-decoration: none;
   color: var(--portal-accent);
 }
@@ -897,7 +899,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 }
 
 .review-item__star {
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: #d1d5db;
 }
 
@@ -907,7 +909,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 
 .review-item__content p {
   color: var(--portal-muted);
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
 }
 
 .review-item__footer {
@@ -919,7 +921,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 }
 
 .review-item__date {
-  font-size: 0.9rem;
+  font-size: var(--font-size-xs);
   color: var(--portal-muted);
 }
 
@@ -951,7 +953,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 
 .user-portal__booking-id {
   width: 100%;
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: var(--portal-muted);
   text-align: right;
   padding-top: 0.6rem;
@@ -1030,8 +1032,8 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   border: 1px solid rgba(255, 255, 255, 0.25);
   padding: 0.35rem 1rem;
   border-radius: 999px;
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.08rem;
 }
@@ -1048,7 +1050,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 }
 
 .invoice-hero__code {
-  font-size: 0.95rem;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.25rem;
   color: rgba(255, 255, 255, 0.75);
@@ -1060,7 +1062,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 }
 
 .invoice-hero__number {
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: rgba(255, 255, 255, 0.8);
 }
 
@@ -1069,12 +1071,12 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem 2rem;
-  font-size: 1.1rem;
+  font-size: var(--font-size-xs);
   color: rgba(255, 255, 255, 0.85);
 }
 
 .invoice-hero__meta strong {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .invoice-hero__total {
@@ -1089,13 +1091,13 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 
 .invoice-hero__total-label {
   display: block;
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: rgba(255, 255, 255, 0.8);
 }
 
 .invoice-hero__total-value {
-  font-size: 2.4rem;
-  font-weight: 700;
+  font-size: var(--font-size-xxl);
+  font-weight: var(--font-weight-semibold);
   letter-spacing: 0.02em;
 }
 
@@ -1132,7 +1134,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 }
 
 .invoice-info-card__title {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #121a33;
   text-transform: uppercase;
   letter-spacing: 0.15rem;
@@ -1152,14 +1154,14 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 
 .invoice-info-card__label {
   color: #5c647d;
-  font-weight: 600;
-  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
 }
 
 .invoice-info-card__value {
   color: #111b3b;
-  font-weight: 700;
-  font-size: 1.1rem;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
   text-align: right;
 }
 
@@ -1185,8 +1187,8 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 
 .invoice-table thead th {
   background: #eef2ff;
-  font-weight: 700;
-  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
   color: #111b3b;
 }
 
@@ -1201,8 +1203,8 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 
 .invoice-table tfoot td {
   border-top: 2px solid #0f172a;
-  font-weight: 700;
-  font-size: 1.15rem;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
 }
 
 .invoice-breakdown {
@@ -1217,7 +1219,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 
 .invoice-breakdown__title {
   text-transform: uppercase;
-  font-size: 0.85rem;
+  font-size: var(--font-size-xs);
   letter-spacing: 0.32rem;
   color: #6c7394;
 }
@@ -1237,19 +1239,19 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 }
 
 .invoice-breakdown__label {
-  font-size: 0.95rem;
+  font-size: var(--font-size-xs);
   color: #5a5f79;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .invoice-breakdown__value {
-  font-weight: 700;
-  font-size: 1.05rem;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
   color: #0f172a;
 }
 
 .invoice-breakdown__item--total .invoice-breakdown__value {
-  font-size: 1.3rem;
+  font-size: var(--font-size-sm);
   color: #102981;
 }
 
@@ -1270,21 +1272,21 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 }
 
 .invoice-label {
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: #666d8c;
 }
 
 .invoice-value {
-  font-weight: 600;
-  font-size: 1.1rem;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
   color: #111b3b;
 }
 
 .invoice-status-badge {
   padding: 0.45rem 0.95rem;
   border-radius: 999px;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.05rem;
   border: 1px solid transparent;
@@ -1312,7 +1314,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 
 .invoice-actions .btn {
   min-width: 180px;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   padding: 1rem 2.5rem;
 }
 
@@ -1535,7 +1537,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   position: absolute;
   top: 1rem;
   right: 1.2rem;
-  font-size: 2rem;
+  font-size: var(--font-size-xl);
   cursor: pointer;
   color: #475569;
 }
@@ -1558,7 +1560,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 }
 
 .rating-input label {
-  font-size: 3rem;
+  font-size: var(--font-size-display);
   color: #cbd5f5;
   cursor: pointer;
   transition: color 0.2s ease;
@@ -1609,7 +1611,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   border-radius: 999px;
-  font-size: 0.85rem;
+  font-size: var(--font-size-xs);
   transition: transform 0.2s ease;
 }
 
@@ -1645,7 +1647,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 
 .intro-text h3 {
   margin: 0;
-  font-size: 1.45rem;
+  font-size: var(--font-size-md);
 }
 
 .intro-text p {
@@ -1677,19 +1679,19 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 }
 
 .stat-card__value {
-  font-size: 1.9rem;
+  font-size: var(--font-size-lg);
   color: #0f172a;
   line-height: 1;
 }
 
 .stat-card__label {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: #0f172a;
 }
 
 .stat-card__detail {
   color: var(--portal-muted);
-  font-size: 0.85rem;
+  font-size: var(--font-size-xs);
 }
 
 .my-tour-dashboard__alert {
@@ -1701,7 +1703,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   background: #fef3c7;
   color: #92400e;
   border: 1px solid rgba(249, 115, 22, 0.3);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .my-tour-dashboard__alert svg {
@@ -1759,7 +1761,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   padding: 0.15rem 0.65rem;
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.7);
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   width: fit-content;
   max-width: 100%;
   white-space: nowrap;
@@ -1768,18 +1770,18 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 .my-tour-card__hero-badge,
 .my-tour-card__hero-date,
 .my-tour-card__hero-code {
-  font-size: 0.85rem;
+  font-size: var(--font-size-xs);
   letter-spacing: 0.08em;
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
   line-height: 1;
 }
 
 .my-tour-card__hero-date {
-  font-size: 0.92rem;
+  font-size: var(--font-size-xs);
 }
 
 .my-tour-card__hero-code {
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   letter-spacing: 0.08em;
   opacity: 0.9;
 }
@@ -1794,7 +1796,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 
 .my-tour-card__title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--font-size-md);
   color: #0b1c74;
 }
 
@@ -1803,7 +1805,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.95rem;
+  font-size: var(--font-size-xs);
   color: var(--portal-muted);
 }
 
@@ -1824,7 +1826,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   flex-wrap: wrap;
   gap: 0.8rem;
   color: var(--portal-muted);
-  font-size: 0.9rem;
+  font-size: var(--font-size-xs);
 }
 
 .my-tour-card__info span {
@@ -1852,7 +1854,7 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
 }
 
 .my-tour-card__price strong {
-  font-size: 1.6rem;
+  font-size: var(--font-size-base);
   color: #0b1c74;
 }
 
@@ -1878,8 +1880,8 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   color: #fff;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 12px 25px rgba(11, 28, 116, 0.25);
   cursor: pointer;

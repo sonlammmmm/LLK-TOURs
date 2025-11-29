@@ -1,3 +1,5 @@
+@import './typography.css';
+
 :root {
   --booking-bg: #f6f7fb;
   --booking-soft: #ffffff;
@@ -21,7 +23,7 @@ body.booking-page {
   background: var(--booking-bg);
   overflow: hidden;
   height: 100vh;
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   line-height: 1.5;
 }
 
@@ -75,8 +77,8 @@ body.booking-page {
   border: 1px solid var(--booking-border);
   color: var(--booking-text);
   text-decoration: none;
-  font-weight: 600;
-  font-size: 3rem;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-display);
   box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
   z-index: 5;
 }
@@ -211,7 +213,7 @@ form.booking-workspace {
 }
 
 .hero-info__eyebrow {
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--booking-accent);
@@ -244,13 +246,13 @@ form.booking-workspace {
   min-width: 120px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: #fff;
 }
 
 .hero-meta__item strong {
   display: block;
-  font-size: 1.4rem;
+  font-size: var(--font-size-md);
   color: #fff;
   margin-top: 0.15rem;
 }
@@ -299,7 +301,7 @@ form.booking-workspace {
 
 .booking-card__header h2 {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: var(--font-size-md);
   color: #fff;
   text-shadow: none;
 }
@@ -307,7 +309,7 @@ form.booking-workspace {
 .booking-card__header p {
   margin: 0.25rem 0 0;
   color: rgba(255, 255, 255, 0.7);
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
 }
 
 .booking-card--payment .booking-card__header h2,
@@ -318,7 +320,7 @@ form.booking-workspace {
 .booking-dates-toolbar {
   display: flex;
   justify-content: space-between;
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #fff;
@@ -384,23 +386,23 @@ form.booking-workspace {
 
 .booking-date-weekday,
 .booking-date-month {
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: rgba(15, 109, 240, 0.7);
 }
 
 .booking-date-day {
-  font-size: 1.6rem;
-  font-weight: 700;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   color: #031439;
 }
 
 .booking-date-slotline {
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: var(--booking-accent);
 }
 
 .booking-date-alert {
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: var(--booking-alert);
 }
 
@@ -416,7 +418,7 @@ form.booking-workspace {
 }
 
 .booking-dates-callout {
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: var(--booking-muted);
 }
 
@@ -500,7 +502,7 @@ form.booking-workspace {
 }
 
 .service-option__desc {
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: rgba(3, 20, 57, 0.65);
 }
 
@@ -520,13 +522,13 @@ form.booking-workspace {
 
 .service-option__meta strong {
   display: block;
-  font-size: 1.05rem;
+  font-size: var(--font-size-xs);
 }
 
 .service-option__price {
   color: var(--booking-accent);
-  font-weight: 600;
-  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
 }
 
 .service-option__badges {
@@ -539,7 +541,7 @@ form.booking-workspace {
   padding: 0.35rem 0.85rem;
   border-radius: 999px;
   border: 1px solid rgba(3, 20, 57, 0.2);
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(3, 20, 57, 0.8);
@@ -568,7 +570,7 @@ form.booking-workspace {
 }
 
 .service-quantity__label {
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.25em;
   color: rgba(3, 20, 57, 0.65);
@@ -588,8 +590,8 @@ form.booking-workspace {
   background: #fff;
   color: #031439;
   text-align: center;
-  font-weight: 600;
-  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
   appearance: textfield;
   -moz-appearance: textfield;
   -webkit-appearance: textfield;
@@ -608,7 +610,7 @@ form.booking-workspace {
   border: 1px solid rgba(3, 20, 57, 0.2);
   background: #fff;
   color: #031439;
-  font-size: 1.1rem;
+  font-size: var(--font-size-xs);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -666,9 +668,9 @@ form.booking-workspace {
   border: 1px solid var(--booking-border);
   background: #fff;
   color: rgba(14, 51, 138, 0.4);
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
   box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
-  font-size: 1.3rem;
+  font-size: var(--font-size-sm);
   cursor: pointer;
 }
 
@@ -678,7 +680,7 @@ form.booking-workspace {
 
 .participants-count strong {
   display: block;
-  font-size: 1.8rem;
+  font-size: var(--font-size-lg);
 }
 
 .participants-count {
@@ -692,7 +694,7 @@ form.booking-workspace {
 
 .participants-hint {
   margin-top: 0.5rem;
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: var(--booking-muted);
   display: flex;
   align-items: center;
@@ -701,7 +703,7 @@ form.booking-workspace {
 }
 
 .participants-hint strong {
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: #fff;
 }
 
@@ -713,8 +715,8 @@ form.booking-workspace {
 
 .promotion-block label {
   color: #fff;
-  font-weight: 500;
-  font-size: 1rem;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-xs);
 }
 
 .promotion-actions {
@@ -731,8 +733,8 @@ form.booking-workspace {
   border: 1px solid var(--booking-border);
   background: #fff;
   color: #0c3a75;
-  font-size: 1.3rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .promo-chip {
@@ -742,12 +744,12 @@ form.booking-workspace {
   background: rgba(255, 255, 255, 0.05);
   color: #fff;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
 }
 
 .promotion-block label {
   color: var(--booking-text);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .booking-card--promo {
@@ -795,13 +797,13 @@ form.booking-workspace {
 .payment-label {
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: rgba(255, 255, 255, 0.7);
 }
 
 .payment-value {
-  font-size: 1.35rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   color: #fff;
 }
 
@@ -819,7 +821,7 @@ form.booking-workspace {
 .booking-actions .btn {
   flex: 1;
   padding: 1rem 1.5rem;
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
 }
 
 .booking-actions .btn--gray {

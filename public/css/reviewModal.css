@@ -1,3 +1,5 @@
+@import './typography.css';
+
 .modal {
   position: fixed;
   top: 0;
@@ -28,7 +30,7 @@
   position: absolute;
   top: 1rem;
   right: 1.5rem;
-  font-size: 2.5rem;
+  font-size: var(--font-size-xxl);
   cursor: pointer;
   color: #777;
 }
@@ -49,7 +51,7 @@
 }
 
 .rating-input label {
-  font-size: 3rem;
+  font-size: var(--font-size-display);
   color: #ddd;
   cursor: pointer;
   margin-right: 0.5rem;

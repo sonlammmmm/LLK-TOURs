@@ -1,0 +1,94 @@
+/* Shared typography tokens and helpers optimized for Vietnamese readability. */
+:root {
+  --font-family-sans: 'Oswald', sans-serif;
+  --font-size-xs: 1.3rem;
+  --font-size-sm: 1.4rem;
+  --font-size-md: 1.5rem;
+  --font-size-base: 1.6rem;
+  --font-size-lg: 1.8rem;
+  --font-size-xl: 2.25rem;
+  --font-size-xxl: 3.2rem;
+  --font-size-display: clamp(3rem, 5vw, 4.8rem);
+  --line-height-tight: 1.35;
+  --line-height-base: 1.6;
+  --line-height-relaxed: 1.8;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+}
+
+body {
+  line-height: var(--line-height-base);
+  font-weight: var(--font-weight-regular);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-base);
+  color: #1a2240;
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-family-sans);
+  font-size: inherit;
+}
+
+p,
+li {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+}
+
+h1,
+.h1 {
+  font-size: var(--font-size-display);
+  line-height: var(--line-height-tight);
+  font-weight: var(--font-weight-semibold);
+  margin: 0 0 1rem;
+}
+
+h2,
+.h2 {
+  font-size: clamp(2.4rem, 4vw, 3.4rem);
+  line-height: var(--line-height-tight);
+  font-weight: var(--font-weight-semibold);
+  margin: 0 0 0.85rem;
+}
+
+h3 {
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  line-height: var(--line-height-base);
+  font-weight: var(--font-weight-medium);
+  margin: 0 0 0.75rem;
+}
+
+.type-lead,
+.lead {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-relaxed);
+}
+
+.text-small {
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-base);
+}
+
+.text-sm {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+}
+
+.text-lg {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-base);
+}
+
+.fw-medium {
+  font-weight: var(--font-weight-medium);
+}
+
+.fw-semibold {
+  font-weight: var(--font-weight-semibold);
+}

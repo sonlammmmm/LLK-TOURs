@@ -1,3 +1,5 @@
+@import './typography.css';
+
 .invoice-container {
   max-width: 80rem;
   margin: 0 auto;
@@ -28,7 +30,7 @@
 }
 
 .invoice-number {
-  font-size: 1.4rem;
+  font-size: var(--font-size-md);
   color: #777;
 }
 
@@ -40,7 +42,7 @@
 }
 
 .invoice-subtitle {
-  font-size: 1.8rem;
+  font-size: var(--font-size-lg);
   color: #0500f1;
   margin-bottom: 1.5rem;
 }
@@ -53,11 +55,11 @@
 
 .invoice-info-item {
   display: flex;
-  font-size: 1.4rem;
+  font-size: var(--font-size-md);
 }
 
 .invoice-label {
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
   color: #777;
   width: 12rem;
 }
@@ -79,17 +81,17 @@
 .invoice-table td {
   padding: 1.2rem;
   text-align: left;
-  font-size: 1.4rem;
+  font-size: var(--font-size-md);
 }
 
 .invoice-table th {
   background-color: #f7f7f7;
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
   color: #777;
 }
 
 .invoice-table tfoot td {
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
   color: #333;
   border-top: 2px solid #0500f1;
 }
@@ -106,8 +108,8 @@
   display: inline-block;
   padding: 0.5rem 1rem;
   border-radius: 2rem;
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
 }
 

@@ -1,13 +1,15 @@
+@import './typography.css';
+
 /* --- Cấu trúc chung cho dashboard --- */
 .admin-nav {
   margin: 0;
 }
 
 .admin-nav__heading {
-  font-size: 1.4rem;
+  font-size: var(--font-size-md);
   margin-bottom: 1.5rem;
   color: #f7f7f7;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -25,7 +27,7 @@
 .side-nav li a {
   text-decoration: none;
   color: #555;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   display: flex;
   align-items: center;
   padding: 0.8rem 1rem;
@@ -66,8 +68,8 @@
 
 /* --- Typography --- */
 .heading-tertiary {
-  font-size: 1.4rem;
-  font-weight: 600;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
   color: #1F2937;
   margin-bottom: 1rem;
 }
@@ -180,21 +182,21 @@
 }
 
 .stats-card__title {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #6B7280;
   margin: 0 0 0.5rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .stats-card__value {
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
   color: #1F2937;
   margin-bottom: 0.5rem;
 }
 
 .stats-card__subtitle {
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: #9CA3AF;
   margin-bottom: 0.5rem;
 }
@@ -202,8 +204,8 @@
 /* Percentage display */
 .stats-card__percentage {
   margin-top: 0.5rem;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .percentage--success {
@@ -211,8 +213,8 @@
   background: #D1FAE5;
   padding: 3px 8px;
   border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   display: inline-block;
 }
 
@@ -221,16 +223,16 @@
   background: #FEF3C7;
   padding: 3px 8px;
   border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   display: inline-block;
 }
 
 .stats-card__trend {
   display: flex;
   align-items: center;
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
 }
 
 .stats-card__trend svg {
@@ -284,7 +286,7 @@
 }
 
 .chart-subtitle {
-  font-size: 0.875rem;
+  font-size: var(--font-size-xs);
   color: #6B7280;
   font-style: italic;
   margin-bottom: 1rem;
@@ -293,19 +295,19 @@
 .chart-filter {
   display: flex;
   align-items: center;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .chart-filter__label {
-  font-size: 0.875rem;
+  font-size: var(--font-size-xs);
   color: #6B7280;
   margin-right: 0.75rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   letter-spacing: 0.05em;
 }
 
 .chart-filter__select {
-  font-size: 0.875rem;
+  font-size: var(--font-size-xs);
   padding: 0.5rem 1rem;
   border-radius: 6px;
   border: 1px solid #E5E7EB;
@@ -313,7 +315,7 @@
   color: #374151;
   cursor: pointer;
   transition: border-color 0.3s, box-shadow 0.3s;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .chart-filter__select:focus {
@@ -362,11 +364,11 @@
   }
   
   .heading-tertiary {
-    font-size: 1.2rem;
+    font-size: var(--font-size-xs);
   }
   
   .stats-card__value {
-    font-size: 1.5rem;
+    font-size: var(--font-size-md);
   }
   
   .chart-header {
@@ -397,6 +399,6 @@
   }
   
   .stats-card__value {
-    font-size: 1.75rem;
+    font-size: var(--font-size-base);
   }
 }

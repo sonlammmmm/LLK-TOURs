@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap');
 
+@import './typography.css';
+
 :root {
   --c-dark: #020617;
   --c-dark-alt: #041145;
@@ -85,7 +87,7 @@
   color: #fff;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  font-size: 1.7rem;
+  font-size: var(--font-size-base);
   outline: none;
 }
 
@@ -96,7 +98,7 @@
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
 }
 
@@ -128,11 +130,11 @@
 }
 
 .text-location {
-  font-size: 0.9rem;
+  font-size: var(--font-size-xs);
   letter-spacing: 0.45em;
   text-transform: uppercase;
   color: var(--c-accent);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .text-heading {
@@ -156,7 +158,7 @@
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.25);
   background: rgba(255, 255, 255, 0.08);
-  font-size: 0.85rem;
+  font-size: var(--font-size-xs);
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: #fff;
@@ -179,7 +181,7 @@
   color: #041020;
   text-transform: uppercase;
   letter-spacing: 0.25em;
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
   transition: transform 0.3s var(--ease-out), background 0.3s;
 }
 
@@ -197,7 +199,7 @@
   color: #fff;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-decoration: none;
   transition: background 0.3s ease, color 0.3s ease;
 }
@@ -265,12 +267,12 @@
 
 .nav-card-info h4 {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: var(--font-size-md);
   font-family: 'Oswald', sans-serif;
 }
 
 .nav-card-info span {
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: var(--c-accent);
   letter-spacing: 0.25em;
 }

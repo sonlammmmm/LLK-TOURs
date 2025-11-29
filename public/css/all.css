@@ -1,3 +1,5 @@
+@import './typography.css';
+
 /* ==== EMPTY STATE CHO TRANG ALL ==== */
 .all-empty {
   max-width: 960px;
@@ -11,7 +13,7 @@
 
 .all-empty h2 {
   margin: 0 0 1rem;
-  font-size: 2rem;
+  font-size: var(--font-size-xl);
 }
 
 .all-empty p {
@@ -44,7 +46,7 @@
 .all-hero__eyebrow {
   letter-spacing: 0.4rem;
   text-transform: uppercase;
-  font-size: 0.85rem;
+  font-size: var(--font-size-xs);
   color: rgba(255, 255, 255, 0.8);
 }
 
@@ -59,7 +61,7 @@
 }
 
 .all-hero__note {
-  font-size: 0.95rem;
+  font-size: var(--font-size-xs);
   color: rgba(255, 255, 255, 0.9);
 }
 
@@ -100,7 +102,7 @@
   top: calc(6rem + 1rem);
   align-self: start;
   z-index: 5;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
 }
 
 .all-filters__form {
@@ -113,7 +115,7 @@
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.25em;
-  font-size: 1.4rem;
+  font-size: var(--font-size-md);
   color: #0c1b42;
 }
 
@@ -125,7 +127,7 @@
 
 .all-filters__label {
   display: block;
-  font-size: 1.05rem;
+  font-size: var(--font-size-xs);
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: #5f6687;
@@ -139,9 +141,9 @@
   padding: 1.05rem 1.2rem;
   border-radius: 12px;
   border: 1px solid #e0e2eb;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   background: #fff;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: #111a3c;
 }
 
@@ -153,7 +155,7 @@
 
 .all-filters__helper {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--font-size-xs);
   color: #5c6478;
   display: flex;
   align-items: center;
@@ -163,7 +165,7 @@
 .all-filters__price-values {
   display: flex;
   gap: 1.2rem;
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
   color: #4a506b;
 }
 
@@ -171,7 +173,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   flex: 1;
 }
 
@@ -186,7 +188,7 @@
 }
 
 .all-filters__price-field label {
-  font-size: 0.9rem;
+  font-size: var(--font-size-xs);
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: #8c91a9;
@@ -197,8 +199,8 @@
   border-radius: 10px;
   border: 1px solid #dfe3f3;
   padding: 0.8rem 1rem;
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   color: #0c1b42;
   background: #fdfdff;
   text-align: inherit;
@@ -225,7 +227,7 @@
   padding: 0.75rem 1.2rem;
   border-radius: 999px;
   border: 1px dashed #b8bfd7;
-  font-size: 1.1rem;
+  font-size: var(--font-size-xs);
   color: #6b7392;
   text-decoration: none;
   transition: all 0.15s ease;
@@ -247,8 +249,8 @@
   border-radius: 12px;
   border: 1px solid #dfe3f3;
   padding: 1rem 3rem 1rem 1.1rem;
-  font-size: 1.24rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   color: #0c1b42;
   background: #fff;
 }
@@ -257,7 +259,7 @@
   position: absolute;
   right: 1.2rem;
   color: #8b90aa;
-  font-size: 1.3rem;
+  font-size: var(--font-size-sm);
 }
 
 .all-filters__searchfield input:focus {
@@ -359,7 +361,7 @@
 }
 
 .all-sort__label {
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #1b2348;
@@ -377,7 +379,7 @@
   border: 1px solid #dfe3f3;
   border-radius: 999px;
   padding: 0.5rem 1.4rem;
-  font-size: 1.1rem;
+  font-size: var(--font-size-xs);
   background: #f6f7fb;
   color: #1b2348;
   cursor: pointer;
@@ -445,8 +447,8 @@
   right: 1rem;
   padding: 0.4rem 0.9rem;
   border-radius: 999px;
-  font-size: 1.3rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   color: #fff;
 }
 
@@ -467,20 +469,20 @@
 
 .all-tour-card__heading h3 {
   margin: 0;
-  font-size: 2.15rem;
+  font-size: var(--font-size-xl);
   color: #0c1b42;
 }
 
 .all-tour-card__heading span {
   color: #5d6a8c;
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
 }
 
 .all-tour-card__summary {
   margin: 0;
   color: #4d567c;
   min-height: 3.2rem;
-  font-size: 1.15rem;
+  font-size: var(--font-size-xs);
   line-height: 1.6;
 }
 
@@ -489,7 +491,7 @@
   gap: 1rem;
   flex-wrap: wrap;
   color: #5d6a8c;
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
 }
 
 .all-tour-card__details span {
@@ -521,20 +523,20 @@
 }
 
 .all-tour-card__support strong {
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   color: #6f7a9a;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .all-tour-card__support span {
-  font-size: 1.05rem;
+  font-size: var(--font-size-xs);
   color: #0c1b42;
 }
 
 .all-tour-card__support .all-tour-card__slots span {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .all-tour-card__actions {
@@ -574,15 +576,15 @@
 }
 
 .all-tour-card__footer-info strong {
-  font-size: 1.1rem;
+  font-size: var(--font-size-xs);
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: #6b738f;
 }
 
 .all-tour-card__footer-info span {
-  font-size: 1.15rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   color: #0c1b42;
 }
 
@@ -591,24 +593,24 @@
   align-items: center;
   gap: 0.4rem;
   color: #1c3d88;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .all-tour-card__details-link i {
-  font-size: 1rem;
+  font-size: var(--font-size-xs);
 }
 
 .all-tour-card__price {
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
   letter-spacing: 0.04em;
 }
 
 .all-tour-card__price strong {
-  font-size: 1.3rem;
+  font-size: var(--font-size-sm);
   color: #0b1b40;
 }
 
 .all-tour-card__price small {
-  font-size: 1.05rem;
+  font-size: var(--font-size-xs);
   color: #5c637a;
 }

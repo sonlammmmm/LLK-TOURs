@@ -1,3 +1,5 @@
+@import './typography.css';
+
 :root {
   --admin-font-base: 1.2rem;
   --admin-font-lg: 1.35rem;
@@ -66,18 +68,18 @@ body.llk-admin-body {
 }
 
 .llk-admin-sidenav__brand {
-  font-size: 1.65rem;
-  font-weight: 600;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 
 .llk-admin-sidenav__brand-text {
-  font-size: 1.8rem;
+  font-size: var(--font-size-lg);
 }
 
 .llk-admin-sidenav__brand .dash-tag {
-  font-size: 1.3rem;
+  font-size: var(--font-size-sm);
   color: rgba(255, 255, 255, 0.7);
   margin-top: 0.35rem;
 }
@@ -99,7 +101,7 @@ body.llk-admin-body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 1.36rem;
+  font-size: var(--font-size-sm);
   color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
   padding: 0.6rem 0.85rem;
@@ -117,11 +119,11 @@ body.llk-admin-body {
 .llk-admin-sidenav__link:hover {
   background: #fff;
   color: #0f172a;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .llk-admin-sidenav__footer {
-  font-size: 1.35rem;
+  font-size: var(--font-size-sm);
   color: rgba(255, 255, 255, 0.65);
   display: flex;
   justify-content: center;
@@ -131,10 +133,10 @@ body.llk-admin-body {
 .llk-admin-sidenav__logout {
   color: #fff;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   border: 1px solid rgba(255, 255, 255, 0.4);
   padding: 0.28rem 0.6rem;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   border-radius: 999px;
   transition: background 0.2s;
   display: inline-flex;
@@ -174,12 +176,12 @@ body.llk-admin-body {
 }
 
 .llk-admin-sidenav__profile-name {
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .llk-admin-sidenav__profile-role {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: rgba(255, 255, 255, 0.7);
 }
 
@@ -250,7 +252,7 @@ body.llk-admin-body {
   border: none;
   outline: none;
   background: transparent;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   width: 180px;
 }
 
@@ -342,15 +344,15 @@ body.llk-admin-body {
 
 .llk-admin-stat-card__label {
   display: block;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #7c84a5;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
 }
 
 .llk-admin-stat-card__value {
-  font-size: 2.1rem;
+  font-size: var(--font-size-xl);
   margin-top: 0.25rem;
   color: #0f172a;
 }
@@ -364,7 +366,7 @@ body.llk-admin-body {
 
 .count-display {
   margin-left: auto;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #475569;
 }
 
@@ -374,7 +376,7 @@ body.llk-admin-body {
 
 .no-data-message {
   text-align: center;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #94a3b8;
   margin: 1rem 0 0;
 }
@@ -391,7 +393,7 @@ body.llk-admin-body {
   border-radius: 999px;
   border: 1px solid #d4d7e5;
   background: #f8fafc;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
 }
 
 .llk-admin-panel__search {
@@ -406,7 +408,7 @@ body.llk-admin-body {
 .llk-admin-empty {
   text-align: center;
   color: #8c92a4;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   margin: 2rem 0;
 }
 
@@ -542,12 +544,12 @@ body.llk-admin-body {
 .promo-card__name,
 .service-admin-card__name {
   font-size: var(--admin-font-lg);
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
   color: #0f172a;
 }
 
 .promo-card__code {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   letter-spacing: 0.2em;
   color: #475569;
   text-transform: uppercase;
@@ -560,8 +562,8 @@ body.llk-admin-body {
   justify-content: center;
   padding: 0.35rem 1rem;
   border-radius: 999px;
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   line-height: 1.2;
   text-transform: none;
   letter-spacing: 0.01em;
@@ -588,14 +590,14 @@ body.llk-admin-body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 0.65rem;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #475569;
 }
 
 .promo-card__meta strong,
 .service-admin-card__meta strong {
   color: #0f172a;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .promo-card__actions,
@@ -622,8 +624,8 @@ body.llk-admin-body {
   border-radius: 999px;
   background: rgba(14, 116, 144, 0.12);
   color: #0e7490;
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .promo-card__chip {
@@ -631,13 +633,13 @@ body.llk-admin-body {
   border-radius: 0.75rem;
   background: rgba(59, 130, 246, 0.1);
   color: #1d4ed8;
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .promo-card__desc {
   color: #64748b;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
 }
 
 .llk-admin-entity-card {
@@ -684,7 +686,7 @@ body.llk-admin-body {
 
 .user-management__name {
   margin: 0;
-  font-size: 1.35rem;
+  font-size: var(--font-size-sm);
   color: #0f172a;
 }
 
@@ -692,7 +694,7 @@ body.llk-admin-body {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #475569;
 }
 
@@ -735,8 +737,8 @@ body.llk-admin-body {
   justify-content: center;
   padding: 0.3rem 0.6rem;
   border-radius: 999px;
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   color: #fff;
 }
@@ -765,12 +767,12 @@ body.llk-admin-body {
 
 .booking-management__tour {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: var(--font-size-md);
   color: #0f172a;
 }
 
 .booking-management__id {
-  font-size: 1.1rem;
+  font-size: var(--font-size-xs);
   color: #94a3b8;
 }
 
@@ -791,7 +793,7 @@ body.llk-admin-body {
 }
 
 .booking-management__user-name {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: #0f172a;
 }
 
@@ -800,7 +802,7 @@ body.llk-admin-body {
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 0.65rem;
   margin-top: 0.75rem;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #475569;
 }
 
@@ -812,7 +814,7 @@ body.llk-admin-body {
 }
 
 .booking-management__status {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .booking-management__status--paid {
@@ -856,7 +858,7 @@ body.llk-admin-body {
 }
 
 .review-management__tour {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #475569;
 }
 
@@ -871,7 +873,7 @@ body.llk-admin-body {
 }
 
 .rating-star {
-  font-size: 1.35rem;
+  font-size: var(--font-size-sm);
   color: #dbe3ff;
 }
 
@@ -880,7 +882,7 @@ body.llk-admin-body {
 }
 
 .review-management__date {
-  font-size: 1.1rem;
+  font-size: var(--font-size-xs);
   color: #94a3b8;
 }
 
@@ -936,7 +938,7 @@ body.llk-admin-body {
 }
 
 .form__current-image p {
-  font-size: 0.95rem;
+  font-size: var(--font-size-xs);
   color: #475569;
   text-align: center;
   margin: 0.35rem 0 0;
@@ -970,14 +972,14 @@ body.llk-admin-body {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  font-size: 2.2rem;
+  font-size: var(--font-size-xl);
   color: #94a3b8;
   cursor: pointer;
 }
 
 .modal__title {
   margin: 0 0 1.5rem;
-  font-size: 1.6rem;
+  font-size: var(--font-size-base);
   color: #0f172a;
 }
 
@@ -993,14 +995,14 @@ body.llk-admin-body {
 
 
 .service-admin-card__price {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   color: #0f172a;
 }
 
 .service-admin-card__desc {
   color: #64748b;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
 }
 
 .llk-admin-tour-card {
@@ -1033,7 +1035,7 @@ body.llk-admin-body {
   align-items: center;
   justify-content: center;
   color: #8c92a4;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
 }
 
 .llk-admin-tour-card__badge {
@@ -1044,7 +1046,7 @@ body.llk-admin-body {
   color: #fff;
   padding: 0.35rem 0.9rem;
   border-radius: 999px;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
 }
 
 .llk-admin-tour-card__body {
@@ -1069,7 +1071,7 @@ body.llk-admin-body {
   display: flex;
   gap: 1.25rem;
   color: #5a6176;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   flex-wrap: wrap;
 }
 
@@ -1090,7 +1092,7 @@ body.llk-admin-body {
 
 .llk-admin-tour-card__dates-title {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   letter-spacing: 0.1em;
   color: #7c84a5;
   text-transform: uppercase;
@@ -1108,7 +1110,7 @@ body.llk-admin-body {
 .llk-admin-tour-card__date-item {
   display: flex;
   justify-content: space-between;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #0f172a;
 }
 
@@ -1119,13 +1121,13 @@ body.llk-admin-body {
 
 .llk-admin-tour-card__more {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #5d63a6;
 }
 
 .llk-admin-tour-card__no-dates {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #9aa0be;
 }
 
@@ -1155,7 +1157,7 @@ body.llk-admin-body {
 }
 
 .llk-admin-tour-card__quick-start label {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #556073;
 }
 
@@ -1169,7 +1171,7 @@ body.llk-admin-body {
   border: 1px solid #d4d7e5;
   border-radius: 0.75rem;
   padding: 0.5rem 0.75rem;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
 }
 
 .llk-admin-tour-card__quick-start-row button {
@@ -1177,7 +1179,7 @@ body.llk-admin-body {
 }
 
 .help-text {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #94a3b8;
 }
 
@@ -1199,7 +1201,7 @@ body.llk-admin-body {
 }
 
 .admin-nav__heading {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   letter-spacing: 0.2em;
   margin-bottom: 1rem;
   text-transform: uppercase;
@@ -1219,7 +1221,7 @@ body.llk-admin-body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #dcdcdc;
   text-decoration: none;
   padding: 0.5rem 0.75rem;
@@ -1282,14 +1284,14 @@ body.llk-admin-body {
 .admin-panel__stat-label {
   display: block;
   color: #7c84a5;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 0.4rem;
 }
 
 .admin-panel__stat-value {
-  font-size: 2rem;
+  font-size: var(--font-size-xl);
   color: #1f1f1f;
 }
 
@@ -1302,7 +1304,7 @@ body.llk-admin-body {
   padding: 0.75rem 1rem;
   border-radius: 0.75rem;
   border: 1px solid #dde0ea;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   background: #fff;
 }
 
@@ -1354,7 +1356,7 @@ body.llk-admin-body {
   color: #fff;
   padding: 0.35rem 0.9rem;
   border-radius: 999px;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
 }
 
 .tour-card__body {
@@ -1372,7 +1374,7 @@ body.llk-admin-body {
 }
 
 .tour-card__title {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   margin: 0;
 }
 
@@ -1385,7 +1387,7 @@ body.llk-admin-body {
 .tour-card__summary {
   margin: 0;
   color: #4a4f63;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   min-height: 48px;
 }
 
@@ -1394,7 +1396,7 @@ body.llk-admin-body {
   flex-wrap: wrap;
   gap: 1rem;
   color: #5a6176;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
 }
 
 .tour-card__meta svg {
@@ -1413,7 +1415,7 @@ body.llk-admin-body {
 
 .tour-card__dates-title {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #6c7391;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -1426,7 +1428,7 @@ body.llk-admin-body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #2d3347;
 }
 
@@ -1438,13 +1440,13 @@ body.llk-admin-body {
 
 .tour-card__more {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #5d63a6;
 }
 
 .tour-card__no-dates {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #9aa0be;
 }
 
@@ -1472,7 +1474,7 @@ body.llk-admin-body {
   border-radius: 0.75rem;
   padding: 0.75rem 0.5rem;
   background: #fff;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #5a6176;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1534,7 +1536,7 @@ body.llk-admin-body {
 }
 
 .start-date-panel__quick .form__label {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #5a6176;
 }
 
@@ -1568,7 +1570,7 @@ body.llk-admin-body {
 }
 
 .start-date-item .form__group label {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #5a6176;
   margin-bottom: 0;
 }
@@ -1595,7 +1597,7 @@ body.llk-admin-body {
   height: 1.5rem;
   border: none;
   color: #a5a7b7;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   cursor: pointer;
   border-radius: 50%;
   display: flex;
@@ -1623,15 +1625,15 @@ body.llk-admin-body {
 }
 
 .form__subheading {
-  font-size: 1.3rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   color: #343a62;
   margin: 0.75rem 0 0.25rem;
 }
 
 .form__help,
 .form__help-text {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #7d83a9;
   display: block;
 }
@@ -1645,7 +1647,7 @@ body.llk-admin-body {
 }
 
 .form__group label {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #4a4f63;
 }
 
@@ -1656,7 +1658,7 @@ body.llk-admin-body {
   border: 1px solid #d4d7e5;
   border-radius: 0.85rem;
   padding: 0.7rem 0.9rem;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   background: #f7f9fc;
   color: #0f172a;
 }
@@ -1681,7 +1683,7 @@ textarea.form__input {
   border: 1px dashed #dfe3ef;
   border-radius: 0.85rem;
   padding: 1rem;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #8890b0;
   text-align: center;
   background: #f8faff;
@@ -1699,8 +1701,8 @@ textarea.form__input {
   border-radius: 999px;
   background: #edf0ff;
   color: #3b3ffc;
-  font-size: 1.2rem;
-  font-weight: 500;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
   width: fit-content;
   margin-top: 0.35rem;
@@ -1725,7 +1727,7 @@ textarea.form__input {
 }
 
 .image-preview__placeholder {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   color: #9ba3c4;
   padding: 0.5rem 0.75rem;
   text-align: center;
@@ -1788,7 +1790,7 @@ textarea.form__input {
   border: none;
   background: rgba(10, 11, 23, 0.6);
   color: #fff;
-  font-size: 1.1rem;
+  font-size: var(--font-size-xs);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1814,7 +1816,7 @@ textarea.form__input {
   color: #c44747;
   border-radius: 999px;
   padding: 0.35rem 0.9rem;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
 }
@@ -1840,7 +1842,7 @@ textarea.form__input {
   background: transparent;
   border: none;
   color: #d64545;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xs);
   cursor: pointer;
 }
 
