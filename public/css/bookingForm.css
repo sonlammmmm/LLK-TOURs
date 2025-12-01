@@ -8,6 +8,7 @@
   --booking-muted: #7a8197;
   --booking-text: #0f1428;
   --booking-accent: #0f6df0;
+  --booking-accent-soft: #88d0ff;
   --booking-accent-strong: #0c51d9;
   --booking-alert: #ff7c5f;
   --booking-success: #16c79a;
@@ -67,7 +68,11 @@ body.booking-page {
 .booking-shell__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(9, 20, 62, 0.9), rgba(3, 14, 45, 0.95));
+  background: linear-gradient(
+    180deg,
+    rgba(9, 20, 62, 0.65),
+    rgba(3, 14, 45, 0.85)
+  );
   backdrop-filter: blur(0px);
   z-index: 1;
 }
@@ -153,11 +158,12 @@ form.booking-workspace {
 }
 
 .booking-section--hero {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 1.25rem;
   grid-column: span 2;
-  min-height: 260px;
+  min-height: clamp(360px, 55vh, 580px);
+  max-height: clamp(380px, 60vh, 640px);
   padding: 0;
   backdrop-filter: none;
   background: transparent;
@@ -168,6 +174,8 @@ form.booking-workspace {
   overflow: hidden;
   border: 1px solid var(--booking-border);
   min-height: 250px;
+  width: 100%;
+  flex: 1 1 auto;
   position: relative;
 }
 
@@ -176,6 +184,7 @@ form.booking-workspace {
   height: 100%;
   display: block;
   object-fit: cover;
+  object-position: center;
 }
 
 .hero-content {
@@ -236,7 +245,7 @@ form.booking-workspace {
   font-size: var(--font-size-xs);
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--booking-accent);
+  color: var(--booking-accent-soft);
 }
 
 .hero-title {
@@ -339,6 +348,15 @@ form.booking-workspace {
   font-size: var(--font-size-md);
   color: var(--booking-card-text-strong);
   text-shadow: none;
+}
+
+.booking-card--participants .booking-card__header h2 {
+  color: var(--booking-card-text-strong);
+}
+
+.booking-card--services .booking-card__header,
+.booking-card--payment .booking-card__header {
+  text-align: center;
 }
 
 .booking-card__header p {
@@ -810,7 +828,6 @@ form.booking-workspace.promo-filled .booking-participants-btn {
   color: #fff;
   border-radius: calc(var(--booking-radius) + 4px);
   border: 1px solid var(--booking-card-border-highlight);
-  padding: clamp(2rem, 3vw, 3rem);
   box-shadow: 0 30px 70px rgba(6, 12, 40, 0.4);
   display: flex;
   flex-direction: column;
@@ -847,7 +864,7 @@ form.booking-workspace.promo-filled .booking-participants-btn {
 
 .payment-option__control {
   margin-top: 0;
-  accent-color: var(--booking-action-icon);
+  accent-color: var(--booking-accent-soft);
 }
 
 .payment-option__content {
