@@ -1,4 +1,6 @@
-﻿const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+﻿const axios = require('axios');
+const crypto = require('crypto');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Booking = require('../models/bookingModel');
 const Tour = require('../models/tourModel');
 const catchAsync = require('../utils/catchAsync');
@@ -12,8 +14,31 @@ const {
   linkSessionToSoftLock,
   findActiveSoftLockBySession,
   confirmSoftLock,
-  getSoftLockById
+  getSoftLockById,
+  updateSoftLockMeta
 } = require('../utils/bookingSoftLock');
+
+const MOMO_ENDPOINT =
+  process.env.MOMO_CREATE_ENDPOINT ||
+  'https://test-payment.momo.vn/v2/gateway/api/create';
+const MOMO_PARTNER_CODE = process.env.MOMO_PARTNER_CODE || 'MOMO';
+const MOMO_ACCESS_KEY = process.env.MOMO_ACCESS_KEY || 'F8BBA842ECF85';
+const MOMO_SECRET_KEY =
+  process.env.MOMO_SECRET_KEY || 'K951B6PE1waDMi640xX08PD3vg6EkVlz';
+const MOMO_PARTNER_NAME = process.env.MOMO_PARTNER_NAME || 'LLK Tours';
+const MOMO_STORE_ID = process.env.MOMO_STORE_ID || 'LLKToursStore';
+const MOMO_REQUEST_TYPE = process.env.MOMO_REQUEST_TYPE || 'payWithMethod';
+const MOMO_PAYMENT_CODE =
+  process.env.MOMO_PAYMENT_CODE ||
+  'T8Qii53fAXyUftPV3m9ysyRhEanUs9KlOPfHgpMR0ON50U10Bh+vZdpJU7VY4z+Z2y77fJHkoDc69scwwzLuW5MzeUKTwPo3ZMaB29imm6YulqnWfTkgzqRaion+EuD7FN9wZ4aXE1+mRt0gHsU193y+yxtRgpmY7SDMU9hCKoQtYyHsfFR5FUAOAKMdw2fzQqpToei3rnaYvZuYaxolprm9+/+WIETnPUDlxCYOiw7vPeaaYQQH0BF0TxyU3zu36ODx980rJvPAgtJzH1gUrlxcSS1HQeQ9ZaVM1eOK/jl8KJm6ijOwErHGbgf/hVymUQG65rHU2MWz9U8QUjvDWA==';
+const MOMO_AUTO_CAPTURE =
+  typeof process.env.MOMO_AUTO_CAPTURE === 'string'
+    ? process.env.MOMO_AUTO_CAPTURE !== 'false'
+    : true;
+const MOMO_LANG = process.env.MOMO_LANG || 'vi';
+const MOMO_REDIRECT_PATH =
+  process.env.MOMO_REDIRECT_PATH || '/api/v1/bookings/momo/redirect';
+const MOMO_IPN_PATH = process.env.MOMO_IPN_PATH || '/api/v1/bookings/momo/ipn';
 
 const bookingSessionPopulate = [
   { path: 'tour', select: 'name startDates duration' },
@@ -49,17 +74,60 @@ const normalizeStartDate = value => {
   return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
 };
 
-const buildPromotionSnapshot = metadata =>
-  metadata && metadata.promotionCode
-    ? {
-        promotion: metadata.promotionId || undefined,
-        userPromotion: metadata.userPromotionId || undefined,
-        code: metadata.promotionCode,
-        name: metadata.promotionName || '',
-        discountType: metadata.promotionType || 'fixed',
-        discountValue: Number(metadata.promotionValue || 0)
-      }
-    : undefined;
+const buildPromotionSnapshot = metadata => {
+  if (!metadata || !metadata.promotionCode) return undefined;
+  const {
+    promotionId,
+    userPromotionId,
+    promotionCode,
+    promotionName,
+    promotionType,
+    promotionValue
+  } = metadata;
+  return {
+    promotion: promotionId || undefined,
+    userPromotion: userPromotionId || undefined,
+    code: promotionCode,
+    name: promotionName || '',
+    discountType: promotionType || 'fixed',
+    discountValue: Number(promotionValue || 0)
+  };
+};
+
+const buildPromotionSnapshotFromPricing = pricing => {
+  if (!pricing || !pricing.promotionCode) return undefined;
+  const promoDoc = pricing.promotion || {};
+  const userPromoDoc = pricing.userPromotion || {};
+
+  return {
+    promotion: promoDoc.id || promoDoc._id || undefined,
+    userPromotion: userPromoDoc.id || userPromoDoc._id || undefined,
+    code: pricing.promotionCode,
+    name: promoDoc.name || '',
+    discountType: promoDoc.discountType || 'fixed',
+    discountValue: Number(promoDoc.discountValue || 0)
+  };
+};
+
+const resolveHoldFromMomoPayload = async (payload, orderId) => {
+  let hold = null;
+
+  const { extraData } = payload;
+
+  if (extraData) {
+    try {
+      hold = await getSoftLockById(extraData);
+    } catch (err) {
+      hold = null;
+    }
+  }
+
+  if (!hold || hold.status !== 'active') {
+    hold = await findActiveSoftLockBySession(orderId);
+  }
+
+  return hold;
+};
 
 const findBookingBySessionId = sessionId =>
   Booking.findOne({
@@ -213,6 +281,16 @@ const buildLineItems = (tour, pricing, req) => {
   return items;
 };
 
+const buildServicesFromPayload = services =>
+  (services || []).map(service => ({
+    service: service.serviceId || service.service,
+    name: service.name,
+    chargeType: service.chargeType,
+    price: Number(service.price || 0),
+    quantity: Number(service.quantity || 1),
+    total: Number(service.total || 0)
+  }));
+
 const buildSessionMetadata = (
   req,
   tour,
@@ -243,6 +321,44 @@ const buildSessionMetadata = (
   softLockId: extras.softLockId || ''
 });
 
+const buildHoldBookingPayload = (req, context) => {
+  const promotionSnapshot = buildPromotionSnapshotFromPricing(context.pricing);
+  const promotionUsage = promotionSnapshot
+    ? {
+        promotionId: promotionSnapshot.promotion,
+        userPromotionId: promotionSnapshot.userPromotion,
+        code: promotionSnapshot.code,
+        discountAmount: Number(context.pricing.discountAmount || 0)
+      }
+    : null;
+
+  return {
+    userId: req.user.id.toString(),
+    tourId: context.tour.id.toString(),
+    participants: context.participants,
+    startDate: context.startDate.toISOString(),
+    platform: context.platform,
+    amounts: {
+      basePrice: Number(context.pricing.basePrice || 0),
+      servicesTotal: Number(context.pricing.servicesTotal || 0),
+      subtotal: Number(context.pricing.subtotal || 0),
+      discountAmount: Number(context.pricing.discountAmount || 0),
+      grandTotal: Number(context.pricing.grandTotal || 0)
+    },
+    services: context.pricing.servicesPayload || [],
+    promotionSnapshot,
+    promotionUsage
+  };
+};
+
+const buildMomoRedirectUrl = req =>
+  process.env.MOMO_REDIRECT_URL ||
+  `${req.protocol}://${req.get('host')}${MOMO_REDIRECT_PATH}`;
+
+const buildMomoIpnUrl = req =>
+  process.env.MOMO_IPN_URL ||
+  `${req.protocol}://${req.get('host')}${MOMO_IPN_PATH}`;
+
 const createDiscountCoupon = async discount => {
   const amount = Math.max(Math.round(discount || 0), 0);
   if (amount < 1) return null;
@@ -259,6 +375,236 @@ const createDiscountCoupon = async discount => {
     console.error('[Stripe] Failed to create coupon', err);
     return null;
   }
+};
+
+const preparePaymentInitialization = async req => {
+  if (!req.user?.id || !req.user?.email) {
+    throw new AppError('Bạn cần đăng nhập để thanh toán.', 401);
+  }
+
+  const tour = await Tour.findById(req.params.tourId);
+  if (!tour) {
+    throw new AppError('Không tìm thấy tour.', 404);
+  }
+
+  const startDateStr = req.body.startDate || req.query.startDate;
+  const participantsRaw =
+    Number.parseInt(req.body.participants || req.query.participants, 10) || 1;
+  const selectedServices =
+    req.body.selectedServices || req.query.selectedServices || [];
+  const platform = (
+    req.body.platform ||
+    req.query.platform ||
+    'web'
+  ).toLowerCase();
+
+  if (!startDateStr) {
+    throw new AppError('Vui lòng chọn ngày khởi hành.', 400);
+  }
+
+  const startDate = new Date(startDateStr);
+  if (Number.isNaN(startDate.getTime())) {
+    throw new AppError('Ngày khởi hành không hợp lệ.', 400);
+  }
+
+  const startKey = startDate.toISOString().split('T')[0];
+  const dateItem =
+    (tour.startDates || []).find(item => {
+      const key =
+        item && item.date
+          ? new Date(item.date).toISOString().split('T')[0]
+          : null;
+      return key === startKey;
+    }) || null;
+
+  if (!dateItem) {
+    throw new AppError('Ngày khởi hành không tồn tại.', 400);
+  }
+
+  const maxSlots =
+    Number.parseInt(dateItem.availableSlots || '', 10) || participantsRaw;
+  const participants = Math.max(Math.min(participantsRaw, maxSlots), 1);
+
+  if (Number(dateItem.availableSlots) < participants) {
+    throw new AppError(
+      `Chỉ còn ${dateItem.availableSlots || 0} suất cho ngày này.`,
+      400
+    );
+  }
+
+  const servicesSnapshot = Array.isArray(selectedServices)
+    ? selectedServices
+    : [];
+
+  const pricing = await buildBookingFinancials({
+    tour,
+    participants,
+    selectedServices,
+    promotionCode:
+      req.body.promotionCode ||
+      req.body.promoCode ||
+      req.query.promotionCode ||
+      req.query.promoCode,
+    userId: req.user.id
+  });
+
+  if (!pricing || !Number.isFinite(pricing.grandTotal)) {
+    throw new AppError('Không thể tính được chi phí.', 400);
+  }
+
+  let softLockRecord = null;
+  try {
+    const lockResult = await acquireSoftLock({
+      tourId: tour.id,
+      userId: req.user.id,
+      startDate,
+      participants,
+      platform,
+      servicesSnapshot
+    });
+    if (!lockResult?.success) {
+      throw new AppError(
+        lockResult?.message ||
+          'Suất của lịch khởi hành này đang được giữ, vui lòng thử lại ngay sau đây.',
+        409
+      );
+    }
+    softLockRecord = lockResult.hold;
+  } catch (err) {
+    if (err instanceof AppError) {
+      throw err;
+    }
+    console.error('[SoftLock] Acquire error:', err.message);
+    throw new AppError(
+      'Không thể giữ chỗ tạm thời cho yêu cầu này. Vui lòng thử lại sau ít phút.',
+      409
+    );
+  }
+
+  return {
+    tour,
+    startDate,
+    startKey,
+    participants,
+    platform,
+    selectedServices: servicesSnapshot,
+    pricing,
+    softLockRecord
+  };
+};
+
+const buildMomoCreateSignature = body => {
+  const rawSignature =
+    `accessKey=${MOMO_ACCESS_KEY}` +
+    `&amount=${body.amount}` +
+    `&extraData=${body.extraData || ''}` +
+    `&ipnUrl=${body.ipnUrl}` +
+    `&orderId=${body.orderId}` +
+    `&orderInfo=${body.orderInfo}` +
+    `&partnerCode=${body.partnerCode}` +
+    `&redirectUrl=${body.redirectUrl}` +
+    `&requestId=${body.requestId}` +
+    `&requestType=${body.requestType}`;
+  return crypto
+    .createHmac('sha256', MOMO_SECRET_KEY)
+    .update(rawSignature)
+    .digest('hex');
+};
+
+const buildMomoIpnSignature = payload => {
+  const fields = [
+    `accessKey=${MOMO_ACCESS_KEY}`,
+    `amount=${payload.amount}`,
+    `extraData=${payload.extraData || ''}`,
+    `message=${payload.message || ''}`,
+    `orderId=${payload.orderId}`,
+    `orderInfo=${payload.orderInfo || ''}`,
+    `orderType=${payload.orderType || ''}`,
+    `partnerCode=${payload.partnerCode}`,
+    `payType=${payload.payType || ''}`,
+    `requestId=${payload.requestId}`,
+    `responseTime=${payload.responseTime}`,
+    `resultCode=${payload.resultCode}`,
+    `transId=${payload.transId}`
+  ];
+  return crypto
+    .createHmac('sha256', MOMO_SECRET_KEY)
+    .update(fields.join('&'))
+    .digest('hex');
+};
+
+const materializeBookingFromHold = async ({ hold, orderId, transId }) => {
+  if (!hold) {
+    throw new Error('Missing hold for MoMo transaction.');
+  }
+
+  const payload = hold.meta?.bookingPayload;
+
+  if (!payload) {
+    throw new Error('Missing booking payload stored on hold.');
+  }
+
+  const amounts = payload.amounts || {};
+
+  const bookingDoc = {
+    tour: payload.tourId,
+
+    user: payload.userId,
+
+    participants: Number(payload.participants || 1),
+
+    startDate: normalizeStartDate(payload.startDate),
+
+    price: Math.max(Number(amounts.grandTotal || 0), 0),
+
+    paymentMethod: 'momo',
+
+    providerSessionId: orderId,
+
+    paid: true,
+
+    currency: 'VND',
+
+    basePrice: Number(amounts.basePrice || 0),
+
+    services: buildServicesFromPayload(payload.services),
+
+    servicesTotal: Number(amounts.servicesTotal || 0),
+
+    subtotal: Number(amounts.subtotal || 0),
+
+    discountAmount: Number(amounts.discountAmount || 0),
+
+    promotionSnapshot: payload.promotionSnapshot,
+
+    softLock: hold._id
+  };
+
+  if (transId) {
+    bookingDoc.providerTransactionId = String(transId);
+  }
+
+  let booking;
+
+  let created = false;
+
+  try {
+    booking = await Booking.create(bookingDoc);
+
+    created = true;
+  } catch (err) {
+    if (err.code === 11000) {
+      booking = await Booking.findOne({
+        paymentMethod: 'momo',
+
+        providerSessionId: orderId
+      });
+    } else {
+      throw err;
+    }
+  }
+
+  return { booking, created, payload };
 };
 
 exports.getCheckoutSession = catchAsync(async (req, res, next) => {
@@ -446,6 +792,229 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   res.status(200).json({ status: 'success', session });
   console.log('[Stripe] Response sent successfully');
 });
+
+const processMomoCallback = async (payloadRaw, source = 'ipn') => {
+  const payload = { ...payloadRaw };
+
+  const { orderId } = payload;
+
+  if (!orderId) {
+    throw new Error('Missing orderId');
+  }
+
+  const { signature } = payload;
+
+  const expectedSignature = buildMomoIpnSignature(payload);
+
+  if (!signature || signature !== expectedSignature) {
+    throw new Error('Invalid signature');
+  }
+
+  const existing = await Booking.findOne({
+    paymentMethod: 'momo',
+
+    providerSessionId: orderId
+  });
+
+  if (existing) {
+    return { booking: existing, created: false };
+  }
+
+  const hold = await resolveHoldFromMomoPayload(payload, orderId);
+
+  if (!hold) {
+    throw new Error('Booking hold not found');
+  }
+
+  const resultCode = Number(payload.resultCode);
+
+  if (resultCode !== 0) {
+    await releaseSoftLock(hold, 'momo-payment-failed');
+
+    return { booking: null, created: false };
+  }
+
+  let bookingResult;
+
+  try {
+    bookingResult = await materializeBookingFromHold({
+      hold,
+
+      orderId,
+
+      transId: payload.transId
+    });
+  } catch (err) {
+    await releaseSoftLock(hold, 'momo-booking-error');
+
+    throw err;
+  }
+
+  const { booking, created, payload: holdPayload } = bookingResult || {};
+
+  if (!booking) {
+    throw new Error('Unable to create booking');
+  }
+
+  await confirmSoftLock(hold._id, booking._id);
+
+  const usage = holdPayload?.promotionUsage;
+
+  if (created && usage?.promotionId) {
+    await recordPromotionUsage({
+      promotionId: usage.promotionId,
+
+      userPromotionId: usage.userPromotionId,
+
+      userId: holdPayload.userId,
+
+      discountAmount: usage.discountAmount,
+
+      code: usage.code
+    });
+  }
+
+  console.log(`[MoMo][${source}] Booking confirmed for order ${orderId}`);
+
+  return { booking, created };
+};
+
+exports.createMomoPayment = catchAsync(async (req, res, next) => {
+  let context;
+  try {
+    context = await preparePaymentInitialization(req);
+  } catch (err) {
+    return next(err);
+  }
+
+  const { tour, pricing, platform, softLockRecord } = context;
+  const amount = Math.max(Math.round(Number(pricing.grandTotal) || 0), 0);
+
+  if (amount <= 0) {
+    if (softLockRecord) {
+      await releaseSoftLock(softLockRecord, 'momo-invalid-amount');
+    }
+    return next(new AppError('Tổng thanh toán qua MoMo phải lớn hơn 0.', 400));
+  }
+
+  const orderId = `${MOMO_PARTNER_CODE}${Date.now()}`;
+  const requestId = orderId;
+  const extraData = softLockRecord?.id ? softLockRecord.id.toString() : '';
+  const bookingPayload = buildHoldBookingPayload(req, context);
+
+  const requestBody = {
+    partnerCode: MOMO_PARTNER_CODE,
+    partnerName: MOMO_PARTNER_NAME,
+    storeId: MOMO_STORE_ID,
+    requestId,
+    amount: String(amount),
+    orderId,
+    orderInfo: `Thanh toán tour ${tour.name}`,
+    redirectUrl: buildMomoRedirectUrl(req),
+    ipnUrl: buildMomoIpnUrl(req),
+    lang: MOMO_LANG,
+    requestType: MOMO_REQUEST_TYPE,
+    autoCapture: MOMO_AUTO_CAPTURE,
+    extraData,
+    orderGroupId: ''
+  };
+
+  if (MOMO_PAYMENT_CODE) {
+    requestBody.paymentCode = MOMO_PAYMENT_CODE;
+  }
+
+  requestBody.signature = buildMomoCreateSignature(requestBody);
+
+  try {
+    const response = await axios.post(MOMO_ENDPOINT, requestBody, {
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 30000
+    });
+    const payload = response.data || {};
+    if (payload.resultCode !== 0 || !payload.payUrl) {
+      throw new AppError(payload.message || 'MoMo từ chối tạo giao dịch.', 400);
+    }
+
+    if (softLockRecord) {
+      await linkSessionToSoftLock(softLockRecord.id, orderId);
+      try {
+        await updateSoftLockMeta(softLockRecord.id, {
+          bookingPayload,
+          momo: {
+            orderId,
+            requestId,
+            amount,
+            platform
+          }
+        });
+      } catch (metaErr) {
+        console.warn(
+          '[MoMo] Unable to persist booking payload:',
+          metaErr.message
+        );
+      }
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      data: {
+        orderId,
+        requestId,
+        payUrl: payload.payUrl,
+        deeplink: payload.deeplink,
+        qrCodeUrl: payload.qrCodeUrl,
+        resultCode: payload.resultCode,
+        message: payload.message
+      }
+    });
+  } catch (err) {
+    if (softLockRecord) {
+      await releaseSoftLock(softLockRecord, 'momo-session-error');
+    }
+    if (err instanceof AppError) {
+      return next(err);
+    }
+    const responseMessage = err.response?.data?.message || err.message;
+    return next(
+      new AppError(responseMessage || 'MoMo từ chối tạo giao dịch.', 500)
+    );
+  }
+});
+
+exports.handleMomoIpn = async (req, res) => {
+  try {
+    await processMomoCallback(req.body || {}, 'ipn');
+    return res.status(200).json({ resultCode: 0, message: 'success' });
+  } catch (err) {
+    console.error('[MoMo] IPN error:', err);
+    return res
+      .status(500)
+      .json({ resultCode: 99, message: err.message || 'Server error' });
+  }
+};
+
+exports.handleMomoRedirect = async (req, res) => {
+  const query = req.query || {};
+  const { orderId, resultCode: resultCodeRaw } = query;
+  const resultCode = Number(resultCodeRaw);
+
+  if (orderId && resultCode === 0) {
+    try {
+      await processMomoCallback(query, 'redirect');
+    } catch (err) {
+      console.error('[MoMo] Redirect processing error:', err.message);
+    }
+  }
+
+  const baseUrl = process.env.PUBLIC_SUCCESS_URL || '/booking-success';
+  const params = new URLSearchParams({ provider: 'momo' });
+  if (orderId) params.set('sid', orderId);
+  if (typeof query.resultCode !== 'undefined')
+    params.set('resultCode', query.resultCode);
+  if (query.message) params.set('message', query.message);
+  const connector = baseUrl.includes('?') ? '&' : '?';
+  res.redirect(`${baseUrl}${connector}${params.toString()}`);
+};
 
 exports.createBookingCheckout = catchAsync(async (req, res, next) => {
   const { tour, user, price, participants, startDate } = req.query;

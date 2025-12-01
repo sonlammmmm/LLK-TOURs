@@ -3635,7 +3635,6 @@ main.auth-page {
   }
 }
 
-/* Hiển thị các control của Mapbox (zoom buttons) */
 .mapboxgl-ctrl-group {
   background: rgba(255, 255, 255, 0.9) !important;
   border-radius: 8px !important;

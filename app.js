@@ -40,6 +40,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use((req, res, next) => {
   res.locals.stripePublicKey = process.env.STRIPE_PUBLIC_KEY || '';
   res.locals.googleClientId = process.env.GOOGLE_CLIENT_ID || '';
+  const momoAccessKey = process.env.MOMO_ACCESS_KEY || 'F8BBA842ECF85';
+  const momoSecretKey =
+    process.env.MOMO_SECRET_KEY || 'K951B6PE1waDMi640xX08PD3vg6EkVlz';
+  const momoPartnerCode = process.env.MOMO_PARTNER_CODE || 'MOMO';
+  res.locals.momoPaymentEnabled = Boolean(
+    momoAccessKey && momoSecretKey && momoPartnerCode
+  );
   next();
 });
 
@@ -96,7 +103,9 @@ app.use(
         'https://js.stripe.com',
         'https://accounts.google.com',
         'https://oauth2.googleapis.com',
-        'https://www.gstatic.com'
+        'https://www.gstatic.com',
+        'https://test-payment.momo.vn',
+        'https://payment.momo.vn'
       ],
       imgSrc: [
         "'self'",
@@ -109,9 +118,16 @@ app.use(
       frameSrc: [
         "'self'",
         'https://js.stripe.com',
-        'https://accounts.google.com'
+        'https://accounts.google.com',
+        'https://test-payment.momo.vn',
+        'https://payment.momo.vn'
       ],
-      navigateSrc: ["'self'", 'https://checkout.stripe.com']
+      navigateSrc: [
+        "'self'",
+        'https://checkout.stripe.com',
+        'https://test-payment.momo.vn',
+        'https://payment.momo.vn'
+      ]
     }
   })
 );

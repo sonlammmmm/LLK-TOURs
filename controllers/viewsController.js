@@ -875,13 +875,16 @@ exports.getBookingForm = catchAsync(async (req, res, next) => {
 
 exports.getBookingSuccess = catchAsync(async (req, res, next) => {
   const { booking: bookingId, sid } = req.query;
+  const providerRaw = (req.query.provider || 'stripe').toLowerCase();
+  const providerKey = providerRaw === 'momo' ? 'momo' : 'stripe';
+  const providerName = providerKey === 'momo' ? 'MoMo' : 'Stripe';
 
   let booking = null;
   if (bookingId) {
     booking = await Booking.findById(bookingId).populate('tour user');
   } else if (sid) {
     booking = await Booking.findOne({
-      paymentMethod: 'stripe',
+      paymentMethod: providerKey,
       providerSessionId: sid
     }).populate('tour user');
   }
@@ -892,7 +895,9 @@ exports.getBookingSuccess = catchAsync(async (req, res, next) => {
     title: pending ? 'Đang xác nhận thanh toán' : 'Thanh toán thành công',
     booking,
     pending,
-    sid: sid || null, // dùng cho client poll
+    sid: sid || null,
+    providerKey,
+    providerName,
     hideFooter: true
   });
 });

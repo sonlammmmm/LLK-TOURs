@@ -127,6 +127,15 @@ const confirmSoftLock = async (holdId, bookingId) => {
   return hold;
 };
 
+const updateSoftLockMeta = async (holdId, updates = {}) => {
+  if (!holdId) return null;
+  const hold = await BookingHold.findById(holdId);
+  if (!hold) return null;
+  hold.meta = { ...(hold.meta || {}), ...(updates || {}) };
+  await hold.save();
+  return hold;
+};
+
 const linkSessionToSoftLock = async (holdId, sessionId) => {
   if (!holdId || !sessionId) return null;
   const hold = await BookingHold.findById(holdId);
@@ -206,6 +215,7 @@ module.exports = {
   releaseSoftLock,
   releaseSoftLockBySession,
   confirmSoftLock,
+  updateSoftLockMeta,
   linkSessionToSoftLock,
   findActiveSoftLockBySession,
   getSoftLockById,

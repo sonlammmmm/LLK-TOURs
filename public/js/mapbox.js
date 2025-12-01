@@ -13,8 +13,8 @@ export const displayMap = locations => {
   const map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/mapbox/light-v11',
-    center: [center.lng, center.lat], // Sử dụng trung tâm được tính toán
-    zoom: 10,
+    center: [center.lng, center.lat],
+    zoom: 17,
     scrollZoom: false,
     boxZoom: true,
     dragRotate: false,

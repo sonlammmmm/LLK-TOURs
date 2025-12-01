@@ -23,6 +23,8 @@ block content
       (bookingFormMeta && bookingFormMeta.availableDates) || [];
     const backHref =
       tour && tour.slug ? `/tour/${tour.slug}` : 'javascript:history.back()';
+    const momoEnabled =
+      typeof momoPaymentEnabled !== 'undefined' ? momoPaymentEnabled : false;
 
   main.main.booking-shell
     .booking-shell__background(style=`background-image:url('/img/tours/${primaryImage}')`)
@@ -112,14 +114,10 @@ block content
                         span.booking-date-weekday= weekday
 
                         strong.booking-date-day= day
-
+  
                         span.booking-date-month= `${month} ${year}`
 
                         span.booking-date-slotline= `${startObj.availableSlots} chỗ`
-
-                        if lowSlots
-
-                          span.booking-date-alert Sắp hết
               else
                 .booking-empty-state Chưa có lịch khởi hành mở. Quay lại sau bạn nhé.
             section.booking-card.booking-card--participants
@@ -214,17 +212,29 @@ block content
               .payment-option__content
                 strong Stripe
                 span Thanh toán qua Stripe
-            label.payment-option.payment-option--disabled
-              span.payment-option__logo
-              input.payment-option__control(
-                type='radio',
-                name='paymentMethod',
-                value='future',
-                disabled=true
-              )
-              .payment-option__content
-                strong Sắp cập nhật
-                span Hình thức thanh toán khác đang được xây dựng
+            if momoEnabled
+              label.payment-option.payment-option--momo
+                span.payment-option__logo
+                input.payment-option__control(
+                  type='radio',
+                  name='paymentMethod',
+                  value='momo'
+                )
+                .payment-option__content
+                  strong MoMo
+                  span Thanh toán qua MoMo
+            else
+              label.payment-option.payment-option--disabled
+                span.payment-option__logo
+                input.payment-option__control(
+                  type='radio',
+                  name='paymentMethod',
+                  value='future',
+                  disabled=true
+                )
+                .payment-option__content
+                  strong Sắp cập nhật
+                  span Hình thức thanh toán khác đang được xây dựng
           .booking-actions
             button.btn.btn--ghost-white#book-tour(
               type='button',

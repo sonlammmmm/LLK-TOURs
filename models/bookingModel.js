@@ -36,13 +36,16 @@ const bookingSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['stripe'],
+    enum: ['stripe', 'momo'],
     default: 'stripe'
   },
   providerSessionId: {
     type: String,
     unique: true,
     sparse: true // Cho phép null/undefined
+  },
+  providerTransactionId: {
+    type: String
   },
   currency: {
     type: String,

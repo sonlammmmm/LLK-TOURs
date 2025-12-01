@@ -27,16 +27,16 @@ block content
       : '';
     const customerEmail =
       booking && booking.user && booking.user.email ? booking.user.email : '';
-  main.main.booking-success
+  main.main.booking-success(data-provider=providerKey, data-provider-name=providerName)
     section.booking-success__viewport(class=pending ? 'is-pending' : '')
       .booking-success__bg(style=`background-image:url('${heroImage}')`)
       .booking-success__overlay
       .booking-success__content
         .booking-success__hero
           span.booking-success__hero-eyebrow= pending ? 'Đang xác nhận thanh toán' : 'Đặt tour thành công'
-          h1.booking-success__hero-title= pending ? 'Chúng tôi đang kết nối với Stripe' : 'Hành trình của bạn đã được xác nhận'
+          h1.booking-success__hero-title= pending ? `Đang kết nối với ${providerName}` : 'Hành trình của bạn đã được xác nhận'
           if pending
-            p.booking-success__hero-desc Hệ thống LLK TOUR đang nhận thông tin từ Stripe để tạo booking của bạn. Vui lòng giữ trang này mở trong giây lát.
+            p.booking-success__hero-desc= `Hệ thống LLK TOUR đang nhận thông tin từ ${providerName} để tạo booking của bạn. Vui lòng giữ trang này mở trong giây lát.`
           else
             p.booking-success__hero-desc Thanh toán đã hoàn tất, chúng tôi đã gửi thông tin hành trình cùng hướng dẫn chi tiết vào email của bạn.
           if !pending && booking

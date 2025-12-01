@@ -2,6 +2,11 @@
 import axios from "./vendor/axios.js";
 import { showAlert } from "./alerts.js";
 
+const PAYMENT_METHODS = {
+  STRIPE: "stripe",
+  MOMO: "momo"
+};
+
 const parseCurrency = el =>
   parseInt(String(el.textContent || "").replace(/[^\d]/g, ""), 10) || 0;
 
@@ -73,7 +78,7 @@ const formatSelectedDate = value => {
   }
 };
 
-export const bookTour = async (
+const initiateStripeCheckout = async (
   tourId,
   startDate,
   participants,
@@ -81,7 +86,7 @@ export const bookTour = async (
   promotionCode
 ) => {
   try {
-    console.log("[Stripe Debug] booking params", {
+    console.log('[Stripe Debug] booking params', {
       tourId,
       startDate,
       participants,
@@ -95,14 +100,14 @@ export const bookTour = async (
         participants,
         selectedServices,
         promotionCode,
-        platform: "web"
+        platform: 'web'
       }
     );
-    console.log("[Stripe Debug] checkout response", session.data);
+    console.log('[Stripe Debug] checkout response', session.data);
 
     const checkoutSession = session.data?.session;
     if (!checkoutSession) {
-      throw new Error("Stripe session response was empty.");
+      throw new Error('Stripe session response was empty.');
     }
 
     if (checkoutSession.url) {
@@ -111,7 +116,7 @@ export const bookTour = async (
     }
 
     if (!checkoutSession.id) {
-      throw new Error("Missing Stripe checkout session ID.");
+      throw new Error('Missing Stripe checkout session ID.');
     }
 
     const fallbackUrl = `https://checkout.stripe.com/pay/${checkoutSession.id}`;
@@ -119,14 +124,69 @@ export const bookTour = async (
     window.redirectingToStripe = true;
     window.location.assign(stripeUrl);
   } catch (err) {
-    console.error("Stripe booking error:", err);
+    console.error('Stripe booking error:', err);
     const message =
       err.response?.data?.message ||
-      "Không thể tạo phiên thanh toán Stripe!";
-    showAlert("error", message);
+      'Không thể tạo phiên thanh toán Stripe!';
+    showAlert('error', message);
     throw err;
   }
 };
+
+const initiateMomoPayment = async (
+  tourId,
+  startDate,
+  participants,
+  selectedServices,
+  promotionCode
+) => {
+  try {
+    const response = await axios.post(
+      `/api/v1/bookings/momo-session/${tourId}`,
+      {
+        startDate,
+        participants,
+        selectedServices,
+        promotionCode,
+        platform: 'web'
+      },
+      { timeout: 30000 }
+    );
+
+    const paymentData = response.data?.data;
+    if (!paymentData || (!paymentData.payUrl && !paymentData.deeplink)) {
+      throw new Error(
+        response.data?.message ||
+          'Không nhận được liên kết thanh toán MoMo.'
+      );
+    }
+
+    const targetUrl = paymentData.payUrl || paymentData.deeplink;
+    window.location.assign(targetUrl);
+  } catch (err) {
+    console.error('[MoMo] Checkout error:', err);
+    const message =
+      err.response?.data?.message ||
+      err.message ||
+      'Không thể khởi tạo thanh toán MoMo.';
+    showAlert('error', message);
+    throw err;
+  }
+};
+
+export const bookTour = async (
+  tourId,
+  startDate,
+  participants,
+  selectedServices,
+  promotionCode
+) => initiateStripeCheckout(
+  tourId,
+  startDate,
+  participants,
+  selectedServices,
+  promotionCode
+);
 
 export const initBookingForm = () => {
   if (typeof window !== "undefined") {
@@ -166,6 +226,9 @@ export const initBookingForm = () => {
   const quantityButtons = Array.from(
     document.querySelectorAll(".service-quantity__btn")
   );
+  const paymentMethodInputs = Array.from(
+    document.querySelectorAll("input[name='paymentMethod']")
+  );
   const promoChips = Array.from(document.querySelectorAll(".promo-chip"));
   const decreaseBtn = document.querySelector(".decrease-btn");
   const increaseBtn = document.querySelector(".increase-btn");
@@ -194,6 +257,9 @@ export const initBookingForm = () => {
     selectedServices: new Map(),
     discountAmount: 0,
     promotionCode: null,
+    paymentMethod:
+      paymentMethodInputs.find(input => input.checked)?.value ||
+      PAYMENT_METHODS.STRIPE,
     isProcessing: false,
     isApplyingPromotion: false
   };
@@ -578,6 +644,16 @@ export const initBookingForm = () => {
     });
   });
 
+  if (paymentMethodInputs.length) {
+    paymentMethodInputs.forEach(input => {
+      input.addEventListener("change", () => {
+        if (input.checked) {
+          state.paymentMethod = input.value || PAYMENT_METHODS.STRIPE;
+        }
+      });
+    });
+  }
+
   promoChips.forEach(chip => {
     chip.addEventListener("click", () => {
       if (promotionInput) {
@@ -628,20 +704,37 @@ export const initBookingForm = () => {
     }
     const tourId = bookTourBtn.dataset.tourId;
     const originalText = bookTourBtn.textContent;
+    const method =
+      state.paymentMethod && state.paymentMethod.toLowerCase() === "momo"
+        ? PAYMENT_METHODS.MOMO
+        : PAYMENT_METHODS.STRIPE;
     bookTourBtn.disabled = true;
-    bookTourBtn.textContent = "Đang xử lý...";
+    bookTourBtn.textContent =
+      method === PAYMENT_METHODS.MOMO
+        ? 'Đang chuyển sang MoMo...'
+        : 'Đang xử lý...';
     state.isProcessing = true;
 
     try {
-      await bookTour(
-        tourId,
-        state.selectedDate,
-        state.currentParticipants,
-        getSelectedServicesPayload(),
-        state.promotionCode
-      );
-    } catch {
-      // error already surfaced
+      if (method === PAYMENT_METHODS.MOMO) {
+        await initiateMomoPayment(
+          tourId,
+          state.selectedDate,
+          state.currentParticipants,
+          getSelectedServicesPayload(),
+          state.promotionCode
+        );
+      } else {
+        await initiateStripeCheckout(
+          tourId,
+          state.selectedDate,
+          state.currentParticipants,
+          getSelectedServicesPayload(),
+          state.promotionCode
+        );
+      }
+    } catch (err) {
+      // errors are surfaced inside individual handlers
     } finally {
       bookTourBtn.disabled = false;
       bookTourBtn.textContent = originalText;

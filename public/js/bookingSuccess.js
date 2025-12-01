@@ -1,7 +1,12 @@
 /* eslint-disable */
 
-const pollBookingStatus = sid => {
+const pollBookingStatus = (sid, provider, providerName) => {
   if (!sid) return;
+  const providerLabel = providerName || 'Stripe';
+  const providerKey =
+    typeof provider === 'string' && provider.toLowerCase() === 'momo'
+      ? 'momo'
+      : 'stripe';
 
   const maxAttempts = 30;
   const interval = 2000;
@@ -10,7 +15,9 @@ const pollBookingStatus = sid => {
   const checkStatus = async () => {
     try {
       attempts += 1;
-      const res = await fetch(`/api/v1/bookings/by-session/${sid}`);
+      const res = await fetch(
+        `/api/v1/bookings/by-session/${sid}?provider=${providerKey}`
+      );
       const data = await res.json();
 
       if (data.status === 'success' && data.data) {
@@ -21,12 +28,14 @@ const pollBookingStatus = sid => {
       if (attempts < maxAttempts) {
         setTimeout(checkStatus, interval);
       } else {
-        const pendingCard = document.querySelector('.booking-success__card--pending');
+        const pendingCard = document.querySelector(
+          '.booking-success__card--pending'
+        );
         if (pendingCard) {
           pendingCard.innerHTML = `
             <div class="booking-success__card-header">
               <h2>Không thể xác nhận thanh toán</h2>
-              <p>Chúng tôi chưa tìm thấy booking tương ứng với phiên Stripe này.</p>
+              <p>Chúng tôi chưa tìm thấy booking tương ứng với phiên ${providerLabel} này.</p>
             </div>
             <p>Vui lòng kiểm tra mục "<strong>Tour của tôi</strong>" hoặc liên hệ với đội ngũ hỗ trợ để được trợ giúp thêm.</p>
             <div class="booking-success__links">
@@ -115,9 +124,11 @@ export const initBookingSuccess = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const sid = urlParams.get('sid');
   const pendingCard = root.querySelector('.booking-success__card--pending');
+  const providerKey = root.dataset.provider || 'stripe';
+  const providerName = root.dataset.providerName || 'Stripe';
 
   if (sid && pendingCard) {
-    pollBookingStatus(sid);
+    pollBookingStatus(sid, providerKey, providerName);
   }
 
   initCountdownRedirect();
