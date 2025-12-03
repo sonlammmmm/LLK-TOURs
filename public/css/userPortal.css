@@ -912,6 +912,23 @@ body.user-portal-body .user-portal__content::-webkit-scrollbar {
   font-size: var(--font-size-xs);
 }
 
+.review-item__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.review-item__badge--muted {
+  background: rgba(251, 191, 36, 0.18);
+  color: #92400e;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
 .review-item__footer {
   display: flex;
   justify-content: space-between;

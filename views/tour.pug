@@ -23,11 +23,19 @@ block content
   - const ratingAverageRounded = Math.round(ratingAverageValue * 10) / 10
   - const ratingAverageDisplay = Number.isFinite(ratingAverageRounded) ? ratingAverageRounded.toFixed(1) : '0.0'
   - const ratingAverageStars = Math.min(5, Math.max(0, Math.round(ratingAverageValue)))
-  - const allReviews = Array.isArray(tour.reviews) ? tour.reviews.slice() : []
-  - const sortedReviews = allReviews.sort((a, b) => (b.rating || 0) - (a.rating || 0))
-  - const maxInitialReviews = 9
-  - const initialReviews = sortedReviews.slice(0, maxInitialReviews)
-  - const extraReviews = sortedReviews.slice(maxInitialReviews)
+  - const reviewSource = Array.isArray(visibleReviews) ? visibleReviews.slice() : (Array.isArray(tour.reviews) ? tour.reviews.slice() : [])
+  - const sortedReviews = reviewSource.sort((a, b) => {
+  -   const dateA = new Date(a && a.createdAt ? a.createdAt : 0).getTime()
+  -   const dateB = new Date(b && b.createdAt ? b.createdAt : 0).getTime()
+  -   if (dateA === dateB) return (b.rating || 0) - (a.rating || 0)
+  -   return dateB - dateA
+  - })
+  - const reviewsPerPage = 9
+  - const reviewPages = []
+  - for (let i = 0; i < sortedReviews.length; i += reviewsPerPage) {
+  -   reviewPages.push(sortedReviews.slice(i, i + reviewsPerPage))
+  - }
+  - const hasReviews = reviewPages.length > 0
 
   section.tour-hero
     .tour-hero__media
@@ -187,65 +195,187 @@ block content
       p.tour-section__text Thư viện hình ảnh đang được cập nhật.
 
   section.tour-reviews
+    - const totalReviewCount = sortedReviews.length
+    - const initialVisibleCount = hasReviews ? Math.min(reviewPages[0].length, reviewsPerPage) : 0
     .tour-reviews__inner
-      .tour-reviews__summary
-        span.tour-reviews__eyebrow Khách hàng nói gì?
-        h3.tour-reviews__score
-          span.tour-reviews__score-value= ratingAverageDisplay
-          span.tour-reviews__score-scale /5
-        .tour-reviews__summary-stars
-          each star in [1,2,3,4,5]
-            i(class=star <= ratingAverageStars ? 'fas fa-star' : 'far fa-star')
-        p.tour-reviews__summary-text= tour.ratingsQuantity ? `${tour.ratingsQuantity} lượt đánh giá xác thực từ khách đã tham gia.` : 'Chưa có đánh giá nào cho tour này.'
-      .tour-reviews__grid
-        if initialReviews.length
-          each review in initialReviews
-            article.tour-review
-              header.tour-review__header
-                .tour-review__avatar
-                  img(src=`/img/users/${review.user.photo || 'default.jpg'}`, alt=review.user.name)
-                .tour-review__info
-                  strong.tour-review__name= review.user.name
-                  span.tour-review__date= new Date(review.createdAt || Date.now()).toLocaleDateString('vi-VN')
-              p.tour-review__text= review.review
-              .tour-review__rating
-                span.tour-review__score= `${review.rating}/5`
-                .tour-review__stars
-                  each star in [1,2,3,4,5]
-                    i(class=star <= review.rating ? 'fas fa-star' : 'far fa-star')
-          each review in extraReviews
-            article.tour-review.tour-review--extra.is-hidden
-              header.tour-review__header
-                .tour-review__avatar
-                  img(src=`/img/users/${review.user.photo || 'default.jpg'}`, alt=review.user.name)
-                .tour-review__info
-                  strong.tour-review__name= review.user.name
-                  span.tour-review__date= new Date(review.createdAt || Date.now()).toLocaleDateString('vi-VN')
-              p.tour-review__text= review.review
-              .tour-review__rating
-                span.tour-review__score= `${review.rating}/5`
-                .tour-review__stars
-                  each star in [1,2,3,4,5]
-                    i(class=star <= review.rating ? 'fas fa-star' : 'far fa-star')
-        else
-          p.tour-section__text Chưa có đánh giá nào cho tour này.
-      if extraReviews.length
-        button.tour-reviews__more(type='button' data-action='reviews-more') Xem thêm đánh giá
+      header.tour-reviews__header
+        .tour-reviews__heading
+          span.tour-reviews__eyebrow Khách hàng nói gì?
+          h3.tour-reviews__title Chia sẻ từ khách hàng đã trải nghiệm
+          if tour.ratingsQuantity
+            p.tour-reviews__description #{tour.ratingsQuantity} lượt đánh giá xác thực, được thu thập từ khách hàng.
+          else
+            p.tour-reviews__description Chưa có đánh giá nào cho tour này, hãy là người đầu tiên chia sẻ trải nghiệm nhé.
+        if hasReviews
+          .tour-reviews__scorecard
+            .tour-reviews__score
+              span.tour-reviews__score-value= ratingAverageDisplay
+              span.tour-reviews__score-scale /5
+            .tour-reviews__summary-stars
+              each star in [1,2,3,4,5]
+                i(class=star <= ratingAverageStars ? 'fas fa-star' : 'far fa-star')
+      if hasReviews
+        .tour-reviews__body
+          .tour-reviews__rail
+            .tour-reviews__scroller(
+              data-review-scroller
+              data-review-pages=reviewPages.length
+              data-pages-loaded=(hasReviews ? 1 : 0)
+              data-total-reviews=totalReviewCount
+              data-reviews-per-page=reviewsPerPage
+            )
+              each page, pageIndex in reviewPages
+                each review in page
+                  - const reviewDate = new Date(review.createdAt || Date.now()).toLocaleDateString('vi-VN')
+                  article(class=`tour-review-card${pageIndex > 0 ? ' is-hidden' : ''}` data-page-index=pageIndex)
+                    header.tour-review-card__header
+                      .tour-review-card__rating
+                        span.tour-review-card__rating-value= review.rating
+                        span.tour-review-card__rating-scale /5
+                      span.tour-review-card__date= reviewDate
+                    p.tour-review-card__text= review.review
+                    footer.tour-review-card__footer
+                      .tour-review-card__author
+                        img(src=`/img/users/${review.user.photo || 'default.jpg'}`, alt=review.user.name)
+                        div
+                          strong.tour-review-card__name= review.user.name
+                      .tour-review-card__stars
+                        each star in [1,2,3,4,5]
+                          i(class=star <= review.rating ? 'fas fa-star' : 'far fa-star')
+          .tour-reviews__controls
+            - const progressText = `Đang hiển thị ${initialVisibleCount} / ${totalReviewCount} đánh giá`
+            p.tour-reviews__progress(data-review-progress)= progressText
+            if reviewPages.length > 1
+              button.tour-reviews__next(type='button' data-review-next) Xem thêm đánh giá
+      else
+        p.tour-section__text Chưa có đánh giá nào cho tour này.
 
 block append scripts
   script.
-    (() => {
-      const moreBtn = document.querySelector('[data-action="reviews-more"]');
-      if (moreBtn) {
-        moreBtn.addEventListener('click', () => {
-          document.querySelectorAll('.tour-review--extra').forEach(card => {
-            card.classList.remove('is-hidden');
-          });
-          moreBtn.remove();
-        });
-      }
-    })();
     document.addEventListener('DOMContentLoaded', () => {
+      const scroller = document.querySelector('[data-review-scroller]');
+      const loadButtons = document.querySelectorAll('[data-review-next]');
+      const progressNode = document.querySelector('[data-review-progress]');
+
+      if (scroller) {
+        const totalPages = Number(scroller.dataset.reviewPages || '0');
+        let pagesLoaded = Number(scroller.dataset.pagesLoaded || '0');
+        const reviewsPerPage = Number(scroller.dataset.reviewsPerPage || '9');
+        const totalReviews = Number(scroller.dataset.totalReviews || '0');
+
+        const revealPage = (pageIndex) => {
+          const cards = scroller.querySelectorAll(`[data-page-index="${pageIndex}"]`);
+          cards.forEach((card) => card.classList.remove('is-hidden'));
+        };
+
+        const getVisibleCount = () =>
+          scroller.querySelectorAll('.tour-review-card:not(.is-hidden)').length;
+
+        const updateProgress = () => {
+          if (!progressNode) return;
+          const visibleCount = getVisibleCount();
+          const baseText =
+            totalReviews > 0
+              ? `Đang hiển thị ${visibleCount} / ${totalReviews} đánh giá`
+              : 'Chưa có đánh giá nào';
+          progressNode.textContent = baseText;
+        };
+
+        const updateButtons = () => {
+          const visibleCount = getVisibleCount();
+          const remaining = Math.max(0, totalReviews - visibleCount);
+          loadButtons.forEach((button) => {
+            if (pagesLoaded >= totalPages || remaining === 0) {
+              button.disabled = true;
+              button.classList.add('is-disabled');
+              button.textContent = 'Đã hiển thị hết đánh giá';
+            } else {
+              const chunk = Math.min(reviewsPerPage, remaining);
+              button.disabled = false;
+              button.classList.remove('is-disabled');
+              button.textContent = `Xem thêm ${chunk} đánh giá`;
+            }
+          });
+        };
+
+        const showNextPage = () => {
+          if (pagesLoaded >= totalPages) return;
+          const nextIndex = pagesLoaded;
+          revealPage(nextIndex);
+          pagesLoaded += 1;
+          scroller.dataset.pagesLoaded = String(pagesLoaded);
+          updateProgress();
+          updateButtons();
+          requestAnimationFrame(() => {
+            scroller.scrollTo({
+              left: scroller.scrollWidth,
+              behavior: 'smooth',
+            });
+          });
+        };
+
+        loadButtons.forEach((button) => {
+          button.addEventListener('click', showNextPage);
+        });
+
+        updateProgress();
+        updateButtons();
+
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartScroll = 0;
+
+        const getPointerX = (event) =>
+          event.touches && event.touches.length ? event.touches[0].clientX : event.clientX;
+
+        const handleDragStart = (event) => {
+          if (event.type === 'mousedown' && event.button !== 0) return;
+          isDragging = true;
+          dragStartX = getPointerX(event);
+          dragStartScroll = scroller.scrollLeft;
+          scroller.classList.add('is-dragging');
+        };
+
+        const handleDragMove = (event) => {
+          if (!isDragging) return;
+          event.preventDefault();
+          const currentX = getPointerX(event);
+          const delta = dragStartX - currentX;
+          scroller.scrollLeft = dragStartScroll + delta;
+        };
+
+        const handleDragEnd = () => {
+          if (!isDragging) return;
+          isDragging = false;
+          scroller.classList.remove('is-dragging');
+        };
+
+        scroller.addEventListener('mousedown', handleDragStart);
+        scroller.addEventListener('mousemove', handleDragMove);
+        scroller.addEventListener('mouseup', handleDragEnd);
+        scroller.addEventListener('mouseleave', handleDragEnd);
+        scroller.addEventListener('touchstart', handleDragStart, { passive: false });
+        scroller.addEventListener('touchmove', handleDragMove, { passive: false });
+        scroller.addEventListener('touchend', handleDragEnd);
+        scroller.addEventListener('touchcancel', handleDragEnd);
+        window.addEventListener('mouseup', handleDragEnd);
+        window.addEventListener('touchend', handleDragEnd);
+        window.addEventListener('touchcancel', handleDragEnd);
+
+        scroller.addEventListener(
+          'wheel',
+          (event) => {
+            if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+            event.preventDefault();
+            scroller.scrollBy({
+              left: event.deltaY,
+              behavior: 'smooth',
+            });
+          },
+          { passive: false }
+        );
+      }
+
       const quickBookingBtn = document.querySelector('.quick-booking__btn[data-booking-href]');
       const dateSelect = document.getElementById('quickBookingDate');
 

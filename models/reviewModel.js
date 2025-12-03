@@ -25,6 +25,10 @@ const reviewSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: 'User',
       required: [true, 'Review Đánh giá phải thuộc về một user']
+    },
+    isHidden: {
+      type: Boolean,
+      default: false
     }
   },
   {
@@ -49,6 +53,9 @@ reviewSchema.statics.calcAverageRatings = async function(tourId) {
   const stats = await this.aggregate([
     {
       $match: { tour: tourId }
+    },
+    {
+      $match: { isHidden: { $ne: true } }
     },
     {
       $group: {

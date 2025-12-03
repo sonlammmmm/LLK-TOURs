@@ -53,6 +53,15 @@ const formatStartDatesWithSlots = tour => {
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 };
 
+const getUserIdFromDoc = userRef => {
+  if (!userRef) return null;
+  if (userRef.id) return userRef.id.toString();
+  if (userRef._id) return userRef._id.toString();
+  if (typeof userRef === 'string') return userRef;
+  if (typeof userRef.toString === 'function') return userRef.toString();
+  return null;
+};
+
 const mapTourWithStartMeta = tour => {
   const upcomingStartDates = formatStartDatesWithSlots(tour);
   const nextAvailable = upcomingStartDates.find(date => !date.isFull) || null;
@@ -334,12 +343,21 @@ exports.searchTours = catchAsync(async (req, res, next) => {
 exports.getTour = catchAsync(async (req, res, next) => {
   const tour = await Tour.findOne({ slug: req.params.slug }).populate({
     path: 'reviews',
-    fields: 'review rating user'
+    select: 'review rating user createdAt isHidden'
   });
 
   if (!tour) {
     return next(new AppError('Không tìm thấy dữ liệu nào', 404));
   }
+
+  const currentUserId = req.user ? req.user.id.toString() : null;
+  const rawReviews = Array.isArray(tour.reviews) ? tour.reviews : [];
+  const visibleReviews = rawReviews.filter(review => {
+    if (!review) return false;
+    if (!review.isHidden) return true;
+    if (!currentUserId) return false;
+    return getUserIdFromDoc(review.user) === currentUserId;
+  });
 
   // Format ngày khởi hành với thông tin slot
   const startDatesWithSlots = formatStartDatesWithSlots(tour);
@@ -364,7 +382,9 @@ exports.getTour = catchAsync(async (req, res, next) => {
     title: `${tour.name}`,
     tour,
     startDatesWithSlots,
-    tourStartMeta
+    tourStartMeta,
+    visibleReviews,
+    currentUserId
   });
 });
 
@@ -911,11 +931,17 @@ exports.getManageReviews = catchAsync(async (req, res, next) => {
     .populate({
       path: 'tour',
       select: 'name'
-    });
+    })
+    .lean({ virtuals: true });
 
   res.status(200).render('manageReviews', {
     title: 'Quản lý đánh giá',
-    reviews,
+    reviews: Array.isArray(reviews)
+      ? reviews.map(review => ({
+          ...review,
+          isHidden: Boolean(review.isHidden)
+        }))
+      : [],
     adminMenuActive: 'reviews'
   });
 });

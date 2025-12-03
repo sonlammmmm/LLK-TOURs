@@ -53,9 +53,11 @@ block adminContent
       .llk-admin-card-grid.review-management__list
         each review in reviewList
           - const searchText = `${review.user.name} ${review.tour.name} ${review.review}`.toLowerCase();
+          - const hiddenAttr = review.isHidden ? 'true' : 'false';
           article.llk-admin-entity-card.review-management__item(
             data-rating=review.rating
             data-search=searchText
+            data-hidden=hiddenAttr
           )
             .review-management__info
               .review-management__user
@@ -70,13 +72,22 @@ block adminContent
                     span.rating-star.rating-star--active ★
                   else
                     span.rating-star ☆
-              .review-management__date
-                span= new Date(review.createdAt).toLocaleDateString('vi-VN')
-              .review-management__text
-                p= review.review
+            .review-management__date
+              span= new Date(review.createdAt).toLocaleDateString('vi-VN')
+            .review-management__text
+              p= review.review
+              .review-management__status
+                if review.isHidden
+                  span.review-management__badge.review-management__badge--muted Đang bị ẩn
+                else
+                  span.review-management__badge.review-management__badge--visible Đang hiển thị công khai
             .review-management__actions
-              button.btn.btn--small.btn--blue.btn-edit-review(data-review-id=`${review.id}`) Sửa
-              button.btn.btn--small.btn--red.btn-delete-review(data-review-id=`${review.id}`) Xóa
+              button.btn.btn--small.btn-toggle-review-visibility(
+                data-review-id=`${review._id}`
+                data-hidden=hiddenAttr
+              )= review.isHidden ? 'Bỏ ẩn' : 'Ẩn'
+              button.btn.btn--small.btn--blue.btn-edit-review(data-review-id=`${review._id}`) Sửa
+              button.btn.btn--small.btn--red.btn-delete-review(data-review-id=`${review._id}`) Xóa
 
   .modal.hidden#edit-review-modal
     .modal__content

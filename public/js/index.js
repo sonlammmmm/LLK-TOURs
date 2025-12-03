@@ -14,7 +14,12 @@ import {
 } from "./bookingManagement"
 import { initViewToggle } from "./viewToggle"
 import { initBookingForm } from "./bookingForm"
-import { handleDeleteReview, handleEditReview, initReviewFilter } from "./reviewManagement"
+import {
+  handleDeleteReview,
+  handleEditReview,
+  handleToggleReviewVisibility,
+  initReviewFilter,
+} from "./reviewManagement"
 import { initBookingSuccess } from "./bookingSuccess"
 import { handleAddReview, handlePrintInvoice } from "./myTours"
 import { initMyBilling } from "./myBilling"
@@ -277,6 +282,7 @@ const reviewManagementList = document.querySelector(".review-management__list")
 if (reviewManagementList) {
   handleDeleteReview()
   handleEditReview()
+  handleToggleReviewVisibility()
   initReviewFilter()
 }
 

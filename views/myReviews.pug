@@ -29,11 +29,17 @@ block content
                 a.my-tour-link(href='/all') Khám phá tour
             else
               each review in reviews
+                - const tourData = review.tour || {}
+                - const tourSlug = tourData.slug || '#'
+                - const tourImage = tourData.imageCover || 'default.jpg'
+                - const tourName = tourData.name || 'Thông tin tour đang cập nhật'
+                - const reviewId = review._id || review.id || ''
+                - const tourId = tourData._id || tourData.id || ''
                 .review-item
                   .review-item__header
-                    a.review-item__tour(href=`/tour/${review.tour.slug}`)
-                      img.review-item__img(src=`/img/tours/${review.tour.imageCover}`, alt=`${review.tour.name}`)
-                      span= review.tour.name
+                    a.review-item__tour(href=`/tour/${tourSlug}`)
+                      img.review-item__img(src=`/img/tours/${tourImage}`, alt=`${tourName}`)
+                      span= tourName
                     .review-item__rating
                       - for (let i = 1; i <= 5; i++)
                         if i <= review.rating
@@ -46,12 +52,12 @@ block content
                     .review-item__date= new Date(review.createdAt).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })
                     .review-item__actions
                       button.btn.btn--small.btn--blue.btn-edit-my-review(
-                        data-review-id=`${review.id}`,
-                        data-tour-id=`${review.tour.id}`,
-                        data-review-text=`${review.review}`,
+                        data-review-id=reviewId
+                        data-tour-id=tourId
+                        data-review-text=`${review.review}`
                         data-review-rating=`${review.rating}`
                       ) Chỉnh sửa
-                      button.btn.btn--small.btn--red.btn-delete-my-review(data-review-id=`${review.id}`) Xoá
+                      button.btn.btn--small.btn--red.btn-delete-my-review(data-review-id=reviewId) Xoá
 
         .modal.hidden#review-modal
           .modal__content

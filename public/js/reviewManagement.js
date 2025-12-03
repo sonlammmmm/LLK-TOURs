@@ -25,6 +25,33 @@ export const deleteReview = async (reviewId) => {
   }
 }
 
+export const setReviewVisibility = async (reviewId, shouldHide) => {
+  try {
+    const url = `/api/v1/reviews/${reviewId}`
+    const res = await axios({
+      method: "PATCH",
+      url,
+      data: { isHidden: shouldHide },
+    })
+
+    if (res.data.status === "success") {
+      const message = shouldHide
+        ? "Đánh giá đã được ẩn khỏi trang chi tiết."
+        : "Đánh giá đã được hiển thị trở lại."
+      showAlert("success", message)
+      window.setTimeout(() => {
+        location.reload()
+      }, 1500)
+    }
+  } catch (err) {
+    console.error("Error toggling review visibility:", err)
+    showAlert(
+      "error",
+      err.response ? err.response.data.message : "Đã xảy ra lỗi khi cập nhật trạng thái hiển thị."
+    )
+  }
+}
+
 // Cập nhật đánh giá
 export const updateReview = async (reviewId, reviewData) => {
   try {
@@ -81,6 +108,43 @@ export const handleDeleteReview = () => {
 
       if (confirm("Bạn có chắc chắn muốn xóa đánh giá này? Hành động này không thể hoàn tác.")) {
         await deleteReview(reviewId)
+      }
+    })
+  })
+}
+
+export const handleToggleReviewVisibility = () => {
+  const toggleButtons = document.querySelectorAll(".btn-toggle-review-visibility")
+  if (!toggleButtons.length) return
+
+  toggleButtons.forEach((button) => {
+    button.addEventListener("click", async (e) => {
+      const reviewId = e.currentTarget.dataset.reviewId
+      if (!reviewId || reviewId === "undefined") {
+        showAlert("error", "Không xác định được đánh giá để cập nhật.")
+        return
+      }
+      const datasetHidden = (e.currentTarget.dataset.hidden || "").toLowerCase()
+      const isHidden = datasetHidden === "true" || datasetHidden === "data-hidden" || datasetHidden === "1"
+
+      const confirmMessage = isHidden
+        ? "Bạn muốn bỏ ẩn đánh giá này để hiển thị lại cho khách hàng?"
+        : "Bạn chắc chắn muốn ẩn đánh giá này? Nội dung sẽ chỉ hiện với người đã đánh giá và quản trị viên."
+      if (!window.confirm(confirmMessage)) {
+        return
+      }
+
+      const originalLabel = e.currentTarget.textContent
+      e.currentTarget.disabled = true
+      e.currentTarget.textContent = isHidden ? "..." : "..."
+      try {
+        await setReviewVisibility(reviewId, !isHidden)
+      } catch (error) {
+        console.error("Error in visibility toggle:", error)
+        showAlert("error", "Không thể cập nhật trạng thái hiển thị. Vui lòng thử lại.")
+      } finally {
+        e.currentTarget.disabled = false
+        e.currentTarget.textContent = originalLabel
       }
     })
   })

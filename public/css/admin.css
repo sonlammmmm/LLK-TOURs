@@ -892,11 +892,55 @@ body.llk-admin-body {
   line-height: 1.6;
 }
 
+.review-management__status {
+  margin-top: 0.6rem;
+}
+
+.review-management__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: none;
+}
+
+.review-management__badge--visible {
+  background: rgba(16, 185, 129, 0.12);
+  color: #0f5132;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.review-management__badge--muted {
+  background: rgba(251, 191, 36, 0.15);
+  color: #92400e;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+}
+
 .review-management__actions {
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;
   margin-top: auto;
+}
+
+.btn-toggle-review-visibility {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid rgba(146, 64, 14, 0.2);
+}
+
+.btn-toggle-review-visibility[data-hidden='true'] {
+  background: #dcfce7;
+  color: #166534;
+  border-color: rgba(22, 101, 52, 0.3);
+}
+
+.btn-toggle-review-visibility:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .llk-admin-page .btn {
