@@ -17,7 +17,8 @@ block content
   - const userContactHref = user && user.role === 'user' ? `/chat?prefill=${encodeURIComponent(contactMessage)}` : '/login'
   - const totalStops = tour.locations && tour.locations.length ? tour.locations.length : 0
   - const galleryImages = Array.isArray(tour.images) ? tour.images : []
-  - const ratingLabel = `${tour.ratingsAverage} / 5 (${tour.ratingsQuantity} đánh giá)`
+  - const reviewDisplayCount = typeof tour.displayRatingsQuantity === 'number' ? tour.displayRatingsQuantity : (tour.ratingsQuantity || 0)
+  - const ratingLabel = `${tour.ratingsAverage} / 5 (${reviewDisplayCount} đánh giá)`
   - const ratingAverageRaw = typeof tour.ratingsAverage === 'number' ? tour.ratingsAverage : Number(tour.ratingsAverage)
   - const ratingAverageValue = Number.isFinite(ratingAverageRaw) ? ratingAverageRaw : 0
   - const ratingAverageRounded = Math.round(ratingAverageValue * 10) / 10
@@ -115,7 +116,7 @@ block content
           .tour-metric
             span.tour-metric__label Đánh giá
             strong.tour-metric__value= `${tour.ratingsAverage}/5`
-            span.tour-metric__meta= `${tour.ratingsQuantity} lượt đánh giá`
+            span.tour-metric__meta= `${reviewDisplayCount} lượt đánh giá`
 
       section.tour-section
         h3.tour-section__title Về tour này
@@ -202,8 +203,8 @@ block content
         .tour-reviews__heading
           span.tour-reviews__eyebrow Khách hàng nói gì?
           h3.tour-reviews__title Chia sẻ từ khách hàng đã trải nghiệm
-          if tour.ratingsQuantity
-            p.tour-reviews__description #{tour.ratingsQuantity} lượt đánh giá xác thực, được thu thập từ khách hàng.
+          if reviewDisplayCount
+            p.tour-reviews__description #{reviewDisplayCount} lượt đánh giá xác thực, được thu thập từ khách hàng.
           else
             p.tour-reviews__description Chưa có đánh giá nào cho tour này, hãy là người đầu tiên chia sẻ trải nghiệm nhé.
         if hasReviews

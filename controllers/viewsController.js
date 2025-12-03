@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Tour = require('../models/tourModel');
 const User = require('../models/userModel');
 const Booking = require('../models/bookingModel');
@@ -60,6 +61,101 @@ const getUserIdFromDoc = userRef => {
   if (typeof userRef === 'string') return userRef;
   if (typeof userRef.toString === 'function') return userRef.toString();
   return null;
+};
+
+const getTourIdFromDoc = tourRef => {
+  if (!tourRef) return null;
+  if (tourRef.id) return tourRef.id.toString();
+  if (tourRef._id) return tourRef._id.toString();
+  if (typeof tourRef === 'string') return tourRef;
+  if (typeof tourRef.toString === 'function') return tourRef.toString();
+  return null;
+};
+
+const buildHiddenReviewCountMap = async (userId, tourRefs = []) => {
+  if (!userId) return new Map();
+  const normalizedIds = Array.isArray(tourRefs)
+    ? tourRefs
+        .map(getTourIdFromDoc)
+        .filter(Boolean)
+    : [];
+  const uniqueIds = [...new Set(normalizedIds)];
+  const objectIds = uniqueIds
+    .map(id => {
+      try {
+        return new mongoose.Types.ObjectId(id);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+  const query = {
+    user: userId,
+    isHidden: true
+  };
+  if (objectIds.length > 0) {
+    query.tour = { $in: objectIds };
+  }
+  const hiddenReviews = await Review.find(query).select('tour').lean();
+  return hiddenReviews.reduce((acc, review) => {
+    const key =
+      review.tour && typeof review.tour.toString === 'function'
+        ? review.tour.toString()
+        : review.tour;
+    if (!key) return acc;
+    acc.set(key, (acc.get(key) || 0) + 1);
+    return acc;
+  }, new Map());
+};
+
+const buildVisibleReviewCountMap = async (tourRefs = []) => {
+  const normalizedIds = Array.isArray(tourRefs)
+    ? tourRefs
+        .map(getTourIdFromDoc)
+        .filter(Boolean)
+    : [];
+  if (normalizedIds.length === 0) return new Map();
+  const objectIds = [...new Set(normalizedIds)]
+    .map(id => {
+      try {
+        return new mongoose.Types.ObjectId(id);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+  if (objectIds.length === 0) return new Map();
+  const counts = await Review.aggregate([
+    { $match: { tour: { $in: objectIds }, isHidden: { $ne: true } } },
+    {
+      $group: {
+        _id: '$tour',
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+  return counts.reduce((acc, item) => {
+    const key =
+      item._id && typeof item._id.toString === 'function'
+        ? item._id.toString()
+        : item._id;
+    if (!key) return acc;
+    acc.set(key, item.count || 0);
+    return acc;
+  }, new Map());
+};
+
+const getDisplayRatingsQuantity = (tour, hiddenReviewMap) => {
+  if (!tour) return 0;
+  const baseCount =
+    typeof tour.ratingsQuantity === 'number' ? tour.ratingsQuantity : 0;
+  if (!hiddenReviewMap || hiddenReviewMap.size === 0) {
+    return baseCount;
+  }
+  const tourId = getTourIdFromDoc(tour);
+  if (!tourId) return baseCount;
+  const hiddenExtras = hiddenReviewMap.get(tourId) || 0;
+  return baseCount + hiddenExtras;
 };
 
 const mapTourWithStartMeta = tour => {
@@ -258,6 +354,20 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
   });
 
   const toursWithMeta = filteredTours.map(mapTourWithStartMeta);
+  const [visibleReviewCountMap, hiddenReviewCountMap] = await Promise.all([
+    buildVisibleReviewCountMap(toursWithMeta),
+    buildHiddenReviewCountMap(req.user ? req.user.id : null, toursWithMeta)
+  ]);
+  toursWithMeta.forEach(tour => {
+    const tourId = getTourIdFromDoc(tour);
+    if (tourId && visibleReviewCountMap.has(tourId)) {
+      tour.ratingsQuantity = visibleReviewCountMap.get(tourId);
+    }
+    tour.displayRatingsQuantity = getDisplayRatingsQuantity(
+      tour,
+      hiddenReviewCountMap
+    );
+  });
 
   let sortApplied = applySortComparator(
     toursWithMeta,
@@ -358,6 +468,8 @@ exports.getTour = catchAsync(async (req, res, next) => {
     if (!currentUserId) return false;
     return getUserIdFromDoc(review.user) === currentUserId;
   });
+
+  tour.displayRatingsQuantity = visibleReviews.length;
 
   // Format ngày khởi hành với thông tin slot
   const startDatesWithSlots = formatStartDatesWithSlots(tour);
@@ -557,6 +669,10 @@ exports.updateUserData = catchAsync(async (req, res, next) => {
 exports.getManageTours = catchAsync(async (req, res, next) => {
   const toursRaw = await Tour.find();
   const now = new Date();
+  const hiddenReviewCountMap = await buildHiddenReviewCountMap(
+    req.user ? req.user.id : null,
+    toursRaw
+  );
 
   const bookingStats = await Booking.aggregate([
     {
@@ -587,6 +703,10 @@ exports.getManageTours = catchAsync(async (req, res, next) => {
 
   const tours = toursRaw.map(tour => {
     const tourObj = tour.toObject();
+    tourObj.displayRatingsQuantity = getDisplayRatingsQuantity(
+      tourObj,
+      hiddenReviewCountMap
+    );
     const tourId = tourObj._id.toString();
     const activeStartDates = (tourObj.startDates || [])
       .filter(
@@ -837,6 +957,15 @@ exports.getBookingForm = catchAsync(async (req, res, next) => {
   if (!tour) {
     return next(new AppError('Không tìm thấy tour với ID này', 404));
   }
+
+  const hiddenReviewCountMap = await buildHiddenReviewCountMap(
+    req.user ? req.user.id : null,
+    [tour]
+  );
+  tour.displayRatingsQuantity = getDisplayRatingsQuantity(
+    tour,
+    hiddenReviewCountMap
+  );
 
   const startDatesWithSlots = formatStartDatesWithSlots(tour);
   const bookingFormMeta = {

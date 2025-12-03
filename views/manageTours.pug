@@ -57,7 +57,7 @@ block adminContent
                 span
                   svg
                     use(xlink:href='/img/icons.svg#icon-star')
-                  | #{tour.ratingsAverage} (#{tour.ratingsQuantity})
+                  | #{tour.ratingsAverage} (#{typeof tour.displayRatingsQuantity === 'number' ? tour.displayRatingsQuantity : (tour.ratingsQuantity || 0)})
               .llk-admin-tour-card__dates
                 h4.llk-admin-tour-card__dates-title Ngày khởi hành đang hoạt động
                 if tour.activeStartDates.length

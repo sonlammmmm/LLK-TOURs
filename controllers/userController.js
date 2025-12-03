@@ -112,17 +112,14 @@ exports.getAllUsers = factory.getAll(User);
 exports.updateUser = catchAsync(async (req, res, next) => {
   const updatePayload = { ...req.body };
 
-  // X??- lA? tr?????ng h???p cA3 file ???nh
   if (req.file) {
     updatePayload.photo = req.file.filename;
   }
 
-  // KhA'ng cho phA?p c??-p nh??-t m??-t kh??cu qua route admin
   ['password', 'passwordConfirm'].forEach(field => {
     if (field in updatePayload) delete updatePayload[field];
   });
 
-  // ??A?nh d???u ?A?y lA? route qu???n lA? ???? khA'ng l???c ng?????i dA1ng khA'ng ho???t ???Tng
   const query = User.findByIdAndUpdate(req.params.id, updatePayload, {
     new: true,
     runValidators: true

@@ -137,6 +137,9 @@ block content
               - const bookingHref = user && user.role === 'user' ? `/book-tour/${tour._id}` : '/login';
               - const tourContactHref = user && user.role === 'user' ? `/chat?prefill=${encodeURIComponent(`Tôi muốn hỏi về tour ${tour.name}`)}` : '/login';
               - const stops = Array.isArray(tour.locations) ? tour.locations.length : 0;
+              - const reviewDisplayCount = typeof tour.displayRatingsQuantity === 'number' ? tour.displayRatingsQuantity : (tour.ratingsQuantity || 0);
+              - const ratingAverageValue = Number(tour.ratingsAverage);
+              - const ratingAverageDisplay = Number.isFinite(ratingAverageValue) ? ratingAverageValue.toFixed(1) : '0.0';
               article.all-tour-card(class={
                 'all-tour-card--soldout': showSoldOutBadge,
                 'all-tour-card--no-date': !hasUpcoming && !showSoldOutBadge
@@ -164,8 +167,8 @@ block content
                       small /khách
                     .all-tour-card__rating
                       i.fas.fa-star
-                      span= tour.ratingsAverage ? tour.ratingsAverage.toFixed(1) : '0'
-                      small= `(${tour.ratingsQuantity || 0}) đánh giá`
+                      span= ratingAverageDisplay
+                      small= `(${reviewDisplayCount || 0}) đánh giá`
                   .all-tour-card__actions
                     if canBook
                       a.btn.btn--green(href=bookingHref) Đặt tour
@@ -174,7 +177,7 @@ block content
                       span Tư vấn
                 .all-tour-card__footer
                   .all-tour-card__footer-info
-                    strong Khởi hành tiếp theo
+                    strong Ngày khởi hành
                     span= nextDateLabel
                     small Chỗ trống #{availableSlots}/#{tour.maxGroupSize || 0}
                   a.all-tour-card__details-link(href=`/tour/${tour.slug}`)

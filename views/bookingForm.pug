@@ -6,7 +6,10 @@ block content
       typeof tour.ratingsAverage === 'number'
         ? tour.ratingsAverage.toFixed(1)
         : '4.5';
-    const reviewCount = tour.ratingsQuantity || 0;
+    const reviewCount =
+      typeof tour.displayRatingsQuantity === 'number'
+        ? tour.displayRatingsQuantity
+        : tour.ratingsQuantity || 0;
     const locationDescription =
       tour.startLocation && tour.startLocation.description
         ? tour.startLocation.description
