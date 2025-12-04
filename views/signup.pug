@@ -12,19 +12,18 @@ block content
             .auth-brand__text
               span LLK Travel
               small LỮ HÀNH - KHÁM PHÁ - KẾT NỐI
-          h1.auth-panel__title Khởi tạo tài khoản nội bộ
-          p.auth-panel__subtitle Tạo tài khoản để đồng bộ điều hành, hướng dẫn viên và bộ phận chăm sóc khách hàng trên một nền tảng.
+          h1.auth-panel__title Khởi tạo tài khoản
           form.form.form--signup
             .auth-field
               label.auth-field__label(for='name') Họ và tên
               .auth-field__input
                 i.fa-regular.fa-user
-                input#name(type='text', placeholder='Nguyễn Minh Châu', required)
+                input#name(type='text', placeholder='Trần Sỷ Sơn Lâm', required)
             .auth-field
-              label.auth-field__label(for='email') Email công việc
+              label.auth-field__label(for='email') Email
               .auth-field__input
                 i.fa-regular.fa-envelope
-                input#email(type='email', placeholder='ban@llk.travel', required)
+                input#email(type='email', placeholder='email@llk.travel', required)
             .auth-field
               label.auth-field__label(for='password') Mật khẩu
               .auth-field__input
@@ -33,7 +32,7 @@ block content
             .auth-field
               label.auth-field__label(for='password-confirm') Xác nhận mật khẩu
               .auth-field__input
-                i.fa-solid.fa-shield-halved
+                i.fa-solid.fa-lock
                 input#password-confirm(type='password', placeholder='Nhập lại mật khẩu', required, minlength='8')
             button.btn.auth-btn(type='submit') Tạo tài khoản
           .auth-meta
