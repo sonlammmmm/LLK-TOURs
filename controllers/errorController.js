@@ -1,5 +1,19 @@
 const AppError = require('../utils/appError');
 
+const LOGIN_REQUIRED_MESSAGE =
+  'Bạn chưa đăng nhập! Vui lòng đăng nhập để có quyền truy cập.';
+
+const redirectToLoginIfNeeded = (err, req, res) => {
+  if (
+    err.message === LOGIN_REQUIRED_MESSAGE &&
+    !req.originalUrl.startsWith('/api')
+  ) {
+    res.redirect('/login');
+    return true;
+  }
+  return false;
+};
+
 const handleCastErrorDB = err => {
   const message = `Trường ${err.path} có giá trị không hợp lệ: ${err.value}.`;
   return new AppError(message, 400);
@@ -38,6 +52,7 @@ const sendErrorDev = (err, req, res) => {
 
   // B) TRANG WEB HIỂN THỊ
   console.error('LỖI', err);
+  if (redirectToLoginIfNeeded(err, req, res)) return;
   return res.status(err.statusCode).render('error', {
     title: 'Đã xảy ra lỗi!',
     msg: err.message,
@@ -70,6 +85,7 @@ const sendErrorProd = (err, req, res) => {
   // A) Lỗi có thể dự đoán, đáng tin cậy: gửi thông báo cho khách hàng
   if (err.isOperational) {
     console.log(err);
+    if (redirectToLoginIfNeeded(err, req, res)) return;
     return res.status(err.statusCode).render('error', {
       title: 'Đã xảy ra lỗi!',
       msg: err.message,
@@ -81,6 +97,7 @@ const sendErrorProd = (err, req, res) => {
   // 1) Ghi log lỗi
   console.error('LỖI', err);
   // 2) Gửi thông báo chung
+  if (redirectToLoginIfNeeded(err, req, res)) return;
   return res.status(err.statusCode).render('error', {
     title: 'Đã xảy ra lỗi!',
     msg: 'Vui lòng thử lại sau.',

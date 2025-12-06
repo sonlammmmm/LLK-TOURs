@@ -434,6 +434,16 @@
   flex-direction: column;
 }
 
+.all-tour-card[data-tour-url] {
+  cursor: pointer;
+}
+
+.all-tour-card[data-tour-url]:focus,
+.all-tour-card[data-tour-url]:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.4);
+  outline-offset: 4px;
+}
+
 .all-tour-card__media {
   position: relative;
   height: 220px;

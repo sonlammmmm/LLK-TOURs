@@ -219,8 +219,9 @@ body.landing-page {
   align-items: center;
   gap: 0.4rem;
   font-weight: var(--font-weight-semibold);
-  font-size: var(--font-size-xs);
-  padding: 0.45rem 1.25rem;
+  font-size: calc(var(--font-size-xs) * 1.2);
+  text-decoration: none;
+  padding: 0.54rem 1.5rem;
   border-radius: 999px;
   border: 1px solid transparent;
   text-transform: none;

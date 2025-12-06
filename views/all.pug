@@ -140,10 +140,17 @@ block content
               - const reviewDisplayCount = typeof tour.displayRatingsQuantity === 'number' ? tour.displayRatingsQuantity : (tour.ratingsQuantity || 0);
               - const ratingAverageValue = Number(tour.ratingsAverage);
               - const ratingAverageDisplay = Number.isFinite(ratingAverageValue) ? ratingAverageValue.toFixed(1) : '0.0';
-              article.all-tour-card(class={
-                'all-tour-card--soldout': showSoldOutBadge,
-                'all-tour-card--no-date': !hasUpcoming && !showSoldOutBadge
-              })
+              - const detailUrl = `/tour/${tour.slug}`;
+              article.all-tour-card(
+                class={
+                  'all-tour-card--soldout': showSoldOutBadge,
+                  'all-tour-card--no-date': !hasUpcoming && !showSoldOutBadge
+                }
+                data-tour-url=detailUrl
+                tabindex='0'
+                role='link'
+                aria-label=`Xem chi tiet tour ${tour.name}`
+              )
                 .all-tour-card__media(style=`background-image:url('/img/tours/${tour.imageCover}')`)
                   if showSoldOutBadge
                     span.all-tour-card__badge.all-tour-card__badge--soldout Hết chỗ
@@ -180,7 +187,7 @@ block content
                     strong Ngày khởi hành
                     span= nextDateLabel
                     small Chỗ trống #{availableSlots}/#{tour.maxGroupSize || 0}
-                  a.all-tour-card__details-link(href=`/tour/${tour.slug}`)
+                  a.all-tour-card__details-link(href=detailUrl)
                     i.fas.fa-angle-right
                     span Xem hành trình chi tiết
 
@@ -297,6 +304,36 @@ block append scripts
             } else {
               filterForm.submit();
             }
+          });
+        });
+      }
+
+      var tourCards = document.querySelectorAll('.all-tour-card[data-tour-url]');
+      if (tourCards && tourCards.length) {
+        var navigateToCard = function (card) {
+          if (!card) return;
+          var targetUrl = card.getAttribute('data-tour-url');
+          if (targetUrl) {
+            window.location.href = targetUrl;
+          }
+        };
+        var isInteractiveTarget = function (target) {
+          if (!target || typeof target.closest !== 'function') return false;
+          return Boolean(target.closest('a, button'));
+        };
+        tourCards.forEach(function (card) {
+          card.addEventListener('click', function (event) {
+            if (event && !isInteractiveTarget(event.target)) {
+              navigateToCard(card);
+            }
+          });
+          card.addEventListener('keydown', function (event) {
+            if (!event) return;
+            var key = event.key || event.code;
+            var isActivateKey = key === 'Enter' || key === ' ' || key === 'Spacebar';
+            if (!isActivateKey || isInteractiveTarget(event.target)) return;
+            event.preventDefault();
+            navigateToCard(card);
           });
         });
       }
