@@ -56,6 +56,7 @@ block adminContent
 
             .tour-form__step(data-step='3')
               h3.heading-tertiary Điểm xuất phát & lộ trình
+              p.form__help-text Nhập chính xác điểm bắt đầu và các chặng dừng để tối ưu trải nghiệm của khách.
               .form__group
                 label.form__label(for='startLocation') Tên điểm xuất phát
                 input#startLocation.form__input(type='text', value=`${tour && tour.startLocation ? tour.startLocation.description : ''}`, required, placeholder='VD: Văn phòng LLK Travel')
@@ -65,32 +66,33 @@ block adminContent
               .form__group
                 label.form__label(for='startLocationCoordinates') Tọa độ (lng, lat)
                 input#startLocationCoordinates.form__input(type='text', value=`${tour && tour.startLocation ? tour.startLocation.coordinates.join(', ') : ''}`, placeholder='106.695249, 10.775400')
-                small.form__help Định dạng: kinh độ, vĩ độ.
-              h4.form__subheading Chặng hành trình
+                small.form__help Định dạng: kinh độ, vĩ độ (VD: 106.695249, 10.775400).
+              h4.form__subheading Các chặng hành trình
               .locations-container(data-item-selector='.location-item')
                 if tour && tour.locations && tour.locations.length > 0
                   each location, i in tour.locations
+                    - const locationCoords = location && Array.isArray(location.coordinates) ? location.coordinates.join(', ') : ''
                     .location-item(data-index=i)
-                      button.location-item__remove(type='button') ×
+                      button.location-item__remove(type='button', aria-label='Xóa chặng') &times;
                       .form__group
-                        label.form__label Tên chặng/điểm dừng
-                        input.location-description.form__input(type='text', value=location.description, required)
+                        label.form__label Tên chặng/Điểm dừng
+                        input.location-description.form__input(type='text', value=location.description, required, placeholder='VD: Nhà thờ Đức Bà')
                       .form__group
                         label.form__label Địa chỉ/Ghi chú
-                        input.location-address.form__input(type='text', value=location.address, placeholder='Ví dụ: check-in bãi biển, ăn trưa...')
+                        input.location-address.form__input(type='text', value=location.address, placeholder='VD: Check-in biển, ăn trưa...')
                       .form__group
                         label.form__label Tọa độ (lng, lat)
-                        input.location-coordinates.form__input(type='text', value=location.coordinates.join(', '), placeholder='106.695249, 10.775400')
+                        input.location-coordinates.form__input(type='text', value=locationCoords, placeholder='106.695249, 10.775400')
+                        small.form__help Định dạng: kinh độ, vĩ độ (VD: 106.695249, 10.775400).
                       .form__group
                         label.form__label Ngày thực hiện
                         input.location-day.form__input(type='number', value=location.day, required, min='1')
                 .form-empty-state.locations-empty-state(class=(tour && tour.locations && tour.locations.length > 0 ? 'is-hidden' : ''))
-                  p Chưa có chặng nào. Bấm “Thêm chặng” để tạo mới.
+                  p Chưa có chặng nào. Bấm "Thêm chặng" để tạo mới.
               button.btn.btn--small.btn--blue.btn-add-location(type='button') Thêm chặng
               .tour-form__actions
                 button.btn.btn--small.btn--gray(type='button', data-step-action='prev', data-step-target='2') Trở lại
                 button.btn.btn--small.btn--blue(type='button', data-step-action='next', data-step-target='4') Tiếp theo
-
             .tour-form__step(data-step='4')
               h3.heading-tertiary Tư liệu tour
               .form__group.form__group--upload
@@ -170,3 +172,6 @@ block adminContent
                       input.start-date-slots.form__input(type='number', min='1', value=dateObj.availableSlots || tour.maxGroupSize)
               .form-empty-state.start-dates-empty-state(class=(tour && tour.startDates && tour.startDates.length > 0 ? 'is-hidden' : ''))
                 p Chưa có ngày khởi hành nào. Thêm nhanh bằng form trên hoặc nhập thủ công.
+
+
+

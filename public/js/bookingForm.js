@@ -58,14 +58,14 @@ const ensureServiceRecord = (serviceId, sourceEl) => {
     minQuantity: parseInt(ds.minQuantity || "1", 10) || 1,
     maxQuantity:
       parseInt(ds.maxQuantity || ds.minQuantity || "1", 10) || 1,
-    name: ds.name || "Dich vu khuyen mai"
+    name: ds.name || "Dịch vụ khuyến mãi"
   };
   availableServices.push(service);
   return service;
 };
 
 const formatSelectedDate = value => {
-  if (!value) return "Chua chon";
+  if (!value) return "Chưa chọn";
   try {
     return new Date(value).toLocaleDateString("vi-VN", {
       weekday: "long",
@@ -74,7 +74,7 @@ const formatSelectedDate = value => {
       year: "numeric"
     });
   } catch {
-    return "Chua chon";
+    return "Chưa chọn";
   }
 };
 
@@ -309,9 +309,9 @@ export const initBookingForm = () => {
     if (selectedDateSlots) {
       if (typeof slots === "number" && !Number.isNaN(slots)) {
         selectedDateSlots.textContent =
-          slots > 1 ? `${slots} cho con trong` : "1 cho cuoi";
+          slots > 1 ? `${slots} chỗ còn trống` : "1 chỗ cuối";
       } else {
-        selectedDateSlots.textContent = "Chua xac dinh";
+        selectedDateSlots.textContent = "Chưa xác định";
       }
     }
     state.selectedDate = value;
@@ -493,7 +493,7 @@ export const initBookingForm = () => {
     state.isApplyingPromotion = true;
     if (applyPromoBtn) {
       applyPromoBtn.disabled = true;
-      applyPromoBtn.textContent = "Đang áp dụng...";
+      applyPromoBtn.textContent = "...";
     }
     if (promotionMessage) {
       promotionMessage.textContent = "";

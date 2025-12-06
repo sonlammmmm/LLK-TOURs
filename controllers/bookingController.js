@@ -45,6 +45,18 @@ const bookingSessionPopulate = [
   { path: 'user', select: 'name email' }
 ];
 
+const releaseSoftLockSafely = async (softLockDoc, reason) => {
+  if (!softLockDoc) return;
+  try {
+    await releaseSoftLock(softLockDoc, reason);
+  } catch (err) {
+    console.warn(
+      `[SoftLock] Release failed (${reason || 'unknown'}):`,
+      err.message
+    );
+  }
+};
+
 const parseServicesFromMetadata = metadata => {
   if (!metadata || !metadata.services) return [];
 
@@ -210,7 +222,7 @@ const createBookingFromStripeSession = async sessionId => {
     created = true;
   } catch (err) {
     if (softLockDoc && err.code !== 11000) {
-      await releaseSoftLock(softLockDoc, 'booking-error');
+      await releaseSoftLockSafely(softLockDoc, 'booking-error');
     }
     if (err.code === 11000) {
       booking = await findBookingBySessionId(session.id);
@@ -320,6 +332,18 @@ const buildSessionMetadata = (
   promotionPerUserLimit: `${pricing.promotionPerUserLimit || ''}`,
   softLockId: extras.softLockId || ''
 });
+
+const buildStripeRedirectUrls = platform =>
+  platform === 'web'
+    ? {
+        successUrl: `${process.env.PUBLIC_SUCCESS_URL}?status=success&sid={CHECKOUT_SESSION_ID}`,
+        cancelUrl: `${process.env.PUBLIC_CANCEL_URL ||
+          process.env.PUBLIC_SUCCESS_URL}?status=cancel`
+      }
+    : {
+        successUrl: `llktours://pay/success?sid={CHECKOUT_SESSION_ID}`,
+        cancelUrl: 'llktours://pay/cancel'
+      };
 
 const buildHoldBookingPayload = (req, context) => {
   const promotionSnapshot = buildPromotionSnapshotFromPricing(context.pricing);
@@ -608,172 +632,107 @@ const materializeBookingFromHold = async ({ hold, orderId, transId }) => {
 };
 
 exports.getCheckoutSession = catchAsync(async (req, res, next) => {
-  if (!req.user?.id || !req.user?.email) {
-    return next(new AppError('Bạn cần đăng nhập để thanh toán.', 401));
+  let context;
+
+  try {
+    context = await preparePaymentInitialization(req);
+  } catch (err) {
+    return next(err);
   }
 
-  const tour = await Tour.findById(req.params.tourId);
-  if (!tour) {
-    return next(new AppError('Không tìm thấy tour.', 404));
-  }
+  const {
+    tour,
 
-  const startDateStr = req.body.startDate || req.query.startDate;
-  const participantsRaw =
-    Number.parseInt(req.body.participants || req.query.participants, 10) || 1;
-  const selectedServices =
-    req.body.selectedServices || req.query.selectedServices || [];
-  const platform = (
-    req.body.platform ||
-    req.query.platform ||
-    'web'
-  ).toLowerCase();
+    startKey,
 
-  if (!startDateStr) {
-    return next(new AppError('Vui lòng chọn ngày khởi hành.', 400));
-  }
+    participants,
 
-  const startDate = new Date(startDateStr);
-  if (Number.isNaN(startDate.getTime())) {
-    return next(new AppError('Ngày khởi hành không hợp lệ.', 400));
-  }
+    platform,
 
-  const startKey = startDate.toISOString().split('T')[0];
-  const dateItem =
-    (tour.startDates || []).find(item => {
-      const key =
-        item && item.date
-          ? new Date(item.date).toISOString().split('T')[0]
-          : null;
-      return key === startKey;
-    }) || null;
+    pricing,
 
-  if (!dateItem) {
-    return next(new AppError('Ngày khởi hành không tồn tại.', 400));
-  }
-
-  const maxSlots =
-    Number.parseInt(dateItem.availableSlots || '', 10) || participantsRaw;
-  const participants = Math.max(Math.min(participantsRaw, maxSlots), 1);
-
-  if (Number(dateItem.availableSlots) < participants) {
-    return next(
-      new AppError(
-        `Chỉ còn ${dateItem.availableSlots || 0} suất cho ngày này.`,
-        400
-      )
-    );
-  }
+    softLockRecord
+  } = context;
 
   console.log('[Stripe] Checkout session request', {
     tourId: req.params.tourId,
+
     userId: req.user.id,
+
     startDate: startKey,
+
     participants,
+
     platform
   });
 
-  const pricing = await buildBookingFinancials({
-    tour,
-    participants,
-    selectedServices,
-    promotionCode:
-      req.body.promotionCode ||
-      req.body.promoCode ||
-      req.query.promotionCode ||
-      req.query.promoCode,
-    userId: req.user.id
-  });
-
-  if (!pricing || !pricing.grandTotal) {
-    return next(new AppError('Không thể tính được chi phí.', 400));
-  }
-
   console.log('[Stripe] Pricing result', {
     subtotal: pricing.subtotal,
+
     discount: pricing.discountAmount,
+
     grandTotal: pricing.grandTotal,
+
     services: pricing.servicesPayload.length
   });
 
-  const servicesSnapshot = Array.isArray(selectedServices)
-    ? selectedServices
-    : [];
-  let softLockRecord = null;
-  try {
-    const lockResult = await acquireSoftLock({
-      tourId: tour.id,
-      userId: req.user.id,
-      startDate,
-      participants,
-      platform,
-      servicesSnapshot
-    });
-    if (!lockResult?.success) {
-      return next(
-        new AppError(
-          lockResult?.message ||
-            'Suất của lịch khởi hành này đang được giữ, vui lòng thử lại ngay sau đây.',
-          409
-        )
-      );
-    }
-    softLockRecord = lockResult.hold;
-  } catch (lockErr) {
-    console.error('[SoftLock] Acquire error:', lockErr.message);
-    return next(
-      new AppError(
-        'Không thể giữ chỗ tạm thời cho yêu cầu này. Vui lòng thử lại sau ít phút.',
-        409
-      )
-    );
-  }
-
-  const successUrl =
-    platform === 'web'
-      ? `${process.env.PUBLIC_SUCCESS_URL}?status=success&sid={CHECKOUT_SESSION_ID}`
-      : `llktours://pay/success?sid={CHECKOUT_SESSION_ID}`;
-  const cancelUrl =
-    platform === 'web'
-      ? `${process.env.PUBLIC_CANCEL_URL ||
-          process.env.PUBLIC_SUCCESS_URL}?status=cancel`
-      : `llktours://pay/cancel`;
+  const { successUrl, cancelUrl } = buildStripeRedirectUrls(platform);
 
   const lineItems = buildLineItems(tour, pricing, req);
+
   const couponId = await createDiscountCoupon(pricing.discountAmount);
+
   const metadata = buildSessionMetadata(
     req,
+
     tour,
+
     pricing,
+
     startKey,
+
     platform,
+
     {
       softLockId: softLockRecord?.id || ''
     }
   );
 
   let session;
+
   try {
     session = await stripe.checkout.sessions.create({
       mode: 'payment',
+
       payment_method_types: ['card'],
+
       customer_email: req.user.email,
+
       client_reference_id: req.params.tourId,
+
       success_url: successUrl,
+
       cancel_url: cancelUrl,
+
       line_items: lineItems,
+
       metadata,
+
       discounts: couponId ? [{ coupon: couponId }] : undefined
     });
+
     console.log('[Stripe] Session object:', session);
   } catch (err) {
-    if (softLockRecord) {
-      await releaseSoftLock(softLockRecord, 'stripe-session-error');
-    }
+    await releaseSoftLockSafely(softLockRecord, 'stripe-session-error');
+
     console.error('[Stripe] Create session failed', {
       message: err.message,
+
       statusCode: err.statusCode,
+
       stack: err.stack
     });
+
     return next(
       new AppError(err.message || 'Stripe error', err.statusCode || 500)
     );
@@ -788,8 +747,11 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   }
 
   console.log(`[Stripe] Session created ${session.id}`);
+
   console.log('[Stripe] Sending response to client...');
+
   res.status(200).json({ status: 'success', session });
+
   console.log('[Stripe] Response sent successfully');
 });
 
@@ -829,7 +791,7 @@ const processMomoCallback = async (payloadRaw, source = 'ipn') => {
   const resultCode = Number(payload.resultCode);
 
   if (resultCode !== 0) {
-    await releaseSoftLock(hold, 'momo-payment-failed');
+    await releaseSoftLockSafely(hold, 'momo-payment-failed');
 
     return { booking: null, created: false };
   }
@@ -845,7 +807,7 @@ const processMomoCallback = async (payloadRaw, source = 'ipn') => {
       transId: payload.transId
     });
   } catch (err) {
-    await releaseSoftLock(hold, 'momo-booking-error');
+    await releaseSoftLockSafely(hold, 'momo-booking-error');
 
     throw err;
   }
@@ -891,9 +853,7 @@ exports.createMomoPayment = catchAsync(async (req, res, next) => {
   const amount = Math.max(Math.round(Number(pricing.grandTotal) || 0), 0);
 
   if (amount <= 0) {
-    if (softLockRecord) {
-      await releaseSoftLock(softLockRecord, 'momo-invalid-amount');
-    }
+    await releaseSoftLockSafely(softLockRecord, 'momo-invalid-amount');
     return next(new AppError('Tổng thanh toán qua MoMo phải lớn hơn 0.', 400));
   }
 
@@ -968,9 +928,7 @@ exports.createMomoPayment = catchAsync(async (req, res, next) => {
       }
     });
   } catch (err) {
-    if (softLockRecord) {
-      await releaseSoftLock(softLockRecord, 'momo-session-error');
-    }
+    await releaseSoftLockSafely(softLockRecord, 'momo-session-error');
     if (err instanceof AppError) {
       return next(err);
     }

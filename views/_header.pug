@@ -24,6 +24,9 @@ header.site-header
           a.site-nav__link(href='/chat') Liên hệ
 
     .site-header__actions
+      if user && user.role === 'admin'
+        a.site-header__btn.site-header__btn--ghost(href='/admin/dashboard')
+          span Quản trị
       if user
         .user-dropdown
           button.user-dropdown__toggle(type='button')

@@ -11,6 +11,25 @@ block content
   //- Logic xử lý dữ liệu Tour (giữ nguyên)
   -
     const toursArray = Array.isArray(tours) ? tours : [];
+    const searchPayload =
+      searchParams && typeof searchParams === 'object' ? searchParams : {};
+    const activeLandingSearch =
+      searchPayload.search ||
+      searchPayload.name ||
+      '';
+    const sliderStartDateValue = searchPayload.startDates || '';
+    const formatLandingDateLabel = iso => {
+      if (!iso) return '';
+      const parsed = new Date(iso);
+      if (Number.isNaN(parsed.getTime())) return '';
+      return parsed.toLocaleDateString('vi-VN', {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      });
+    };
+    const sliderStartDateLabel = formatLandingDateLabel(sliderStartDateValue);
     const getSlots = (tour) => {
       const values = [tour.available_slots, tour.availableSlots, tour.remainingSlots, tour.maxGroupSize];
       for (const value of values) {
@@ -37,15 +56,46 @@ block content
       //- 2. UI & TEXT LAYER
       .slider-ui
         //- Search Box
-        form.slider-search(action='/all' method='GET')
-          input.slider-search__input(
-            type='search'
-            name='search'
-            placeholder='Bạn muốn đến nơi nào...?'
+        .slider-search-shell
+          form.slider-search(action='/all' method='GET' autocomplete='off')
+            .slider-search__row
+              input.slider-search__input(
+                type='search'
+                name='search'
+                placeholder='Bạn muốn đến nơi nào...?'
+                value=activeLandingSearch
+              )
+              button(type='submit' aria-label='Tìm tour')
+                i.fa-solid.fa-magnifying-glass
+            input#sliderStartDateInput(type='hidden' name='startDates' value=sliderStartDateValue)
+          .slider-date-filter(
+            data-date-picker
+            data-selected-date=sliderStartDateValue
+            class={ 'has-value': Boolean(sliderStartDateValue) }
           )
-          button(type='submit')
-            i.fa-solid.fa-magnifying-glass
-
+            .slider-date-filter__controls
+              button.slider-date-filter__trigger(type='button' data-toggle-date aria-label='Chọn ngày khởi hành' aria-expanded='false')
+                span.slider-date-filter__value(data-placeholder='Chọn ngày khởi hành')= sliderStartDateLabel || 'Chọn ngày khởi hành'
+                span.slider-date-filter__icon
+                  i.fa-regular.fa-calendar
+              button.slider-date-filter__clear(
+                type='button'
+                data-clear-date
+                aria-label='Xóa ngày đã chọn'
+                class={ 'is-visible': Boolean(sliderStartDateValue) }
+              )
+                i.fa-regular.fa-circle-xmark
+            .slider-date-picker(role='dialog' aria-modal='false')
+              .date-picker__header
+                button.date-picker__nav-btn(type='button' data-shift-month='-1' aria-label='Tháng trước')
+                  i.fa-solid.fa-chevron-left
+                .date-picker__current-month(data-month-label) Tháng hiện tại
+                button.date-picker__nav-btn(type='button' data-shift-month='1' aria-label='Tháng tiếp theo')
+                  i.fa-solid.fa-chevron-right
+              .date-picker__weekdays
+                each day in ['T2','T3','T4','T5','T6','T7','CN']
+                  span= day
+              .date-picker__grid(data-calendar-grid)
         .slider-content-wrapper
           each tour, idx in sliderTours
             - const maxSlots = tour.maxGroupSize || getSlots(tour) || '—';
@@ -92,8 +142,12 @@ block append scripts
       const slider = document.querySelector('#cinematic-slider');
       if (!slider) return;
       const sliderSearchInput = slider.querySelector('.slider-search__input');
+      const sliderDateFilter = slider.querySelector('[data-date-picker]');
+      const sliderDateInput = slider.querySelector('#sliderStartDateInput');
+      if (sliderDateFilter && sliderDateInput) {
+        initSliderDateFilter(sliderDateFilter, sliderDateInput);
+      }
 
-      // Elements
       const backgrounds = slider.querySelectorAll('.slide-bg');
       const textItems = slider.querySelectorAll('.slide-text-item');
       const navViewport = slider.querySelector('.slider-nav-viewport');
@@ -111,10 +165,9 @@ block append scripts
       const autoplayTime = 6000;
       let timer;
 
-      // Typing effect for the slider search placeholder
       if (sliderSearchInput && !sliderSearchInput.value) {
         const typingText = 'Bạn muốn đến nơi nào...?';
-        const typingDelay = 84; // 30% faster than the previous 120ms steps
+        const typingDelay = 84;
         const typingStartDelay = 400;
         const typingLoopDelay = 5000;
         let typingIndex = 0;
@@ -188,7 +241,195 @@ block append scripts
         });
       }
 
-      // --- ANIMATION FUNCTIONS ---
+      function initSliderDateFilter(filterElement, hiddenInput) {
+        const toggleButton = filterElement.querySelector('[data-toggle-date]');
+        const clearButton = filterElement.querySelector('[data-clear-date]');
+        const monthLabelEl = filterElement.querySelector('[data-month-label]');
+        const calendarGrid = filterElement.querySelector('[data-calendar-grid]');
+        const navButtons = filterElement.querySelectorAll('[data-shift-month]');
+        const valueLabel = filterElement.querySelector('.slider-date-filter__value');
+        const placeholderText =
+          (valueLabel && valueLabel.dataset.placeholder) ||
+          (valueLabel ? valueLabel.textContent : '');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const monthFormatter = new Intl.DateTimeFormat('vi-VN', {
+          month: 'long',
+          year: 'numeric'
+        });
+        const displayFormatter = new Intl.DateTimeFormat('vi-VN', {
+          weekday: 'short',
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric'
+        });
+
+        const parseLocalDate = value => {
+          if (!value || typeof value !== 'string') return null;
+          const parts = value.split('-');
+          if (parts.length !== 3) return null;
+          const [yearStr, monthStr, dayStr] = parts;
+          const year = Number(yearStr);
+          const month = Number(monthStr);
+          const day = Number(dayStr);
+          if (!year || !month || !day) return null;
+          const parsed = new Date(year, month - 1, day);
+          if (Number.isNaN(parsed.getTime())) return null;
+          parsed.setHours(0, 0, 0, 0);
+          return parsed;
+        };
+
+        const formatIsoDate = date => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+
+        let selectedDate = parseLocalDate(hiddenInput.value);
+        let viewMonth = selectedDate
+          ? new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
+          : new Date(today.getFullYear(), today.getMonth(), 1);
+
+        function updateValueLabel() {
+          if (!valueLabel) return;
+          if (selectedDate) {
+            valueLabel.textContent = displayFormatter.format(selectedDate);
+          } else {
+            const fallback =
+              (valueLabel.dataset && valueLabel.dataset.placeholder) || placeholderText || '';
+            valueLabel.textContent = fallback;
+          }
+        }
+
+        function syncSelectionState() {
+          const hasValue = Boolean(selectedDate);
+          filterElement.classList.toggle('has-value', hasValue);
+          filterElement.dataset.selectedDate = selectedDate ? formatIsoDate(selectedDate) : '';
+          if (clearButton) {
+            clearButton.classList.toggle('is-visible', hasValue);
+          }
+          updateValueLabel();
+        }
+
+        function renderCalendar() {
+          if (!calendarGrid) return;
+          const startOfMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1);
+          if (monthLabelEl) {
+            monthLabelEl.textContent = monthFormatter.format(startOfMonth);
+          }
+          const fragment = document.createDocumentFragment();
+          const leadingEmpty = (startOfMonth.getDay() + 6) % 7;
+          for (let i = 0; i < leadingEmpty; i += 1) {
+            const spacer = document.createElement('span');
+            spacer.className = 'date-picker__day is-empty';
+            fragment.appendChild(spacer);
+          }
+          const daysInMonth = new Date(
+            startOfMonth.getFullYear(),
+            startOfMonth.getMonth() + 1,
+            0
+          ).getDate();
+          for (let day = 1; day <= daysInMonth; day += 1) {
+            const current = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth(), day);
+            current.setHours(0, 0, 0, 0);
+            const cell = document.createElement('button');
+            cell.type = 'button';
+            cell.className = 'date-picker__day';
+            cell.textContent = String(day).padStart(2, '0');
+            const isoValue = formatIsoDate(current);
+            cell.dataset.dateValue = isoValue;
+            if (current < today) {
+              cell.disabled = true;
+              cell.classList.add('is-disabled');
+            }
+            if (selectedDate && current.getTime() === selectedDate.getTime()) {
+              cell.classList.add('is-selected');
+            }
+            fragment.appendChild(cell);
+          }
+          calendarGrid.innerHTML = '';
+          calendarGrid.appendChild(fragment);
+        }
+
+        function setCalendarOpen(isOpen) {
+          filterElement.classList.toggle('is-open', Boolean(isOpen));
+          if (toggleButton) {
+            toggleButton.setAttribute('aria-expanded', Boolean(isOpen).toString());
+          }
+        }
+
+        function handleDateSelection(nextDate) {
+          if (nextDate) {
+            selectedDate = new Date(
+              nextDate.getFullYear(),
+              nextDate.getMonth(),
+              nextDate.getDate()
+            );
+            hiddenInput.value = formatIsoDate(selectedDate);
+          } else {
+            selectedDate = null;
+            hiddenInput.value = '';
+          }
+          syncSelectionState();
+          renderCalendar();
+        }
+
+        if (toggleButton) {
+          toggleButton.addEventListener('click', event => {
+            event.preventDefault();
+            const nextState = !filterElement.classList.contains('is-open');
+            setCalendarOpen(nextState);
+            if (nextState) {
+              renderCalendar();
+            }
+          });
+        }
+
+        if (calendarGrid) {
+          calendarGrid.addEventListener('click', event => {
+            const target = event.target.closest('[data-date-value]');
+            if (!target || target.disabled) return;
+            const chosen = parseLocalDate(target.dataset.dateValue);
+            if (!chosen) return;
+            handleDateSelection(chosen);
+            setCalendarOpen(false);
+          });
+        }
+
+        if (clearButton) {
+          clearButton.addEventListener('click', () => {
+            handleDateSelection(null);
+            setCalendarOpen(false);
+          });
+        }
+
+        navButtons.forEach(button => {
+          const shift = Number(button.dataset.shiftMonth);
+          if (Number.isNaN(shift)) return;
+          button.addEventListener('click', event => {
+            event.preventDefault();
+            viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + shift, 1);
+            renderCalendar();
+          });
+        });
+
+        document.addEventListener('click', event => {
+          if (!filterElement.classList.contains('is-open')) return;
+          if (!filterElement.contains(event.target)) {
+            setCalendarOpen(false);
+          }
+        });
+
+        document.addEventListener('keydown', event => {
+          if (event.key === 'Escape') {
+            setCalendarOpen(false);
+          }
+        });
+
+        syncSelectionState();
+        renderCalendar();
+      }
 
       function animateTextIn(index) {
         const item = textItems[index];
@@ -277,8 +518,6 @@ block append scripts
         // Kết thúc trạng thái animating
         setTimeout(() => { isAnimating = false; }, hasGSAP ? 1000 : 300);
       }
-
-      // --- EVENTS ---
 
       function nextSlide() {
         const next = (currentIndex + 1) % totalSlides;

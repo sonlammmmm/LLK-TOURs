@@ -416,19 +416,19 @@ export const handleTourForm = () => {
       const idx = locationsContainer.querySelectorAll('.location-item').length;
       const node = elFromHTML(`
         <div class="location-item" data-index="${idx}">
-          <button class="location-item__remove" type="button">×</button>
+          <button class="location-item__remove" type="button" aria-label="Xóa chặng">&times;</button>
           <div class="form__group">
             <label class="form__label">Tên chặng/điểm dừng</label>
-            <input class="location-description form__input" type="text" required>
+            <input class="location-description form__input" type="text" required placeholder="VD: Nhà thờ Đức Bà">
           </div>
           <div class="form__group">
             <label class="form__label">Địa chỉ/Ghi chú</label>
-            <input class="location-address form__input" type="text" placeholder="Ví dụ: Buổi sáng tại...">
+            <input class="location-address form__input" type="text" placeholder="VD: Check-in biển, ăn trưa...">
           </div>
           <div class="form__group">
             <label class="form__label">Tọa độ (lng, lat)</label>
             <input class="location-coordinates form__input" type="text" placeholder="106.695249, 10.775400">
-            <small class="form__help">Định dạng: kinh độ, vĩ độ (VD: 106.695, 10.775)</small>
+            <small class="form__help">Định dạng: kinh độ, vĩ độ (VD: 106.695249, 10.775400).</small>
           </div>
           <div class="form__group">
             <label class="form__label">Ngày thực hiện</label>
