@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const Message = require('./models/messageModel');
 const User = require('./models/userModel');
 const { startSoftLockMaintenance } = require('./utils/bookingSoftLock');
+const { setSocketServerInstance } = require('./utils/realtime');
 
 process.on('uncaughtException', err => {
   console.error('Lỗi không bắt được, đang dừng chương trình.');
@@ -41,6 +42,7 @@ const io = new Server(server, {
     methods: ['GET', 'POST']
   }
 });
+setSocketServerInstance(io);
 // Map socket theo từng user
 const userSockets = new Map();
 

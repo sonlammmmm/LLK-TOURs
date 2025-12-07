@@ -3,8 +3,8 @@ extends adminLayout
 block adminContent
   .llk-admin-topbar
     .llk-admin-topbar__left
-      h1.llk-admin-topbar__title Gán mã cho người dùng
-      p.llk-admin-topbar__subtitle Phát hành mã và giới hạn lượt theo từng tài khoản.
+      h1.llk-admin-topbar__title Gắn mã khuyến mãi cho người dùng
+      p.llk-admin-topbar__subtitle Điều chỉnh phạm vi áp dụng và ghi chú rõ ràng để đảm bảo người dùng nhận đúng ưu đãi.
     .llk-admin-topbar__right
       a.btn.btn--ghost(href='/admin/promotions')
         svg(width='16', height='16')
@@ -14,42 +14,41 @@ block adminContent
   section.llk-admin-panel
     .llk-admin-panel__header
       .llk-admin-panel__header-title
-        h2.heading-secondary Gán mã #{promotion.code}
+        h2.heading-secondary Gắn mã #{promotion.code}
         p.llk-admin-panel__header-subtitle= promotion.name
-      .llk-admin-panel__stats
+      .llk-admin-panel__stats.llk-admin-panel__stats--row
         .llk-admin-stat-card
-          span.llk-admin-stat-card__label Loại ưu đãi
+          span.llk-admin-stat-card__label Giảm giá
           strong.llk-admin-stat-card__value
             if promotion.discountType === 'percent'
-              | Giảm #{promotion.discountValue}%
+              | Giảm #{promotion.discountValue}% 
             else
               | #{promotion.discountValue.toLocaleString('vi-VN')} VND
         .llk-admin-stat-card
           span.llk-admin-stat-card__label Trạng thái
           strong.llk-admin-stat-card__value= promotion.status === 'active' ? 'Đang hoạt động' : 'Tạm ngưng'
-
     form.form.form-assign-promotion
       input(type='hidden', id='assign-promotion-id', value=promotion.id)
       .llk-admin-form-grid
         .llk-admin-form-card
           h3.heading-tertiary Chọn người dùng
+          p.form__hint Sử dụng Ctrl (Cmd trên Mac) để chọn cùng lúc nhiều người dùng, hãy lọc trong danh sách nếu cần.
           .form__group
             label.form__label(for='assign-user') Người dùng
-            select#assign-user.form__select(name='assign-user' multiple size='6')
-              option(value='' disabled selected) -- Chọn user --
+            select#assign-user.form__select(name='assign-user' multiple size='12')
+              option(value='' disabled selected) -- Chọn người dùng --
               each user in users
                 option(value=user.id)= `${user.name} (${user.email})`
-            small.form__hint Giữ Ctrl (Cmd trên Mac) để chọn nhiều người cùng lúc.
         .llk-admin-form-card
-          h3.heading-tertiary Cài đặt áp dụng mã
+          h3.heading-tertiary Thiết lập áp dụng
           .form__group
-            label.form__label(for='assign-limit') Số lượt tối đa mỗi user
+            label.form__label(for='assign-limit') Số lần tối đa / người
             input#assign-limit.form__input(type='number', min='1', value=promotion.perUserLimit || 1)
           .form__group
-            label.form__label(for='assign-expiry') Hạn dùng (nếu cần)
+            label.form__label(for='assign-expiry') Hạn dùng mã (nếu có)
             input#assign-expiry.form__input(type='date')
           .form__group
-            label.form__label(for='assign-note') Ghi chú
+            label.form__label(for='assign-note') Ghi chú nội bộ
             textarea#assign-note.form__textarea(rows='3')
-          .form__group
-            button.btn.btn--green.btn-assign-promotion(type='submit') Gán mã cho user
+      .form__group
+        button.btn.btn--green.btn-assign-promotion(type='submit') Gắn mã cho người dùng

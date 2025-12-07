@@ -227,6 +227,7 @@ export const handleEditReview = () => {
 export const initReviewFilter = () => {
   const searchInput = document.querySelector(".search-input")
   const ratingFilter = document.querySelector(".filter-rating")
+  const visibilityFilter = document.querySelector("[data-visibility-filter]")
   const tableContainer = document.querySelector(".table-container")
   const isTableView = tableContainer && tableContainer.classList.contains("hidden") === false
 
@@ -238,9 +239,14 @@ export const initReviewFilter = () => {
     ratingFilter.addEventListener("change", filterReviews)
   }
 
+  if (visibilityFilter) {
+    visibilityFilter.addEventListener("change", filterReviews)
+  }
+
   function filterReviews() {
     const searchTerm = searchInput ? searchInput.value.toLowerCase() : ""
     const rating = ratingFilter ? ratingFilter.value : ""
+    const visibility = visibilityFilter ? visibilityFilter.value : ""
 
     // Lọc trong chế độ xem lưới
     const gridItems = document.querySelectorAll(".review-management__item")
@@ -256,6 +262,12 @@ export const initReviewFilter = () => {
 
       if (shouldShow && rating) {
         shouldShow = reviewRating === Number.parseInt(rating, 10)
+      }
+
+      if (shouldShow && visibility) {
+        const isHidden = (item.dataset.hidden || "").toLowerCase() === "true"
+        shouldShow =
+          visibility === "hidden" ? isHidden : !isHidden
       }
 
       item.style.display = shouldShow ? "" : "none"
@@ -278,6 +290,12 @@ export const initReviewFilter = () => {
 
       if (shouldShow && rating) {
         shouldShow = reviewRating === Number.parseInt(rating, 10)
+      }
+
+      if (shouldShow && visibility) {
+        const rowHiddenAttr = row.dataset.hidden || ""
+        const isHidden = rowHiddenAttr.toLowerCase() === "true"
+        shouldShow = visibility === "hidden" ? isHidden : !isHidden
       }
 
       row.style.display = shouldShow ? "" : "none"

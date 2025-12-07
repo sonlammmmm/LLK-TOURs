@@ -8,6 +8,10 @@ const UserPromotion = require('../models/userPromotionModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const Review = require('../models/reviewModel');
+const {
+  formatRecentOrderCard,
+  formatReviewCard
+} = require('../utils/dashboardFeed');
 
 const formatStartDatesWithSlots = tour => {
   if (!tour.startDates) return [];
@@ -830,7 +834,7 @@ exports.getEditUserForm = catchAsync(async (req, res, next) => {
 });
 
 exports.getManageBookings = catchAsync(async (req, res, next) => {
-  const bookings = await Booking.find();
+  const bookings = await Booking.find().sort('-createdAt');
 
   res.status(200).render('manageBookings', {
     title: 'Lịch sử đặt tour',
@@ -1053,6 +1057,7 @@ exports.getBookingSuccess = catchAsync(async (req, res, next) => {
 
 exports.getManageReviews = catchAsync(async (req, res, next) => {
   const reviews = await Review.find()
+    .sort('-createdAt')
     .populate({
       path: 'user',
       select: 'name photo'
@@ -1333,33 +1338,80 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
     style: 'currency',
     currency: 'VND'
   });
-  const formatBookingDate = date =>
-    date
-      ? `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`
-      : 'Ngày chưa xác định';
-  const recentBookings = await Booking.find()
-    .sort('-createdAt')
-    .limit(4);
-  const recentOrders = recentBookings.map(booking => {
-    const noteParts = [];
-    if (booking.tour && booking.tour.name) noteParts.push(booking.tour.name);
-    if (booking.startDate) noteParts.push(formatBookingDate(booking.startDate));
-    return {
-      customer: (booking.user && booking.user.name) || 'Khách mới',
-      note: noteParts.length ? noteParts.join(' · ') : 'Đơn mới',
-      amount: currencyFormatter.format(booking.price || 0),
-      status: booking.paid ? 'Đã thanh toán' : 'Chưa thanh toán'
-    };
-  });
+
+  const [recentBookings, topProductAggregation, latestReviewDocs] = await Promise.all([
+    Booking.find()
+      .sort('-createdAt')
+      .limit(6)
+      .lean(),
+    Booking.aggregate([
+      { $match: { paid: true, tour: { $ne: null } } },
+      {
+        $group: {
+          _id: '$tour',
+          totalRevenue: { $sum: '$price' },
+          totalSales: {
+            $sum: {
+              $cond: [{ $gt: ['$participants', 0] }, '$participants', 1]
+            }
+          }
+        }
+      },
+      { $sort: { totalSales: -1, totalRevenue: -1 } },
+      { $limit: 5 }
+    ]),
+    Review.find()
+      .sort('-createdAt')
+      .limit(6)
+      .populate({ path: 'tour', select: 'name slug' })
+      .lean()
+  ]);
+
+  const recentOrders = recentBookings
+    .map(formatRecentOrderCard)
+    .filter(Boolean);
+
+  const topTourIds = topProductAggregation
+    .map(item => item._id)
+    .filter(Boolean);
+  let tourMap = new Map();
+  if (topTourIds.length > 0) {
+    const tourDocs = await Tour.find({ _id: { $in: topTourIds } })
+      .select('name slug price')
+      .lean();
+    tourMap = new Map(tourDocs.map(t => [t._id.toString(), t]));
+  }
+
+  const totalTopRevenue = topProductAggregation.reduce(
+    (sum, item) => sum + (item.totalRevenue || 0),
+    0
+  );
+
+  const topProducts = topProductAggregation
+    .map(item => {
+      const tourId = item._id ? item._id.toString() : null;
+      if (!tourId) return null;
+      const tourInfo = tourMap.get(tourId);
+      const share = totalTopRevenue
+        ? Math.round((item.totalRevenue / totalTopRevenue) * 100)
+        : 0;
+      return {
+        id: tourId,
+        name: tourInfo ? tourInfo.name : 'Tour ?? xo?',
+        sales: item.totalSales || 0,
+        revenue: currencyFormatter.format(item.totalRevenue || 0),
+        growth: share
+      };
+    })
+    .filter(Boolean);
+
+  const latestReviews = latestReviewDocs
+    .map(formatReviewCard)
+    .filter(Boolean);
 
   const bookingStatusBreakdown = [
     { label: 'Đã thanh toán', value: paidBookings },
     { label: 'Chưa thanh toán', value: unpaidBookings }
-  ];
-  const entityTotals = [
-    { label: 'Tour', value: totalTours },
-    { label: 'Người dùng', value: totalUsers },
-    { label: 'Đơn đặt tour', value: totalBookings }
   ];
   const conversionPercentage = totalBookings
     ? ((paidBookings / totalBookings) * 100).toFixed(1)
@@ -1375,7 +1427,9 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
       paidBookings,
       unpaidBookings,
       conversionRate: `${conversionPercentage}%`,
-      recentOrders
+      recentOrders,
+      topProducts,
+      latestReviews
     },
     revenueData: formattedRevenueData,
     dailyRevenueByMonth,
@@ -1384,7 +1438,6 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
     currentMonthIndex,
     monthLabels: months,
     bookingStatusBreakdown,
-    entityTotals,
     todayRevenue: todayRevenue.length > 0 ? todayRevenue[0].total : 0,
     monthRevenue: monthRevenue.length > 0 ? monthRevenue[0].total : 0,
     yearRevenue: yearRevenue.length > 0 ? yearRevenue[0].total : 0,

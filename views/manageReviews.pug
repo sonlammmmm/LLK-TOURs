@@ -44,6 +44,13 @@ block adminContent
           option(value='3') 3 sao
           option(value='2') 2 sao
           option(value='1') 1 sao
+        select.llk-admin-panel__filter.filter-visibility(
+          data-visibility-filter
+          aria-label='Lọc theo trạng thái hiển thị'
+        )
+          option(value='') Tất cả trạng thái
+          option(value='visible') Đang hiển thị
+          option(value='hidden') Đang bị ẩn
         p.count-display
       p.no-data-message.llk-admin-empty.hidden(data-default-text='Không tìm thấy đánh giá phù hợp.') Không tìm thấy đánh giá phù hợp.
 
@@ -111,3 +118,4 @@ block adminContent
 
 block append scripts
   script(src='/js/reviewManagement.js', type='module')
+

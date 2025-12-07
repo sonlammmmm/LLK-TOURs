@@ -5,6 +5,7 @@ const factory = require('./handlerFactory');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const APIFeatures = require('../utils/apiFeatures');
+const { formatReviewCard } = require('../utils/dashboardFeed');
 
 const getReviewerId = review => {
   if (!review || !review.user) return null;
@@ -93,6 +94,33 @@ exports.checkReviewOwnership = catchAsync(async (req, res, next) => {
   }
 
   next();
+});
+
+exports.getLatestReviewFeed = catchAsync(async (req, res) => {
+  const includeHidden = req.query.includeHidden === 'true';
+  const limitRaw = parseInt(req.query.limit, 10);
+  const limit = Number.isFinite(limitRaw)
+    ? Math.min(Math.max(limitRaw, 1), 20)
+    : 6;
+
+  const filter = {};
+  if (!includeHidden) {
+    filter.isHidden = { $ne: true };
+  }
+
+  const reviews = await Review.find(filter)
+    .sort('-createdAt')
+    .limit(limit)
+    .populate({ path: 'tour', select: 'name slug' })
+    .lean();
+
+  const formatted = reviews.map(formatReviewCard).filter(Boolean);
+
+  res.status(200).json({
+    status: 'success',
+    results: formatted.length,
+    data: { reviews: formatted }
+  });
 });
 
 exports.getAllReviews = catchAsync(async (req, res, next) => {

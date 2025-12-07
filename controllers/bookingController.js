@@ -8,6 +8,7 @@ const factory = require('./handlerFactory');
 const AppError = require('../utils/appError');
 const { recordPromotionUsage } = require('../utils/promotionEngine');
 const { buildBookingFinancials } = require('../utils/bookingPricing');
+const { formatRecentOrderCard } = require('../utils/dashboardFeed');
 const {
   acquireSoftLock,
   releaseSoftLock,
@@ -1014,6 +1015,28 @@ exports.createBookingCheckout = catchAsync(async (req, res, next) => {
 exports.createBooking = factory.createOne(Booking);
 exports.getBooking = factory.getOne(Booking);
 exports.getAllBookings = factory.getAll(Booking);
+
+exports.getRecentBookingFeed = catchAsync(async (req, res) => {
+  const limitRaw = parseInt(req.query.limit, 10);
+  const limit = Number.isFinite(limitRaw)
+    ? Math.min(Math.max(limitRaw, 1), 15)
+    : 6;
+
+  const bookings = await Booking.find()
+    .sort('-createdAt')
+    .limit(limit)
+    .lean();
+
+  const orders = bookings
+    .map(formatRecentOrderCard)
+    .filter(Boolean);
+
+  res.status(200).json({
+    status: 'success',
+    results: orders.length,
+    data: { orders }
+  });
+});
 
 exports.getMyBookings = catchAsync(async (req, res, next) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);

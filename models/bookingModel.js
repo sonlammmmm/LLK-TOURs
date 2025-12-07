@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const Tour = require('./tourModel');
+const { emitDashboardEvent } = require('../utils/realtime');
+const { formatRecentOrderCard } = require('../utils/dashboardFeed');
 
 const bookingSchema = new mongoose.Schema({
   tour: {
@@ -155,6 +157,22 @@ bookingSchema.post('findOneAndDelete', async function() {
     } catch (err) {
       console.error('Lỗi khi hoàn slot:', err.message);
     }
+  }
+});
+
+bookingSchema.post('save', async function(doc) {
+  try {
+    if (!doc) return;
+    await doc.populate([
+      { path: 'user', select: 'name' },
+      { path: 'tour', select: 'name' }
+    ]);
+    const payload = formatRecentOrderCard(doc);
+    if (payload) {
+      emitDashboardEvent('dashboard:orders:new', { order: payload });
+    }
+  } catch (err) {
+    console.error('Unable to emit realtime order:', err.message);
   }
 });
 

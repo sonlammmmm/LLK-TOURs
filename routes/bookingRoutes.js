@@ -22,6 +22,8 @@ router.get('/my', bookingController.getMyBookings);
 
 router.use(authController.restrictTo('admin', 'lead-guide'));
 
+router.get('/recent-feed', bookingController.getRecentBookingFeed);
+
 router
   .route('/')
   .get(bookingController.getAllBookings)

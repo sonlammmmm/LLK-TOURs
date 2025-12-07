@@ -22,7 +22,76 @@ block adminContent
       .llk-admin-stat-card
         span.llk-admin-stat-card__label Tỷ lệ chuyển đổi
         strong.llk-admin-stat-card__value #{stats.conversionRate}
-        small.llk-admin-stat-card__trend.text-success  Tỷ lệ đơn thanh toán thành công
+        small.llk-admin-stat-card__trend.text-success Tỷ lệ đơn thanh toán thành công
+
+    .llk-admin-dashboard__cards
+      .llk-admin-table-card(data-section='recent-orders')
+        .llk-admin-card-header
+          h3.heading-tertiary Đơn hàng gần nhất
+          button.llk-admin-inline-btn(type='button' data-orders-refresh) Làm mới
+        ul.llk-admin-table(data-recent-orders-list)
+          each order in stats.recentOrders || []
+            li(data-order-id=order.id)
+              span
+                strong= order.customer
+                br
+                small= order.note
+              span
+                strong= order.amount
+                br
+                small.status-label= order.status
+          if !stats.recentOrders || !stats.recentOrders.length
+            li
+              span Chưa có dữ liệu
+        pre#dashboardRecentOrdersData(style='display:none') !{JSON.stringify(stats.recentOrders || [])}
+      .llk-admin-table-card(data-section='top-products')
+        .llk-admin-card-header
+          h3.heading-tertiary Tour bán chạy nhất
+        ul.llk-admin-table
+          each product in stats.topProducts || []
+            li
+              span
+                strong= product.name
+                br
+                small= (product.sales || 0) + ' lượt'
+              span
+                strong= product.revenue
+                br
+                small.text-success +#{product.growth}%
+          if !stats.topProducts || !stats.topProducts.length
+            li
+              span Chưa có dữ liệu
+      .llk-admin-review-section
+        .llk-admin-review-section__header
+          h3.heading-tertiary Đánh giá mới nhất
+          button.llk-admin-inline-btn(type='button' data-review-refresh) Làm mới
+        pre#dashboardReviewFeedData(style='display:none') !{JSON.stringify(stats.latestReviews || [])}
+        p.llk-admin-review-empty(
+          data-review-empty
+          class=stats.latestReviews && stats.latestReviews.length ? 'is-hidden' : ''
+        ) Chưa có đánh giá nào
+        .llk-admin-review-grid(data-review-feed)
+          if stats.latestReviews && stats.latestReviews.length
+            each review in stats.latestReviews
+              - const ratingClass = review.rating >= 4 ? 'review-card--positive' : review.rating <= 2 ? 'review-card--negative' : 'review-card--neutral';
+              - const ratingDisplay = Number.isFinite(review.rating) ? Math.round(review.rating) : (review.rating || '0');
+              - const createdLabel = review.createdAt ? new Date(review.createdAt).toLocaleDateString('vi-VN') : '--';
+              .llk-admin-review-card(class=ratingClass data-review-card data-review-id=review.id data-review-rating=review.rating data-review-hidden=review.isHidden)
+                .llk-admin-review-card__header
+                  .llk-admin-review-card__reviewer
+                    img(src=review.reviewerAvatar alt=review.reviewer loading='lazy')
+                    .llk-admin-review-card__reviewer-info
+                      strong= review.reviewer
+                      span= review.tourName
+                  span.llk-admin-review-card__rating
+                    i.fa-solid.fa-star(aria-hidden='true')
+                    | #{ratingDisplay}
+                p.llk-admin-review-card__content= review.content
+                .llk-admin-review-card__meta
+                  span= createdLabel
+                  span.llk-admin-review-card__status(class=review.isHidden ? 'is-hidden' : 'is-visible')= review.isHidden ? 'Đã ẩn' : 'Đang hiển thị'
+          else
+            //- placeholder handled via script
 
     .llk-admin-dashboard__grid
       .llk-admin-chart-card
@@ -53,46 +122,25 @@ block adminContent
         pre#dashboardStatusData(style='display:none') !{JSON.stringify(bookingStatusBreakdown)}
         .chart-wrapper
           canvas#statusChart
-      .llk-admin-chart-card
-        .llk-admin-chart-card__header
-          h3.heading-tertiary So sánh tài nguyên
-        pre#dashboardEntityData(style='display:none') !{JSON.stringify(entityTotals)}
-        .chart-wrapper
-          canvas#entityChart
 
-    .llk-admin-dashboard__two-col
-      .llk-admin-table-card
-        h3.heading-tertiary Đơn hàng gần nhất
-        ul.llk-admin-table
-          each order in stats.recentOrders || []
-            li
-              span
-                strong= order.customer
-                br
-                small= order.note
-              span
-                strong= order.amount
-                br
-                small.status-label= order.status
-          if !stats.recentOrders || !stats.recentOrders.length
-            li
-              span Chưa có dữ liệu
-      .llk-admin-table-card
-        h3.heading-tertiary Tour bán chạy nhất
-        ul.llk-admin-table
-          each product in stats.topProducts || []
-            li
-              span
-                strong= product.name
-                br
-                small= product.sales + ' đơn'
-              span
-                strong= product.revenue
-                br
-                small.text-success +#{product.growth}%
-          if !stats.topProducts || !stats.topProducts.length
-            li
-              span Chưa có dữ liệu
+    #dashboardReviewModal.llk-admin-review-modal.hidden(data-review-modal)
+      .llk-admin-review-modal__dialog(role='dialog' aria-modal='true')
+        button.llk-admin-review-modal__close(type='button' data-review-modal-close aria-label='Đóng')
+          i.fa-solid.fa-xmark
+        h3.llk-admin-review-modal__title(data-review-modal-title) Chi tiết đánh giá
+        p.llk-admin-review-modal__subtitle(data-review-modal-subtitle)
+        form.llk-admin-review-modal__form(data-review-form)
+          input(type='hidden' data-review-field='id')
+          label(for='modalReviewRating') Điểm đánh giá
+          select#modalReviewRating(data-review-field='rating')
+            each ratingValue in [5, 4, 3, 2, 1]
+              option(value=ratingValue)= ratingValue
+          label(for='modalReviewContent') Nội dung
+          textarea#modalReviewContent(rows='4' data-review-field='content')
+          .llk-admin-review-modal__actions
+            button(type='submit' class='llk-admin-review-modal__btn llk-admin-review-modal__btn--primary') Lưu thay đổi
+            button(type='button' class='llk-admin-review-modal__btn llk-admin-review-modal__btn--ghost' data-review-toggle) Ẩn đánh giá
+            button(type='button' class='llk-admin-review-modal__btn llk-admin-review-modal__btn--danger' data-review-delete) Xóa đánh giá
 
 block scripts
   script(src='/js/dashboard.js')

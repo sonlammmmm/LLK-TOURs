@@ -335,6 +335,18 @@ body.llk-admin-body {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
+.llk-admin-panel__stats--row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.llk-admin-panel__stats--row .llk-admin-stat-card {
+  flex: 1 1 0;
+}
+
 .llk-admin-stat-card {
   padding: 1rem 1.25rem;
   border-radius: 1rem;
@@ -445,10 +457,22 @@ body.llk-admin-body {
   gap: 1.25rem;
 }
 
-.llk-admin-dashboard__two-col {
+.llk-admin-dashboard__two-col,
+.llk-admin-dashboard__cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
+  gap: 1rem;
+  align-items: stretch;
+  grid-auto-rows: minmax(0, 1fr);
+}
+
+@media (min-width: 1280px) {
+  .llk-admin-dashboard__cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .llk-admin-dashboard__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .llk-admin-chart-card,
@@ -456,8 +480,51 @@ body.llk-admin-body {
   background: #fff;
   border-radius: 1.25rem;
   border: 1px solid #eef2ff;
-  padding: 1.25rem;
+  padding: 1.1rem;
   box-shadow: 0 12px 25px rgba(15, 23, 42, 0.08);
+}
+
+.llk-admin-table-card {
+  font-size: var(--admin-font-base);
+  line-height: 1.5;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.llk-admin-table-card .llk-admin-card-header {
+  margin-bottom: 0.75rem;
+}
+
+.llk-admin-table-card .llk-admin-table {
+  max-height: none;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.llk-admin-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.llk-admin-inline-btn {
+  border: 1px solid #cbd5f5;
+  background: #f8fafc;
+  color: #0f172a;
+  border-radius: 999px;
+  font-size: var(--admin-font-base);
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.llk-admin-inline-btn:hover {
+  background: #e0e7ff;
+  color: #1d4ed8;
 }
 
 .llk-admin-chart-card__header {
@@ -484,6 +551,268 @@ body.llk-admin-body {
 
 .status-label {
   color: #94a3b8;
+  font-size: var(--admin-font-base);
+}
+
+.llk-admin-review-section {
+  margin-top: 0;
+  background: #fff;
+  border-radius: 1.5rem;
+  border: 1px solid #eef2ff;
+  padding: 1.5rem;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 380px;
+  overflow: hidden;
+}
+
+.llk-admin-review-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.llk-admin-review-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+  max-height: calc(380px - 90px);
+}
+
+.llk-admin-review-empty {
+  font-size: var(--admin-font-base);
+  color: #94a3b8;
+  margin-bottom: 1rem;
+}
+
+.llk-admin-review-empty.is-hidden {
+  display: none;
+}
+
+.llk-admin-review-card {
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #38bdf8;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  background: #fff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.llk-admin-review-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+}
+
+.llk-admin-review-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.llk-admin-review-card__reviewer {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  flex: 1;
+}
+
+.llk-admin-review-card__reviewer img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e2e8f0;
+}
+
+.llk-admin-review-card__reviewer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.llk-admin-review-card__reviewer-info span {
+  font-size: var(--admin-font-base);
+  color: #94a3b8;
+}
+
+.llk-admin-review-card__rating {
+  font-weight: 700;
+  color: #0f172a;
+  min-width: 48px;
+  text-align: right;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  justify-content: flex-end;
+}
+
+.llk-admin-review-card__rating i {
+  color: #facc15;
+  font-size: 0.9rem;
+}
+
+.llk-admin-review-card__content {
+  color: #475569;
+  font-size: var(--admin-font-base);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.llk-admin-review-card__meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--admin-font-base);
+  color: #94a3b8;
+}
+
+.llk-admin-review-card__status {
+  font-weight: 600;
+  color: #16a34a;
+}
+
+.llk-admin-review-card__status.is-hidden {
+  color: #dc2626;
+}
+
+.review-card--positive {
+  border-left-color: #22c55e;
+}
+
+.review-card--neutral {
+  border-left-color: #facc15;
+}
+
+.review-card--negative {
+  border-left-color: #ef4444;
+}
+
+.llk-admin-review-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  transition: opacity 0.2s ease;
+}
+
+.llk-admin-review-modal.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.llk-admin-review-modal__dialog {
+  background: #fff;
+  border-radius: 1.25rem;
+  width: min(620px, 92vw);
+  padding: 1.75rem;
+  position: relative;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.25);
+}
+
+.llk-admin-review-modal__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  border: none;
+  background: transparent;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #94a3b8;
+}
+
+.llk-admin-review-modal__title {
+  margin-top: 0;
+  margin-bottom: 0.35rem;
+  color: #0f172a;
+}
+
+.llk-admin-review-modal__subtitle {
+  margin: 0 0 1rem;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.llk-admin-review-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.llk-admin-review-modal__form label {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.llk-admin-review-modal__form select,
+.llk-admin-review-modal__form textarea {
+  width: 100%;
+  border: 1px solid #cbd5f5;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  font-size: 1rem;
+  resize: vertical;
+}
+
+.llk-admin-review-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.llk-admin-review-modal__btn {
+  border-radius: 999px;
+  padding: 0.6rem 1.5rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 0.2s ease;
+}
+
+.llk-admin-review-modal__btn--primary {
+  background: #16a34a;
+  color: #fff;
+}
+
+.llk-admin-review-modal__btn--ghost {
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #cbd5f5;
+}
+
+.llk-admin-review-modal__btn--danger {
+  background: #dc2626;
+  color: #fff;
+}
+
+.llk-admin-review-modal__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.llk-admin-review-modal__hint {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-top: 0.35rem;
 }
 
 .llk-admin-card-grid {
@@ -652,6 +981,10 @@ body.llk-admin-body {
   flex-direction: column;
   gap: 1rem;
   min-height: 300px;
+}
+
+.user-management__item {
+  min-height: unset;
 }
 
 .user-management__list,
@@ -920,10 +1253,10 @@ body.llk-admin-body {
 }
 
 .review-management__actions {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
-  margin-top: auto;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: auto;
 }
 
 .btn-toggle-review-visibility {

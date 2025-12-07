@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const Tour = require('./tourModel');
+const { emitDashboardEvent } = require('../utils/realtime');
+const { formatReviewCard } = require('../utils/dashboardFeed');
 
 const reviewSchema = new mongoose.Schema(
   {
@@ -88,6 +90,52 @@ reviewSchema.post(/^findOneAnd/, async doc => {
   // doc là document đã được tìm thấy và xử lý
   if (doc) {
     await doc.constructor.calcAverageRatings(doc.tour);
+  }
+});
+
+const populateReviewForRealtime = async doc => {
+  if (!doc) return null;
+  await doc.populate([
+    { path: 'user', select: 'name photo' },
+    { path: 'tour', select: 'name slug' }
+  ]);
+  return doc;
+};
+
+reviewSchema.post('save', async function(doc) {
+  try {
+    if (!doc) return;
+    await populateReviewForRealtime(doc);
+    const payload = formatReviewCard(doc);
+    if (payload) {
+      emitDashboardEvent('dashboard:reviews:upsert', { review: payload });
+    }
+  } catch (err) {
+    console.error('Unable to emit realtime review:', err.message);
+  }
+});
+
+reviewSchema.post('findOneAndUpdate', async function(doc) {
+  try {
+    if (!doc) return;
+    await populateReviewForRealtime(doc);
+    const payload = formatReviewCard(doc);
+    if (payload) {
+      emitDashboardEvent('dashboard:reviews:upsert', { review: payload });
+    }
+  } catch (err) {
+    console.error('Unable to emit realtime review update:', err.message);
+  }
+});
+
+reviewSchema.post('findOneAndDelete', function(doc) {
+  try {
+    if (!doc) return;
+    emitDashboardEvent('dashboard:reviews:remove', {
+      reviewId: doc._id.toString()
+    });
+  } catch (err) {
+    console.error('Unable to emit realtime review removal:', err.message);
   }
 });
 
