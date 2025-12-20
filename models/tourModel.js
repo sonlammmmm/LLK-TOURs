@@ -111,7 +111,6 @@ const tourSchema = new mongoose.Schema(
               ];
             }
           } catch {
-            // Nếu parse thất bại -> giữ nguyên
             return v;
           }
         }

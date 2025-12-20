@@ -213,12 +213,10 @@ exports.updateTour = catchAsync(async (req, res, next) => {
     else delete req.body.guides;
   }
 
-  // ------------------------
   // Merge hoặc thay thế startDates tuỳ mode
   let incoming = req.body.startDates;
   if (typeof incoming === 'string') {
     incoming = tryParseJSON(incoming, 'startDates');
-    // nếu parse lỗi → incoming = undefined (không đụng tới startDates hiện có)
   }
 
   if (Array.isArray(incoming)) {
@@ -274,7 +272,6 @@ exports.updateTour = catchAsync(async (req, res, next) => {
     // không gửi startDates → không sửa mảng cũ
     delete req.body.startDates;
   }
-  // ------------------------
 
   const updated = await Tour.findByIdAndUpdate(req.params.id, req.body, {
     new: true,

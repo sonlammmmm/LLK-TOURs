@@ -7,7 +7,6 @@ const router = express.Router();
 
 router.use('/:tourId/reviews', reviewRouter);
 
-//lỗi mapbox bỏ phần này
 router
   .route('/top-5-cheap')
   .get(tourController.aliasTopTours, tourController.getAllTours);

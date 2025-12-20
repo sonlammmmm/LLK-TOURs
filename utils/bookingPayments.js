@@ -19,8 +19,7 @@ const momoConfig = {
     'https://test-payment.momo.vn/v2/gateway/api/create',
   partnerCode: process.env.MOMO_PARTNER_CODE || 'MOMO',
   accessKey: process.env.MOMO_ACCESS_KEY || 'F8BBA842ECF85',
-  secretKey:
-    process.env.MOMO_SECRET_KEY || 'K951B6PE1waDMi640xX08PD3vg6EkVlz',
+  secretKey: process.env.MOMO_SECRET_KEY || 'K951B6PE1waDMi640xX08PD3vg6EkVlz',
   partnerName: process.env.MOMO_PARTNER_NAME || 'LLK Tours',
   storeId: process.env.MOMO_STORE_ID || 'LLKToursStore',
   requestType: process.env.MOMO_REQUEST_TYPE || 'payWithMethod',

@@ -155,9 +155,12 @@ block append scripts
       let navCards = navTrack ? Array.from(navTrack.children) : [];
       const navBaseCount = navCards.length;
       const hasGSAP = typeof window.gsap !== 'undefined';
-      let navCycleWidth = 0;
       let virtualNavIndex = navBaseCount;
       let activeNavCard = null;
+      let navScrollTween = null;
+      let navScrollCompletionTimeout = null;
+      const NAV_SCROLL_DURATION = 0.85;
+      const NAV_NATIVE_SCROLL_MS = 550;
       
       let currentIndex = 0;
       let isAnimating = false;
@@ -541,25 +544,12 @@ block append scripts
         navCards.forEach((card) => card.addEventListener('click', handleNavClick));
         virtualNavIndex = navBaseCount;
         requestAnimationFrame(() => {
-          navCycleWidth = calculateNavCycleWidth();
           const initialCard = navCards[virtualNavIndex];
           if (initialCard) {
             highlightNavCard(initialCard);
-            scrollNavCardIntoView(initialCard, false);
+            scrollNavCardIntoView(initialCard, { smooth: false });
           }
         });
-      }
-
-      function calculateNavCycleWidth() {
-        if (!navTrack) return 0;
-        const reference = navTrack.querySelectorAll('.nav-card[data-index="0"]');
-        if (reference.length >= 2) {
-          return reference[1].offsetLeft - reference[0].offsetLeft;
-        }
-        const style = window.getComputedStyle(navTrack);
-        const gap = parseFloat(style.columnGap || style.gap || '0');
-        const cardWidth = navCards[virtualNavIndex]?.offsetWidth || 0;
-        return navBaseCount * (cardWidth + gap);
       }
 
       function handleNavClick(event) {
@@ -597,24 +587,68 @@ block append scripts
         }
       }
 
-      function scrollNavCardIntoView(card, smooth = true) {
-        if (!navViewport || !card) return;
+      function scrollNavCardIntoView(card, options = {}) {
+        if (!navViewport || !card) {
+          if (options && typeof options.onComplete === 'function') {
+            options.onComplete();
+          }
+          return;
+        }
+        const { smooth = true, onComplete } = options;
+        if (navScrollTween && typeof navScrollTween.kill === 'function') {
+          navScrollTween.kill();
+          navScrollTween = null;
+        }
+        if (navScrollCompletionTimeout) {
+          clearTimeout(navScrollCompletionTimeout);
+          navScrollCompletionTimeout = null;
+        }
         const target = card.offsetLeft - (navViewport.clientWidth / 2 - card.offsetWidth / 2);
-        navViewport.scrollTo({ left: target, behavior: smooth ? 'smooth' : 'auto' });
+        if (!smooth) {
+          navViewport.scrollTo({ left: target, behavior: 'auto' });
+          if (typeof onComplete === 'function') onComplete();
+          return;
+        }
+        if (hasGSAP && typeof gsap.to === 'function') {
+          navScrollTween = gsap.to(navViewport, {
+            scrollLeft: target,
+            duration: NAV_SCROLL_DURATION,
+            ease: 'power3.out',
+            onComplete: () => {
+              navScrollTween = null;
+              if (typeof onComplete === 'function') onComplete();
+            }
+          });
+          return;
+        }
+        navViewport.scrollTo({ left: target, behavior: 'smooth' });
+        if (typeof onComplete === 'function') {
+          navScrollCompletionTimeout = setTimeout(() => {
+            navScrollCompletionTimeout = null;
+            onComplete();
+          }, NAV_NATIVE_SCROLL_MS);
+        }
       }
 
       function normalizeNavPosition(wrapTransition = false) {
-        if (!navViewport || !navCycleWidth || !navBaseCount) return;
+        if (!navViewport || !navBaseCount || !navCards.length) return;
+        let normalized = false;
         if (virtualNavIndex >= navBaseCount * 2) {
           virtualNavIndex -= navBaseCount;
-          navViewport.scrollLeft -= navCycleWidth;
+          normalized = true;
         } else if (virtualNavIndex < navBaseCount) {
           virtualNavIndex += navBaseCount;
-          navViewport.scrollLeft += navCycleWidth;
+          normalized = true;
+        }
+        const currentCard = navCards[virtualNavIndex];
+        if (!currentCard) return;
+        if (normalized) {
+          scrollNavCardIntoView(currentCard, { smooth: false });
+          highlightNavCard(currentCard);
+          return;
         }
         if (wrapTransition) {
-          const currentCard = navCards[virtualNavIndex];
-          if (currentCard) highlightNavCard(currentCard);
+          highlightNavCard(currentCard);
         }
       }
 
@@ -624,11 +658,10 @@ block append scripts
         if (!candidate) return;
         virtualNavIndex = candidate.idx;
         highlightNavCard(candidate.card);
-        scrollNavCardIntoView(candidate.card, smooth);
-        setTimeout(
-          () => normalizeNavPosition(wrapTransition),
-          smooth ? 650 : 0
-        );
+        scrollNavCardIntoView(candidate.card, {
+          smooth,
+          onComplete: () => normalizeNavPosition(wrapTransition)
+        });
       }
 
       // Autoplay logic
@@ -659,7 +692,6 @@ block append scripts
       }
 
       window.addEventListener('resize', () => {
-        navCycleWidth = calculateNavCycleWidth();
         moveNavToLogicalIndex(currentIndex, false);
       });
     });

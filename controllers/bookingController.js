@@ -39,37 +39,17 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
     return next(err);
   }
 
-  const {
-    tour,
-
-    startKey,
-
-    participants,
-
-    platform,
-
-    pricing,
-
-    softLockRecord
-  } = context;
+  const { tour, startKey, platform, pricing, softLockRecord } = context;
 
   const { successUrl, cancelUrl } = buildStripeRedirectUrls(platform);
-
   const lineItems = buildLineItems(tour, pricing, req);
-
   const couponId = await createDiscountCoupon(pricing.discountAmount);
-
   const metadata = buildSessionMetadata(
     req,
-
     tour,
-
     pricing,
-
     startKey,
-
     platform,
-
     {
       softLockId: softLockRecord?.id || ''
     }
@@ -80,32 +60,21 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   try {
     session = await stripeClient.checkout.sessions.create({
       mode: 'payment',
-
       payment_method_types: ['card'],
-
       customer_email: req.user.email,
-
       client_reference_id: req.params.tourId,
-
       success_url: successUrl,
-
       cancel_url: cancelUrl,
-
       line_items: lineItems,
-
       metadata,
-
       discounts: couponId ? [{ coupon: couponId }] : undefined
     });
-
   } catch (err) {
     await releaseSoftLockSafely(softLockRecord, 'stripe-session-error');
 
     console.error('[Stripe] Create session failed', {
       message: err.message,
-
       statusCode: err.statusCode,
-
       stack: err.stack
     });
 

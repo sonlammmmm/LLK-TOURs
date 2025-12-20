@@ -79,9 +79,7 @@ const getTourIdFromDoc = tourRef => {
 const buildHiddenReviewCountMap = async (userId, tourRefs = []) => {
   if (!userId) return new Map();
   const normalizedIds = Array.isArray(tourRefs)
-    ? tourRefs
-        .map(getTourIdFromDoc)
-        .filter(Boolean)
+    ? tourRefs.map(getTourIdFromDoc).filter(Boolean)
     : [];
   const uniqueIds = [...new Set(normalizedIds)];
   const objectIds = uniqueIds
@@ -100,7 +98,9 @@ const buildHiddenReviewCountMap = async (userId, tourRefs = []) => {
   if (objectIds.length > 0) {
     query.tour = { $in: objectIds };
   }
-  const hiddenReviews = await Review.find(query).select('tour').lean();
+  const hiddenReviews = await Review.find(query)
+    .select('tour')
+    .lean();
   return hiddenReviews.reduce((acc, review) => {
     const key =
       review.tour && typeof review.tour.toString === 'function'
@@ -114,9 +114,7 @@ const buildHiddenReviewCountMap = async (userId, tourRefs = []) => {
 
 const buildVisibleReviewCountMap = async (tourRefs = []) => {
   const normalizedIds = Array.isArray(tourRefs)
-    ? tourRefs
-        .map(getTourIdFromDoc)
-        .filter(Boolean)
+    ? tourRefs.map(getTourIdFromDoc).filter(Boolean)
     : [];
   if (normalizedIds.length === 0) return new Map();
   const objectIds = [...new Set(normalizedIds)]
@@ -1339,7 +1337,11 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
     currency: 'VND'
   });
 
-  const [recentBookings, topProductAggregation, latestReviewDocs] = await Promise.all([
+  const [
+    recentBookings,
+    topProductAggregation,
+    latestReviewDocs
+  ] = await Promise.all([
     Booking.find()
       .sort('-createdAt')
       .limit(6)
@@ -1405,9 +1407,7 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
     })
     .filter(Boolean);
 
-  const latestReviews = latestReviewDocs
-    .map(formatReviewCard)
-    .filter(Boolean);
+  const latestReviews = latestReviewDocs.map(formatReviewCard).filter(Boolean);
 
   const bookingStatusBreakdown = [
     { label: 'Đã thanh toán', value: paidBookings },

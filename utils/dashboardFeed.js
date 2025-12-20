@@ -42,9 +42,7 @@ const formatRecentOrderCard = booking => {
   return {
     id: getSafeId(booking._id || booking.id),
     customer:
-      (booking.user && booking.user.name) ||
-      booking.customer ||
-      'Khách mới',
+      (booking.user && booking.user.name) || booking.customer || 'Khách mới',
     note: noteParts.length ? noteParts.join(' · ') : 'Đơn mới',
     amount: currencyFormatter.format(
       typeof booking.price === 'number' ? booking.price : 0
@@ -69,8 +67,7 @@ const formatReviewCard = review => {
 
   return {
     id: getSafeId(review._id || review.id),
-    reviewer:
-      (review.user && review.user.name) || review.reviewer || 'Ẩn danh',
+    reviewer: (review.user && review.user.name) || review.reviewer || 'Ẩn danh',
     reviewerAvatar: reviewerPhoto,
     rating: safeRating,
     content: review.review || '',

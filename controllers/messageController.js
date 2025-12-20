@@ -27,10 +27,7 @@ exports.getUserChatView = catchAsync(async (req, res) => {
 
   const adminIds = [
     ...new Set(
-      // eslint-disable-next-line prettier/prettier
-      messages
-        .filter(m => m.role === 'admin')
-        .map(m => m.sender.toString())
+      messages.filter(m => m.role === 'admin').map(m => m.sender.toString())
     )
   ];
 

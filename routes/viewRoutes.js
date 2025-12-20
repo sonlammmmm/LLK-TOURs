@@ -1,7 +1,6 @@
 const express = require('express');
 const viewsController = require('../controllers/viewsController');
 const authController = require('../controllers/authController');
-const bookingController = require('../controllers/bookingController');
 const messageController = require('../controllers/messageController'); // 👈 thêm controller chat
 
 const router = express.Router();
@@ -37,7 +36,12 @@ router.get('/search', authController.isLoggedIn, viewsController.searchTours);
 router.get('/tour/:slug', authController.isLoggedIn, viewsController.getTour);
 router.get('/login', setAuthLayout, viewsController.getLoginForm);
 router.get('/signup', setAuthLayout, viewsController.getSignupForm);
-router.get('/me', authController.protect, setUserPortalLayout, viewsController.getAccount);
+router.get(
+  '/me',
+  authController.protect,
+  setUserPortalLayout,
+  viewsController.getAccount
+);
 
 // Route hiển thị chat của user (có thể dùng riêng hoặc qua nút chat nổi)
 router.get(
@@ -221,8 +225,18 @@ router.get(
 );
 
 // -------------------- CÁ NHÂN --------------------
-router.get('/my-billing', authController.protect, setUserPortalLayout, viewsController.getMyBilling);
-router.get('/my-reviews', authController.protect, setUserPortalLayout, viewsController.getMyReviews);
+router.get(
+  '/my-billing',
+  authController.protect,
+  setUserPortalLayout,
+  viewsController.getMyBilling
+);
+router.get(
+  '/my-reviews',
+  authController.protect,
+  setUserPortalLayout,
+  viewsController.getMyReviews
+);
 router.get(
   '/my-promotions',
   authController.protect,

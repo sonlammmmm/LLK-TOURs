@@ -102,7 +102,7 @@ const populateReviewForRealtime = async doc => {
   return doc;
 };
 
-reviewSchema.post('save', async function(doc) {
+reviewSchema.post('save', async doc => {
   try {
     if (!doc) return;
     await populateReviewForRealtime(doc);
@@ -115,7 +115,7 @@ reviewSchema.post('save', async function(doc) {
   }
 });
 
-reviewSchema.post('findOneAndUpdate', async function(doc) {
+reviewSchema.post('findOneAndUpdate', async doc => {
   try {
     if (!doc) return;
     await populateReviewForRealtime(doc);
@@ -128,7 +128,7 @@ reviewSchema.post('findOneAndUpdate', async function(doc) {
   }
 });
 
-reviewSchema.post('findOneAndDelete', function(doc) {
+reviewSchema.post('findOneAndDelete', doc => {
   try {
     if (!doc) return;
     emitDashboardEvent('dashboard:reviews:remove', {

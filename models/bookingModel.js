@@ -160,7 +160,7 @@ bookingSchema.post('findOneAndDelete', async function() {
   }
 });
 
-bookingSchema.post('save', async function(doc) {
+bookingSchema.post('save', async doc => {
   try {
     if (!doc) return;
     await doc.populate([
