@@ -2298,3 +2298,74 @@ textarea.form__input {
     width: 100%;
   }
 }
+
+@media (max-width: 900px) {
+  body.llk-admin-body {
+    height: auto;
+    overflow: auto;
+  }
+
+  .llk-admin-page {
+    height: auto;
+    min-height: auto;
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .llk-admin-sidenav {
+    position: static;
+    height: auto;
+    overflow: visible;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .llk-admin-sidenav {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .llk-admin-sidenav__nav {
+    width: 100%;
+  }
+
+  .llk-admin-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .llk-admin-panel {
+    padding: 1.25rem;
+  }
+
+  .llk-admin-panel__toolbar {
+    flex-direction: column;
+  }
+
+  .llk-admin-panel__stats--row {
+    flex-direction: column;
+  }
+
+  .llk-admin-panel__actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .llk-admin-page {
+    padding: 0.75rem;
+  }
+
+  .llk-admin-panel__actions .btn,
+  .llk-admin-topbar__right .btn,
+  .llk-admin-panel__toggle {
+    width: 100%;
+  }
+
+  .llk-admin-panel__search,
+  .llk-admin-panel__filter {
+    min-width: auto;
+  }
+}

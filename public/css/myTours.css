@@ -118,3 +118,15 @@
     max-width: 100%;
   }
 }
+
+@media screen and (max-width: 480px) {
+  .card__footer_mytour {
+    padding: 1.5rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .btn-mytour {
+    width: 100%;
+  }
+}

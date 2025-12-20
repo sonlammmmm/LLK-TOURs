@@ -1005,3 +1005,80 @@ form.booking-workspace.promo-filled .booking-participants-btn {
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 1024px) {
+  body.booking-page {
+    overflow: auto;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .main.booking-shell,
+  form.booking-workspace {
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+    padding-bottom: 2rem;
+  }
+
+  .booking-layout {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .booking-card--payment {
+    grid-column: span 3;
+  }
+}
+
+@media (max-width: 640px) {
+  .booking-layout {
+    padding: 1.25rem;
+    gap: 1rem;
+  }
+
+  .booking-section {
+    padding: 1.6rem;
+  }
+
+  .booking-card,
+  .booking-card--services,
+  .booking-card--payment {
+    padding: 1.4rem;
+  }
+
+  .booking-card__header h2 {
+    font-size: var(--font-size-base);
+  }
+
+  .booking-date-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-card--participants,
+  .booking-card--promo {
+    height: auto;
+    min-height: auto;
+  }
+
+  .booking-actions {
+    flex-direction: column;
+  }
+
+  .booking-actions .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-content__inner {
+    padding: 1.4rem;
+  }
+
+  .booking-section--hero {
+    min-height: auto;
+  }
+
+  .booking-card__header p {
+    font-size: var(--font-size-xs);
+  }
+}

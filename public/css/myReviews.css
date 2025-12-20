@@ -143,3 +143,21 @@
     gap: 1rem;
   }
 }
+
+@media only screen and (max-width: 480px) {
+  .review-item__header,
+  .review-item__content,
+  .review-item__footer {
+    padding: 1.25rem;
+  }
+
+  .reviews-search,
+  .reviews-rating {
+    width: 100%;
+  }
+
+  .review-item__actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

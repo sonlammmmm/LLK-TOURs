@@ -402,3 +402,13 @@
     font-size: var(--font-size-base);
   }
 }
+
+@media (max-width: 560px) {
+  .chart-container {
+    padding: 1rem;
+  }
+
+  .chart-filter {
+    width: 100%;
+  }
+}

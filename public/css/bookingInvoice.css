@@ -174,3 +174,36 @@
     overflow-x: auto;
   }
 }
+
+@media only screen and (max-width: 640px) {
+  .invoice-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .invoice-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .invoice-header,
+  .invoice-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .invoice-table th,
+  .invoice-table td {
+    font-size: var(--font-size-base);
+    padding: 1rem;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  .invoice-actions .btn {
+    width: 100%;
+  }
+
+  .invoice-title h2 {
+    font-size: clamp(2.2rem, 7vw, 2.6rem);
+  }
+}

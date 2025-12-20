@@ -511,3 +511,58 @@
     max-height: 60vh;
   }
 }
+
+@media (max-width: 640px) {
+  .admin-chat-sidebar {
+    max-height: none;
+    padding: 1.5rem;
+  }
+
+  .admin-chat-conversation,
+  .admin-chat-stats {
+    padding: 1.25rem;
+  }
+
+  .admin-chat-conversation__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-chat-partner {
+    width: 100%;
+  }
+
+  .admin-chat-conversation__footer {
+    flex-direction: column;
+  }
+
+  .admin-chat-form {
+    flex-direction: column;
+    border-radius: 2rem;
+    padding: 0.8rem 1rem;
+  }
+
+  .admin-chat-input {
+    font-size: var(--font-size-base);
+  }
+
+  .admin-chat-send {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-chat-messages {
+    padding: 1rem;
+  }
+
+  .admin-chat-message {
+    max-width: 100%;
+  }
+
+  .admin-chat-partner {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+}

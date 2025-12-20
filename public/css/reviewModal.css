@@ -77,3 +77,23 @@
 .btn--orange:hover {
   background-color: #ff5500;
 }
+
+@media (max-width: 480px) {
+  .modal__content {
+    width: 100%;
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+  }
+
+  .modal__title {
+    font-size: var(--font-size-lg);
+  }
+
+  .rating-input {
+    justify-content: center;
+  }
+
+  .rating-input label {
+    font-size: clamp(3rem, 12vw, 4rem);
+  }
+}

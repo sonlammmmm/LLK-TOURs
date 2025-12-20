@@ -374,3 +374,33 @@
     grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
   }
 }
+
+@media (max-width: 900px) {
+  .booking-success {
+    min-height: auto;
+    padding: 2rem 0 3rem;
+  }
+
+  .booking-success__viewport {
+    height: auto;
+    min-height: auto;
+    max-height: none;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 520px) {
+  .booking-success__card,
+  .booking-success__hero-meta li {
+    padding: 1.4rem;
+  }
+
+  .booking-success__status,
+  .booking-success__actions .btn {
+    width: 100%;
+  }
+
+  .booking-success__timeline {
+    flex-direction: column;
+  }
+}

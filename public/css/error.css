@@ -131,3 +131,22 @@ body.error-page-body .alert-container {
     align-items: stretch;
   }
 }
+
+@media (max-width: 640px) {
+  body.error-page-body {
+    height: auto;
+    max-height: none;
+    overflow: auto;
+    padding-top: 1.5rem;
+  }
+
+  #error-page {
+    min-height: 100vh;
+    height: auto;
+    padding: 2rem 0;
+  }
+
+  #error-page .slider-content-wrapper {
+    min-height: auto;
+  }
+}

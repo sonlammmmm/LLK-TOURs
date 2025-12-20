@@ -111,3 +111,21 @@
     margin-bottom: 1rem;
   }
 }
+
+@media (max-width: 480px) {
+  .booking-detail {
+    padding: 1.5rem;
+  }
+
+  .booking-detail__label {
+    font-size: var(--font-size-base);
+  }
+
+  .booking-detail__value {
+    font-size: var(--font-size-sm);
+  }
+
+  .booking-detail__actions {
+    gap: 0.75rem;
+  }
+}
