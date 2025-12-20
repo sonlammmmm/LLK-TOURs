@@ -196,10 +196,12 @@ const startSoftLockMaintenance = () => {
     try {
       const released = await sweepExpiredSoftLocks();
       if (released > 0) {
-        console.log(`[SoftLock] Released ${released} expired holds`);
+        console.log(
+          `[SoftLock] Đã giải phóng ${released} giữ chỗ hết hạn`
+        );
       }
     } catch (err) {
-      console.error('[SoftLock] Sweep error:', err.message);
+      console.error('[SoftLock] Lỗi quét giữ chỗ:', err.message);
     }
   }, SWEEP_INTERVAL_MS);
 

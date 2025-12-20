@@ -87,7 +87,10 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
     try {
       await linkSessionToSoftLock(softLockRecord.id, session.id);
     } catch (linkErr) {
-      console.error('[SoftLock] Unable to attach session:', linkErr.message);
+      console.error(
+        '[SoftLock] Không thể gắn phiên thanh toán:',
+        linkErr.message
+      );
     }
   }
   res.status(200).json({ status: 'success', session });

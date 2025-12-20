@@ -42,7 +42,7 @@ const releaseSoftLockSafely = async (softLockDoc, reason) => {
     await releaseSoftLock(softLockDoc, reason);
   } catch (err) {
     console.warn(
-      `[SoftLock] Release failed (${reason || 'unknown'}):`,
+      `[SoftLock] Giải phóng thất bại (${reason || 'không rõ'}):`,
       err.message
     );
   }
@@ -182,7 +182,7 @@ const createBookingFromStripeSession = async sessionId => {
       softLockDoc = null;
     }
   } catch (lockErr) {
-    console.error('[SoftLock] Lookup error:', lockErr.message);
+    console.error('[SoftLock] Lỗi tra cứu giữ chỗ:', lockErr.message);
     softLockDoc = null;
   }
 
@@ -489,7 +489,7 @@ const preparePaymentInitialization = async req => {
     if (err instanceof AppError) {
       throw err;
     }
-    console.error('[SoftLock] Acquire error:', err.message);
+    console.error('[SoftLock] Lỗi giữ chỗ:', err.message);
     throw new AppError(
       'Không thể giữ chỗ tạm thời cho yêu cầu này. Vui lòng thử lại sau ít phút.',
       409
