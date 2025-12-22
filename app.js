@@ -194,13 +194,11 @@ app.all('*', (req, res, next) => {
 app.use((err, req, res, next) => {
   //  Log lỗi chi tiết
   if (err.statusCode === 400 || err.statusCode === 401) {
-    console.error('🚫 Validation Error:', {
+    console.error('Validation Error:', {
       message: err.message,
       statusCode: err.statusCode,
       path: req.path,
       method: req.method,
-      body: req.body,
-      query: req.query,
       user: req.user?.id
     });
   }
