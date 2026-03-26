@@ -1,0 +1,288 @@
+extends adminLayout
+
+block adminContent
+  .llk-admin-topbar
+    .llk-admin-topbar__left
+      h1.llk-admin-topbar__title Hòm thư góp ý
+      p.llk-admin-topbar__subtitle Tin nhắn từ khách vãng lai qua trang Liên hệ.
+
+  - const msgList = Array.isArray(messages) ? messages : [];
+  - const totalMsgs = msgList.length;
+  - const unreadMsgs = msgList.filter(m => !m.isRead).length;
+  - const readMsgs = totalMsgs - unreadMsgs;
+
+  section.llk-admin-panel.contact-inbox(data-collection='.contact-card')
+    .llk-admin-panel__stats.llk-admin-panel__stats--wide
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Tổng tin nhắn
+        strong.llk-admin-stat-card__value #{totalMsgs}
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Chưa đọc
+        strong.llk-admin-stat-card__value.stat--unread #{unreadMsgs}
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Đã đọc
+        strong.llk-admin-stat-card__value #{readMsgs}
+
+    if totalMsgs > 0
+      .llk-admin-panel__toolbar
+        input.llk-admin-panel__search.search-input(
+          type='text'
+          placeholder='Tìm theo tên, email, tiêu đề...'
+          aria-label='Tìm kiếm tin nhắn'
+          data-collection-search
+        )
+        select.llk-admin-panel__filter(
+          data-collection-filter
+          data-filter-field='read'
+          aria-label='Lọc theo trạng thái'
+        )
+          option(value='') Tất cả
+          option(value='unread') Chưa đọc
+          option(value='read') Đã đọc
+        p.count-display
+          | Đang hiển thị 
+          strong #{totalMsgs}
+          |  trên tổng số 
+          strong #{totalMsgs}
+      p.no-data-message.llk-admin-empty.hidden Không tìm thấy tin nhắn phù hợp.
+
+    if totalMsgs === 0
+      p.llk-admin-empty Chưa có tin nhắn nào từ khách hàng.
+    else
+      .contact-inbox__list
+        each msg in msgList
+          - const isUnread = !msg.isRead;
+          - const searchText = `${msg.name} ${msg.email} ${msg.subject} ${msg.message}`.toLowerCase();
+          - const dateStr = msg.createdAt ? new Date(msg.createdAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+          article.contact-card(
+            class=isUnread ? 'contact-card--unread' : ''
+            data-msg-id=msg.id
+            data-read=isUnread ? 'unread' : 'read'
+            data-search=searchText
+          )
+            .contact-card__header
+              .contact-card__sender
+                .contact-card__avatar
+                  if isUnread
+                    i.fas.fa-envelope
+                  else
+                    i.fas.fa-envelope-open
+                div
+                  h3.contact-card__name= msg.name
+                  span.contact-card__email= msg.email
+                  if msg.phone
+                    span.contact-card__phone
+                      i.fas.fa-phone
+                      |  #{msg.phone}
+              .contact-card__meta
+                if isUnread
+                  span.contact-card__badge Chưa đọc
+                else
+                  span.contact-card__badge.contact-card__badge--read Đã đọc
+                span.contact-card__date= dateStr
+            .contact-card__subject
+              strong= msg.subject
+            .contact-card__body
+              p= msg.message
+            .contact-card__actions
+              if isUnread
+                button.btn.btn--small.btn--green.btn-mark-read(data-msg-id=msg.id)
+                  i.fas.fa-check
+                  |  Đánh dấu đã đọc
+              button.btn.btn--small.btn--red.btn-delete-contact(data-msg-id=msg.id)
+                i.fas.fa-trash
+                |  Xóa
+
+block append styles
+  style.
+    /* Contact Inbox */
+    .contact-inbox__list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .contact-card {
+      background: #fff;
+      border-radius: 1.4rem;
+      padding: 2rem 2.2rem;
+      box-shadow: 0 0.6rem 1.4rem rgba(12, 19, 45, 0.05);
+      transition: all 0.25s ease;
+      border-left: 4px solid transparent;
+    }
+
+    /* Chưa đọc: nền xanh đậm */
+    .contact-card--unread {
+      background: linear-gradient(135deg, #0d1f5e, #1a35a8);
+      color: #fff;
+      border-left-color: #4ade80;
+      box-shadow: 0 0.8rem 2rem rgba(31, 61, 239, 0.18);
+    }
+
+    .contact-card--unread .contact-card__email,
+    .contact-card--unread .contact-card__phone,
+    .contact-card--unread .contact-card__date {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .contact-card--unread .contact-card__body p {
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .contact-card--unread .contact-card__subject strong {
+      color: #fff;
+    }
+
+    .contact-card--unread .contact-card__avatar {
+      background: rgba(255, 255, 255, 0.15);
+      color: #4ade80;
+    }
+
+    .contact-card--unread .contact-card__badge {
+      background: #4ade80;
+      color: #0b1b40;
+    }
+
+    /* Đã đọc: nền trắng */
+    .contact-card__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .contact-card__sender {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.2rem;
+    }
+
+    .contact-card__avatar {
+      flex-shrink: 0;
+      width: 4.4rem;
+      height: 4.4rem;
+      border-radius: 50%;
+      background: #eef2ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      color: #1f3def;
+    }
+
+    .contact-card__name {
+      font-size: 1.5rem;
+      margin: 0 0 0.2rem;
+      font-weight: 600;
+    }
+
+    .contact-card__email {
+      font-size: 1.25rem;
+      color: #5f6687;
+      display: block;
+    }
+
+    .contact-card__phone {
+      font-size: 1.2rem;
+      color: #8c91a9;
+      display: block;
+      margin-top: 0.15rem;
+    }
+
+    .contact-card__phone i {
+      font-size: 1rem;
+    }
+
+    .contact-card__meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.4rem;
+      flex-shrink: 0;
+    }
+
+    .contact-card__badge {
+      display: inline-block;
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding: 0.3rem 1rem;
+      border-radius: 999px;
+      background: #1f3def;
+      color: #fff;
+      letter-spacing: 0.04em;
+    }
+
+    .contact-card__badge--read {
+      background: #e5e8f0;
+      color: #5f6687;
+    }
+
+    .contact-card__date {
+      font-size: 1.15rem;
+      color: #8c91a9;
+    }
+
+    .contact-card__subject {
+      margin-bottom: 0.6rem;
+    }
+
+    .contact-card__subject strong {
+      font-size: 1.4rem;
+      color: #0c1b42;
+    }
+
+    .contact-card__body p {
+      font-size: 1.3rem;
+      color: #4e5672;
+      line-height: 1.65;
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .contact-card__actions {
+      display: flex;
+      gap: 0.8rem;
+      margin-top: 1.2rem;
+      flex-wrap: wrap;
+    }
+
+    .contact-card__actions .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    /* Unread button styles on dark background */
+    .contact-card--unread .btn--green {
+      background: #4ade80;
+      color: #0b1b40;
+    }
+
+    .contact-card--unread .btn--red {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fca5a5;
+      border: 1px solid rgba(252, 165, 165, 0.3);
+    }
+
+    .stat--unread {
+      color: #1f3def;
+    }
+
+    @media (max-width: 640px) {
+      .contact-card {
+        padding: 1.5rem;
+      }
+      .contact-card__header {
+        flex-direction: column;
+        gap: 0.8rem;
+      }
+      .contact-card__meta {
+        align-items: flex-start;
+        flex-direction: row;
+        gap: 1rem;
+      }
+    }

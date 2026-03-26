@@ -1,0 +1,122 @@
+extends base
+
+block append head
+  link(rel='stylesheet' href='/css/about.css')
+
+block content
+  - const faqList = Array.isArray(faqs) ? faqs : [];
+
+  //- ===== HERO =====
+  section.about-hero
+    .about-hero__inner
+      .about-hero__content
+        h1 LLK Travel — Hành trình trọn cảm xúc
+  //- ===== GIỚI THIỆU =====
+  section.about-section
+    .about-section__wrapper
+      .about-intro
+        .about-intro__text
+          h2 Câu chuyện của chúng tôi
+          p LLK Travel được thành lập với sứ mệnh mang đến những hành trình du lịch Việt Nam chất lượng cao, phục vụ khách gia đình, công ty và nhóm bạn yêu thích khám phá. Với kinh nghiệm nhiều năm trong ngành, chúng tôi tự hào là đối tác đáng tin cậy cho mọi chuyến đi.
+          p Đội ngũ của chúng tôi gồm các hướng dẫn viên bản địa giàu kinh nghiệm, hiểu sâu về văn hóa và ẩm thực từng vùng miền, sẵn sàng đồng hành cùng bạn trên mọi cung đường.
+        .about-intro__image
+          img(src='/img/about-team.jpg' alt='Đội ngũ LLK Travel' onerror="this.style.display='none'")
+
+  //- ===== STATS =====
+  section.about-stats
+    .about-stats__wrapper
+      .about-stat
+        .about-stat__number 500+
+        .about-stat__label Tour đã tổ chức
+      .about-stat
+        .about-stat__number 10,000+
+        .about-stat__label Khách hàng hài lòng
+      .about-stat
+        .about-stat__number 63
+        .about-stat__label Tỉnh thành phủ sóng
+      .about-stat
+        .about-stat__number 24/7
+        .about-stat__label Hỗ trợ trực tuyến
+
+  //- ===== GIÁ TRỊ CỐT LÕI =====
+  section.about-section
+    .about-section__wrapper
+      h2.about-section__heading Giá trị cốt lõi
+      .about-values
+        .about-value-card
+          .about-value-card__icon
+            i.fas.fa-shield-alt
+          h3 An toàn & Tin cậy
+          p Mọi tour đều được bảo hiểm đầy đủ, đảm bảo an toàn tuyệt đối cho du khách trong suốt hành trình.
+        .about-value-card
+          .about-value-card__icon
+            i.fas.fa-heart
+          h3 Tận tâm phục vụ
+          p Đội ngũ luôn lắng nghe và đặt trải nghiệm của khách hàng lên hàng đầu, từ lúc tư vấn đến khi kết thúc chuyến đi.
+        .about-value-card
+          .about-value-card__icon
+            i.fas.fa-leaf
+          h3 Du lịch bền vững
+          p Cam kết bảo vệ môi trường và phát triển du lịch cộng đồng, góp phần giữ gìn vẻ đẹp Việt Nam.
+        .about-value-card
+          .about-value-card__icon
+            i.fas.fa-tags
+          h3 Giá cả minh bạch
+          p Niêm yết giá rõ ràng, không phát sinh chi phí ẩn. Cam kết hoàn tiền nếu tour không đúng mô tả.
+
+  //- ===== FAQ =====
+  section.about-section.about-faq-section#faq
+    .about-section__wrapper
+      h2.about-section__heading Câu hỏi thường gặp
+      p.about-section__subtitle Tìm câu trả lời nhanh cho những thắc mắc phổ biến nhất về dịch vụ của chúng tôi.
+
+      if faqList.length
+        .about-faq
+          each faq, idx in faqList
+            .about-faq__item(data-faq-item)
+              button.about-faq__question(type='button' aria-expanded='false' data-faq-toggle)
+                .about-faq__question-text
+                  span.about-faq__number= `0${idx + 1}`
+                  span= faq.question
+                .about-faq__icon
+                  i.fas.fa-chevron-down
+              .about-faq__answer(data-faq-answer)
+                .about-faq__answer-inner
+                  p= faq.answer
+      else
+        .about-faq-empty
+          i.fas.fa-question-circle
+          p Chưa có câu hỏi nào. Hãy liên hệ chúng tôi nếu bạn cần hỗ trợ!
+block append scripts
+  script.
+    (function() {
+      // FAQ Accordion
+      var faqItems = document.querySelectorAll('[data-faq-toggle]');
+      faqItems.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var item = btn.closest('[data-faq-item]');
+          var answer = item.querySelector('[data-faq-answer]');
+          var isOpen = item.classList.contains('is-open');
+
+          // Close all others
+          document.querySelectorAll('[data-faq-item].is-open').forEach(function(openItem) {
+            if (openItem !== item) {
+              openItem.classList.remove('is-open');
+              openItem.querySelector('[data-faq-toggle]').setAttribute('aria-expanded', 'false');
+              openItem.querySelector('[data-faq-answer]').style.maxHeight = null;
+            }
+          });
+
+          // Toggle current
+          if (isOpen) {
+            item.classList.remove('is-open');
+            btn.setAttribute('aria-expanded', 'false');
+            answer.style.maxHeight = null;
+          } else {
+            item.classList.add('is-open');
+            btn.setAttribute('aria-expanded', 'true');
+            answer.style.maxHeight = answer.scrollHeight + 'px';
+          }
+        });
+      });
+    })();

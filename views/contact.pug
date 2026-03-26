@@ -1,0 +1,83 @@
+extends base
+
+block append head
+  link(rel='stylesheet' href='/css/contact.css')
+
+block content
+  //- ===== HERO =====
+  section.contact-hero
+    .contact-hero__inner
+      .contact-hero__content
+        h1 Kết nối với chúng tôi
+        p Bạn có câu hỏi, góp ý hay cần tư vấn? Đội ngũ LLK Travel luôn sẵn sàng lắng nghe và hỗ trợ bạn.
+
+  //- ===== CONTACT MAIN =====
+  section.contact-section
+    .contact-section__wrapper
+      //- BÊN TRÁI: BẢN ĐỒ
+      .contact-map
+        h2.contact-map__title
+          i.fas.fa-map-marker-alt
+          |  Văn phòng của chúng tôi
+        .contact-map__embed
+          iframe(
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3918.41845197229!2d106.78303187576067!3d10.855743457724207!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3175276e7ea103df%3A0xb6cf10bb7d719327!2zSFVURUNIIC0gxJDhuqFpIGjhu41jIEPDtG5nIG5naOG7hyBUUC5IQ00gKFRodSBEdWMgQ2FtcHVzKQ!5e0!3m2!1svi!2s!4v1774503210737!5m2!1svi!2s"
+            width="100%"
+            height="100%"
+            style="border:0;"
+            allowfullscreen=""
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+          )
+        .contact-map__info
+          .contact-info-item
+            i.fas.fa-map-marker-alt
+            div
+              strong Địa chỉ
+              p Khu Công nghệ cao Xa lộ Hà Nội, Hiệp Phú, TP. Thủ Đức, TP. HCM
+          .contact-info-item
+            i.fas.fa-phone
+            div
+              strong Hotline
+              p 038****234
+          .contact-info-item
+            i.fas.fa-envelope
+            div
+              strong Email
+              p transysonlam@gmail.com
+          .contact-info-item
+            i.fas.fa-clock
+            div
+              strong Giờ làm việc
+              p Thứ 2 – Thứ 7: 8:00 – 18:00
+
+      //- BÊN PHẢI: FORM LIÊN HỆ
+      .contact-form-wrapper
+        h2.contact-form__title
+          i.fas.fa-paper-plane
+          |  Gửi tin nhắn cho chúng tôi
+        p.contact-form__subtitle Điền thông tin bên dưới, chúng tôi sẽ phản hồi trong thời gian sớm nhất.
+        form#contactForm.contact-form
+          .contact-form__field
+            label(for='contact-name') Họ và tên *
+            input#contact-name(type='text' required placeholder='Nhập họ tên...' maxlength='100')
+          .contact-form__field
+            label(for='contact-email') Email *
+            input#contact-email(type='email' required placeholder='email@example.com')
+          .contact-form__row
+            .contact-form__field
+              label(for='contact-phone') Số điện thoại
+              input#contact-phone(type='tel' placeholder='0xxx xxx xxx' maxlength='20')
+            .contact-form__field
+              label(for='contact-subject') Tiêu đề *
+              input#contact-subject(type='text' required placeholder='Nội dung cần hỗ trợ...' maxlength='200')
+          .contact-form__field
+            label(for='contact-message') Nội dung tin nhắn *
+            textarea#contact-message(required placeholder='Nhập nội dung...' rows='5' maxlength='3000')
+          .contact-form__actions
+            button.btn.btn--green(type='submit')#contactSubmitBtn
+              i.fas.fa-paper-plane
+              |  Gửi tin nhắn
+          .contact-form__note
+            i.fas.fa-shield-alt
+            |  Thông tin của bạn được bảo mật hoàn toàn theo chính sách quyền riêng tư.

@@ -9,8 +9,9 @@
   --c-accent: #7be0ff;
   --c-muted: rgba(255, 255, 255, 0.75);
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --nav-card-width: clamp(150px, 13vw, 210px);
-  --nav-card-height: clamp(210px, 28vw, 300px);
+  --nav-card-width: clamp(170px, 15vw, 240px);
+  --nav-card-height: clamp(230px, 30vw, 320px);
+  --nav-card-scale: 0.82;
 }
 
 .slider-container {
@@ -21,6 +22,7 @@
   background: radial-gradient(circle at top, rgba(4, 17, 69, 0.65), rgba(2, 6, 23, 0.95));
   font-family: 'Inter', sans-serif;
   color: var(--c-light);
+  contain: layout style;
 }
 
 .slider-backgrounds {
@@ -35,13 +37,16 @@
   background-size: cover;
   background-position: center;
   opacity: 0;
-  transform: scale(1.08);
-  transition: opacity 1s ease;
+  will-change: transform, opacity;
+  transform: scale(1.08) translateZ(0);
+  transition: opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .slide-bg.is-active {
   opacity: 1;
-  transform: scale(1);
+  transform: scale(1) translateZ(0);
 }
 
 .slide-bg::after {
@@ -341,6 +346,8 @@
   gap: 1.5rem;
   max-width: 650px;
   pointer-events: auto;
+  will-change: transform, opacity;
+  transform: translateZ(0);
 }
 
 .slide-text-item.is-active {
@@ -455,10 +462,10 @@
 
 .slider-nav {
   display: flex;
-  align-items: flex-end;
-  gap: 1.2rem;
-  scroll-behavior: smooth;
+  align-items: center;
+  gap: 0.4rem;
   will-change: transform;
+  transform: translateZ(0);
 }
 
 .nav-card {
@@ -471,7 +478,16 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   filter: grayscale(0.6) brightness(0.7);
   background: rgba(0, 0, 0, 0.35);
-  transition: flex-basis 0.4s var(--ease-out), height 0.4s var(--ease-out), filter 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, opacity 0.35s ease;
+  will-change: transform, filter, opacity;
+  transform: scale(var(--nav-card-scale)) translateZ(0);
+  transform-origin: center center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    filter 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.4s ease,
+    box-shadow 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.4s ease;
   opacity: 0.7;
 }
 
@@ -479,7 +495,8 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s ease;
+  transform: translateZ(0);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .nav-card-info {
@@ -504,12 +521,12 @@
 }
 
 .nav-card.is-active {
-  flex-basis: calc(var(--nav-card-width) + 40px);
-  height: calc(var(--nav-card-height) + 40px);
+  transform: scale(1) translateZ(0);
   filter: grayscale(0) brightness(1);
   border-color: var(--c-accent);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
   opacity: 1;
+  z-index: 2;
 }
 
 .slider-empty {
@@ -548,13 +565,13 @@
   }
 
   .nav-card {
-    flex: 0 0 120px;
-    height: 170px;
+    --nav-card-width: 145px;
+    --nav-card-height: 195px;
+    --nav-card-scale: 0.84;
   }
 
   .nav-card.is-active {
-    flex: 0 0 140px;
-    height: 190px;
+    transform: scale(1) translateZ(0);
   }
 }
 
@@ -610,7 +627,8 @@
   }
 
   .nav-card {
-    flex: 0 0 140px;
+    --nav-card-width: 145px;
+    --nav-card-height: 190px;
   }
 }
 
@@ -631,6 +649,6 @@
   }
 
   .slider-nav {
-    gap: 0.8rem;
+    gap: 0.2rem;
   }
 }

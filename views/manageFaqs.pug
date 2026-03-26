@@ -1,0 +1,264 @@
+extends adminLayout
+
+block adminContent
+  .llk-admin-topbar
+    .llk-admin-topbar__left
+      h1.llk-admin-topbar__title Quản lý FAQ
+      p.llk-admin-topbar__subtitle Quản lý các câu hỏi thường gặp hiển thị trên trang Giới thiệu.
+    .llk-admin-topbar__right
+      button#btn-add-faq.btn.btn--small.btn--green(type='button')
+        i.fas.fa-plus-circle
+        |  Thêm câu hỏi mới
+
+  - const faqList = Array.isArray(faqs) ? faqs : [];
+  - const totalFaqs = faqList.length;
+  - const activeFaqs = faqList.filter(f => f.active).length;
+
+  section.llk-admin-panel.faq-table(data-collection='.faq-admin-card')
+    .llk-admin-panel__stats.llk-admin-panel__stats--wide
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Tổng câu hỏi
+        strong.llk-admin-stat-card__value #{totalFaqs}
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Đang hiển thị
+        strong.llk-admin-stat-card__value #{activeFaqs}
+      .llk-admin-stat-card
+        span.llk-admin-stat-card__label Đang ẩn
+        strong.llk-admin-stat-card__value #{totalFaqs - activeFaqs}
+
+    if totalFaqs > 0
+      .llk-admin-panel__toolbar
+        input.llk-admin-panel__search.search-input(
+          type='text'
+          placeholder='Tìm kiếm câu hỏi...'
+          aria-label='Tìm kiếm câu hỏi'
+          data-collection-search
+        )
+        select.llk-admin-panel__filter.filter-status(
+          data-collection-filter
+          data-filter-field='status'
+          aria-label='Lọc theo trạng thái'
+        )
+          option(value='') Tất cả trạng thái
+          option(value='active') Đang hiển thị
+          option(value='inactive') Đang ẩn
+        p.count-display
+          | Đang hiển thị 
+          strong #{totalFaqs}
+          |  trên tổng số 
+          strong #{totalFaqs}
+      p.no-data-message.llk-admin-empty.hidden Không tìm thấy câu hỏi phù hợp.
+
+    if totalFaqs === 0
+      p.llk-admin-empty Chưa có câu hỏi FAQ nào. Bấm "Thêm câu hỏi mới" để bắt đầu.
+    else
+      .llk-admin-card-grid
+        each faq in faqList
+          - const isActive = faq.active;
+          - const searchText = `${faq.question} ${faq.answer}`.toLowerCase();
+          article.faq-admin-card(
+            data-status=isActive ? 'active' : 'inactive'
+            data-search=searchText
+          )
+            .faq-admin-card__head
+              .faq-admin-card__title
+                h3.faq-admin-card__question= faq.question
+              span(class=`promo-card__badge ${isActive ? 'promo-card__badge--active' : 'promo-card__badge--inactive'}`)= isActive ? 'Hiển thị' : 'Đã ẩn'
+            .faq-admin-card__answer
+              p= faq.answer
+            .faq-admin-card__meta
+              span Thứ tự: #{faq.displayOrder || 0}
+              span Tạo: #{faq.createdAt ? new Date(faq.createdAt).toLocaleDateString('vi-VN') : '—'}
+            .faq-admin-card__actions
+              button.btn.btn--small.btn--orange.btn-toggle-faq(
+                data-faq-id=`${faq.id}`
+                data-next-status=`${faq.active ? 'inactive' : 'active'}`
+              )= faq.active ? 'Ẩn' : 'Hiển thị'
+              button.btn.btn--small.btn--blue.btn-edit-faq(
+                data-faq-id=`${faq.id}`
+                data-question=faq.question
+                data-answer=faq.answer
+                data-order=`${faq.displayOrder || 0}`
+              ) Chỉnh sửa
+              button.btn.btn--small.btn--red.btn-delete-faq(data-faq-id=`${faq.id}`) Xóa
+
+  //- ===== MODAL TẠO / CHỈNH SỬA FAQ =====
+  .faq-modal-overlay#faqModal
+    .faq-modal
+      .faq-modal__header
+        h2#faqModalTitle Thêm câu hỏi mới
+        button.faq-modal__close#faqModalClose(type='button' aria-label='Đóng')
+          i.fas.fa-times
+      form#faqForm.faq-modal__form
+        input#faq-edit-id(type='hidden' value='')
+        .faq-modal__field
+          label(for='faq-question') Câu hỏi *
+          input#faq-question(type='text' required placeholder='Nhập câu hỏi...' maxlength='500')
+        .faq-modal__field
+          label(for='faq-answer') Câu trả lời *
+          textarea#faq-answer(required placeholder='Nhập câu trả lời...' rows='4' maxlength='2000')
+        .faq-modal__row
+          .faq-modal__field
+            label(for='faq-order') Thứ tự hiển thị
+            input#faq-order(type='number' value='0' min='0')
+        .faq-modal__actions
+          button.btn.btn--green(type='submit')#faqSubmitBtn Lưu câu hỏi
+          button.btn.btn--outline(type='button' id='faqCancelBtn') Hủy
+
+block append styles
+  style.
+    /* FAQ Admin Card */
+    .faq-admin-card {
+      background: #fff;
+      border-radius: 1.4rem;
+      padding: 2rem;
+      box-shadow: 0 0.8rem 1.6rem rgba(12, 19, 45, 0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .faq-admin-card__head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .faq-admin-card__question {
+      font-size: 1.5rem;
+      color: #0c1b42;
+      margin: 0 0 0.4rem;
+      line-height: 1.5;
+    }
+    .faq-admin-card__answer p {
+      font-size: 1.3rem;
+      color: #5f6687;
+      line-height: 1.6;
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .faq-admin-card__meta {
+      display: flex;
+      gap: 2rem;
+      font-size: 1.2rem;
+      color: #8c91a9;
+    }
+    .faq-admin-card__actions {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    /* FAQ Modal */
+    .faq-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+    .faq-modal-overlay.is-open {
+      display: flex;
+    }
+    .faq-modal {
+      background: #fff;
+      border-radius: 1.6rem;
+      width: 100%;
+      max-width: 60rem;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 2rem 4rem rgba(0, 0, 0, 0.2);
+    }
+    .faq-modal__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2rem 2.5rem;
+      border-bottom: 1px solid #e5e8f0;
+    }
+    .faq-modal__header h2 {
+      margin: 0;
+      font-size: 1.8rem;
+      color: #0c1b42;
+    }
+    .faq-modal__close {
+      background: none;
+      border: none;
+      font-size: 1.6rem;
+      color: #8c91a9;
+      cursor: pointer;
+      padding: 0.5rem;
+    }
+    .faq-modal__close:hover { color: #e74c3c; }
+    .faq-modal__form {
+      padding: 2rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .faq-modal__field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex: 1;
+    }
+    .faq-modal__field label {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #4e5672;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .faq-modal__field input,
+    .faq-modal__field textarea,
+    .faq-modal__field select {
+      padding: 1rem 1.2rem;
+      border: 1px solid #e0e2eb;
+      border-radius: 1rem;
+      font-size: 1.4rem;
+      color: #0c1b42;
+      font-family: inherit;
+    }
+    .faq-modal__field textarea {
+      resize: vertical;
+      min-height: 10rem;
+    }
+    .faq-modal__field input:focus,
+    .faq-modal__field textarea:focus,
+    .faq-modal__field select:focus {
+      outline: 2px solid rgba(31, 61, 239, 0.3);
+      border-color: #1f3def;
+    }
+    .faq-modal__row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    .faq-modal__actions {
+      display: flex;
+      gap: 1rem;
+      padding-top: 0.5rem;
+    }
+    .faq-modal__actions .btn--outline {
+      background: #f6f7fb;
+      border: 1px solid #e0e2eb;
+      color: #4e5672;
+      padding: 0.9rem 2rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .faq-modal__actions .btn--outline:hover {
+      background: #eef2ff;
+      border-color: #1f3def;
+      color: #1f3def;
+    }
+    @media (max-width: 640px) {
+      .faq-modal__row { grid-template-columns: 1fr; }
+      .faq-modal { margin: 1rem; }
+    }

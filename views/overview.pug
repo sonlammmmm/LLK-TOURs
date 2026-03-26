@@ -125,7 +125,7 @@ block content
             each tour, idx in sliderTours
               - const thumbImage = tour.imageCover ? `/img/tours/${tour.imageCover}` : fallbackImage;
               .nav-card(data-index=idx)
-                img(src=thumbImage alt=tour.name)
+                img(src=thumbImage alt=tour.name loading='lazy' decoding='async')
                 .nav-card-info
                   h4= tour.name
                   span 0#{idx + 1}
@@ -166,7 +166,6 @@ block append scripts
       let isAnimating = false;
       const totalSlides = backgrounds.length;
       const autoplayTime = 6000;
-      let timer;
 
       if (sliderSearchInput && !sliderSearchInput.value) {
         const typingText = 'Bạn muốn đến nơi nào...?';
@@ -440,86 +439,138 @@ block append scripts
         const heading = item.querySelector('.text-heading');
         const meta = item.querySelector('.text-meta');
         const btn = item.querySelector('.btn-explore');
+        const elements = [location, heading, meta, btn].filter(Boolean);
         if (hasGSAP) {
-          gsap.set([location, heading, meta, btn], { y: 30, opacity: 0 });
-          gsap.to([location, heading, meta, btn], {
+          // Kill any running tweens on these elements
+          elements.forEach(el => gsap.killTweensOf(el));
+          gsap.set(elements, { y: 25, opacity: 0, force3D: true });
+          return gsap.to(elements, {
             y: 0,
             opacity: 1,
-            duration: 0.8,
-            stagger: 0.1,
-            ease: "power3.out",
-            delay: 0.2
+            duration: 0.65,
+            stagger: 0.08,
+            ease: "power2.out",
+            delay: 0.15,
+            force3D: true
           });
         } else {
-          [location, heading, meta, btn].forEach((el) => {
-            if (!el) return;
+          elements.forEach((el) => {
             el.style.opacity = '1';
-            el.style.transform = 'none';
+            el.style.transform = 'translateZ(0)';
           });
+          return null;
+        }
+      }
+
+      function animateTextOut(index) {
+        const item = textItems[index];
+        const elements = Array.from(item.children).filter(Boolean);
+        if (hasGSAP) {
+          elements.forEach(el => gsap.killTweensOf(el));
+          return gsap.to(elements, {
+            y: -20,
+            opacity: 0,
+            duration: 0.4,
+            stagger: 0.03,
+            ease: "power2.in",
+            force3D: true
+          });
+        } else {
+          item.classList.remove('is-active');
+          return null;
         }
       }
 
       function animateBg(index) {
         const bg = backgrounds[index];
-        if (!bg) return;
+        if (!bg) return null;
         if (hasGSAP) {
-          gsap.set(bg, { scale: 1.15, opacity: 0 });
-          gsap.to(bg, { opacity: 1, duration: 1 });
-          gsap.to(bg, { scale: 1, duration: 6, ease: "none" });
+          gsap.killTweensOf(bg);
+          gsap.set(bg, { scale: 1.1, opacity: 0, force3D: true });
+          const tl = gsap.timeline();
+          tl.to(bg, { opacity: 1, duration: 0.8, ease: "power2.out" });
+          tl.to(bg, { scale: 1, duration: 5.5, ease: "none", force3D: true }, 0);
+          return tl;
         } else {
           bg.style.opacity = '1';
-          bg.style.transform = 'scale(1)';
+          bg.style.transform = 'scale(1) translateZ(0)';
+          return null;
         }
       }
 
+      function animateBgOut(index) {
+        const bg = backgrounds[index];
+        if (!bg) return null;
+        if (hasGSAP) {
+          gsap.killTweensOf(bg);
+          return gsap.to(bg, { opacity: 0, duration: 0.6, ease: "power2.in", force3D: true });
+        } else {
+          bg.style.opacity = '0';
+          return null;
+        }
+      }
+
+      // Slide transition orchestrator using GSAP timeline
+      let activeTimeline = null;
       function goToSlide(index) {
         if (isAnimating || index === currentIndex) return;
         isAnimating = true;
 
+        // Kill any running master timeline
+        if (activeTimeline && activeTimeline.kill) {
+          activeTimeline.kill();
+        }
+
         const prevIndex = currentIndex;
         currentIndex = index;
 
-        // 1. Xử lý Background cũ
-        const prevBg = backgrounds[prevIndex];
-        prevBg.classList.remove('is-active');
-        if (hasGSAP) {
-          gsap.to(prevBg, { opacity: 0, duration: 0.8 });
-        } else {
-          prevBg.style.opacity = '0';
-        }
-        
-        // 2. Xử lý Text cũ
-        const prevText = textItems[prevIndex];
-        if (hasGSAP) {
-          gsap.to(prevText.children, {
-            y: -30,
-            opacity: 0,
-            duration: 0.5,
-            stagger: 0.05,
-            onComplete: () => prevText.classList.remove('is-active')
-          });
-        } else {
-          prevText.classList.remove('is-active');
-        }
-
-        // 3. Xử lý Nav
+        // Navigation
         const wrapTransition =
           (prevIndex === totalSlides - 1 && currentIndex === 0) ||
           (prevIndex === 0 && currentIndex === totalSlides - 1);
         moveNavToLogicalIndex(currentIndex, true, wrapTransition);
 
-        // 4. Active Slide Mới
-        const nextBg = backgrounds[currentIndex];
-        const nextText = textItems[currentIndex];
-        nextBg.classList.add('is-active');
-        nextText.classList.add('is-active');
-        
-        // Chạy Animation cho Slide Mới
-        animateBg(currentIndex);
-        animateTextIn(currentIndex);
+        if (hasGSAP) {
+          activeTimeline = gsap.timeline({
+            onComplete: () => {
+              isAnimating = false;
+              activeTimeline = null;
+            }
+          });
 
-        // Kết thúc trạng thái animating
-        setTimeout(() => { isAnimating = false; }, hasGSAP ? 1000 : 300);
+          // Phase 1: Fade out old bg and text in parallel
+          const textOutTween = animateTextOut(prevIndex);
+          const bgOutTween = animateBgOut(prevIndex);
+
+          if (textOutTween) activeTimeline.add(textOutTween, 0);
+          if (bgOutTween) activeTimeline.add(bgOutTween, 0);
+
+          // Phase 2: After a brief overlap, bring in new content
+          activeTimeline.call(() => {
+            backgrounds[prevIndex].classList.remove('is-active');
+            textItems[prevIndex].classList.remove('is-active');
+            backgrounds[currentIndex].classList.add('is-active');
+            textItems[currentIndex].classList.add('is-active');
+          }, null, 0.35);
+
+          const bgInTween = animateBg(currentIndex);
+          const textInTween = animateTextIn(currentIndex);
+
+          if (bgInTween) activeTimeline.add(bgInTween, 0.35);
+          if (textInTween) activeTimeline.add(textInTween, 0.4);
+        } else {
+          // Fallback without GSAP
+          backgrounds[prevIndex].classList.remove('is-active');
+          backgrounds[prevIndex].style.opacity = '0';
+          textItems[prevIndex].classList.remove('is-active');
+
+          backgrounds[currentIndex].classList.add('is-active');
+          backgrounds[currentIndex].style.opacity = '1';
+          backgrounds[currentIndex].style.transform = 'scale(1) translateZ(0)';
+          textItems[currentIndex].classList.add('is-active');
+
+          setTimeout(() => { isAnimating = false; }, 300);
+        }
       }
 
       function nextSlide() {
@@ -613,7 +664,8 @@ block append scripts
           navScrollTween = gsap.to(navViewport, {
             scrollLeft: target,
             duration: NAV_SCROLL_DURATION,
-            ease: 'power3.out',
+            ease: 'power2.out',
+            overwrite: 'auto',
             onComplete: () => {
               navScrollTween = null;
               if (typeof onComplete === 'function') onComplete();
@@ -643,8 +695,25 @@ block append scripts
         const currentCard = navCards[virtualNavIndex];
         if (!currentCard) return;
         if (normalized) {
+          // Disable transitions on ALL nav cards to prevent flicker during instant jump
+          const transitionBackup = [];
+          navCards.forEach((card, i) => {
+            transitionBackup[i] = card.style.transition;
+            card.style.transition = 'none';
+          });
+          // Instantly swap highlight and scroll position
+          if (activeNavCard) activeNavCard.classList.remove('is-active');
+          activeNavCard = currentCard;
+          currentCard.classList.add('is-active');
           scrollNavCardIntoView(currentCard, { smooth: false });
-          highlightNavCard(currentCard);
+          // Re-enable transitions after browser has painted the instant state
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              navCards.forEach((card, i) => {
+                card.style.transition = transitionBackup[i] || '';
+              });
+            });
+          });
           return;
         }
         if (wrapTransition) {
@@ -664,14 +733,44 @@ block append scripts
         });
       }
 
-      // Autoplay logic
+      // Autoplay logic — uses requestAnimationFrame + visibility API for smooth, efficient timing
+      let autoplayLastTime = 0;
+      let autoplayRafId = null;
+      let autoplayPaused = false;
+
+      function autoplayTick(timestamp) {
+        if (autoplayPaused || isAnimating) {
+          autoplayLastTime = timestamp;
+          autoplayRafId = requestAnimationFrame(autoplayTick);
+          return;
+        }
+        if (!autoplayLastTime) autoplayLastTime = timestamp;
+        const elapsed = timestamp - autoplayLastTime;
+        if (elapsed >= autoplayTime) {
+          autoplayLastTime = timestamp;
+          nextSlide();
+        }
+        autoplayRafId = requestAnimationFrame(autoplayTick);
+      }
+
       function startTimer() {
-        timer = setInterval(nextSlide, autoplayTime);
+        autoplayLastTime = 0;
+        if (autoplayRafId) cancelAnimationFrame(autoplayRafId);
+        autoplayRafId = requestAnimationFrame(autoplayTick);
       }
       function resetTimer() {
-        clearInterval(timer);
-        startTimer();
+        autoplayLastTime = 0;
       }
+
+      // Pause autoplay when tab is hidden to save resources
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          autoplayPaused = true;
+        } else {
+          autoplayPaused = false;
+          autoplayLastTime = 0; // reset so it doesn't jump immediately
+        }
+      });
 
       // --- INIT ---
       // Chạy animation cho slide đầu tiên ngay khi load
@@ -691,7 +790,12 @@ block append scripts
         startTimer();
       }
 
+      // Debounced resize handler to prevent layout thrashing
+      let resizeTimeout;
       window.addEventListener('resize', () => {
-        moveNavToLogicalIndex(currentIndex, false);
+        if (resizeTimeout) clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          moveNavToLogicalIndex(currentIndex, false);
+        }, 150);
       });
     });

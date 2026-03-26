@@ -33,6 +33,8 @@ import {
   initPromotionListActions,
 } from "./promotionManagement"
 import { handleServiceForm, initServiceListActions } from "./serviceManagement"
+import { initFaqManagement } from "./faqManagement"
+import { initContactForm, initContactManagement } from "./contactManagement"
 
 // DOM ELEMENTS
 const loginForm = document.querySelector(".form--login")
@@ -267,6 +269,24 @@ if (serviceFormEl) {
 
 if (serviceTable) {
   initServiceListActions()
+}
+
+// FAQ Management
+const faqTable = document.querySelector('.faq-table')
+if (faqTable) {
+  initFaqManagement()
+}
+
+// Contact Form (public)
+const contactForm = document.getElementById('contactForm')
+if (contactForm) {
+  initContactForm()
+}
+
+// Contact Inbox (admin)
+const contactInbox = document.querySelector('.contact-inbox')
+if (contactInbox) {
+  initContactManagement()
 }
 
 // Initialize view toggle and search functionality

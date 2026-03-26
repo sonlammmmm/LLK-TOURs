@@ -15,13 +15,13 @@ header.site-header
             i.dropdown-arrow: i.fa-solid.fa-chevron-down
           ul.site-nav__dropdown
             li
-              a(href='#') Về chúng tôi
+              a(href='/about') Về chúng tôi
+            li
+              a(href='/about#faq') Câu hỏi thường gặp
             li
               a(href='#') Hướng dẫn viên
-            li
-              a(href='#') Lịch sử phát triển
         li
-          a.site-nav__link(href='/chat') Liên hệ
+          a.site-nav__link(href='/contact') Liên hệ
 
     .site-header__actions
       if user && user.role === 'admin'

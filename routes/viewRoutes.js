@@ -32,6 +32,8 @@ router.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) =>
 // -------------------- TRANG NGƯỜI DÙNG --------------------
 router.get('/', viewsController.getOverview);
 router.get('/all', viewsController.getAllTours);
+router.get('/about', viewsController.getAboutPage);
+router.get('/contact', viewsController.getContactPage);
 router.get('/search', authController.isLoggedIn, viewsController.searchTours);
 router.get('/tour/:slug', authController.isLoggedIn, viewsController.getTour);
 router.get('/login', setAuthLayout, viewsController.getLoginForm);
@@ -222,6 +224,22 @@ router.get(
   authController.protect,
   authController.restrictTo('admin'),
   viewsController.getManageReviews
+);
+
+// -------------------- QUẢN LÝ FAQ --------------------
+router.get(
+  '/admin/faqs',
+  authController.protect,
+  authController.restrictTo('admin'),
+  viewsController.getManageFaqs
+);
+
+// -------------------- HÒM THƯ GÓP Ý --------------------
+router.get(
+  '/admin/contacts',
+  authController.protect,
+  authController.restrictTo('admin'),
+  viewsController.getManageContacts
 );
 
 // -------------------- CÁ NHÂN --------------------

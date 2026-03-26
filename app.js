@@ -18,6 +18,8 @@ const bookingRouter = require('./routes/bookingRoutes');
 const messageRouter = require('./routes/messageRoutes');
 const serviceRouter = require('./routes/serviceRoutes');
 const promotionRouter = require('./routes/promotionRoutes');
+const faqRouter = require('./routes/faqRoutes');
+const contactRouter = require('./routes/contactRoutes');
 
 const app = express();
 
@@ -119,6 +121,7 @@ app.use(
         "'self'",
         'https://js.stripe.com',
         'https://accounts.google.com',
+        'https://www.google.com',
         'https://test-payment.momo.vn',
         'https://payment.momo.vn'
       ],
@@ -186,22 +189,14 @@ app.use('/api/v1/bookings', bookingRouter);
 app.use('/api/v1/messages', messageRouter);
 app.use('/api/v1/services', serviceRouter);
 app.use('/api/v1/promotions', promotionRouter);
+app.use('/api/v1/faqs', faqRouter);
+app.use('/api/v1/contacts', contactRouter);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Không tìm thấy ${req.originalUrl} trên server!`, 404));
 });
 
 app.use((err, req, res, next) => {
-  //  Log lỗi chi tiết
-  if (err.statusCode === 400 || err.statusCode === 401) {
-    console.error('Validation Error:', {
-      message: err.message,
-      statusCode: err.statusCode,
-      path: req.path,
-      method: req.method,
-      user: req.user?.id
-    });
-  }
   next(err);
 });
 

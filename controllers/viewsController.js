@@ -5,6 +5,8 @@ const Booking = require('../models/bookingModel');
 const Service = require('../models/serviceModel');
 const Promotion = require('../models/promotionModel');
 const UserPromotion = require('../models/userPromotionModel');
+const FAQ = require('../models/faqModel');
+const ContactMessage = require('../models/contactMessageModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const Review = require('../models/reviewModel');
@@ -1445,5 +1447,52 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
     formattedMonth,
     currentYear: today.getFullYear(),
     adminMenuActive: 'dashboard'
+  });
+});
+
+// ==================== ABOUT / FAQ ====================
+exports.getAboutPage = catchAsync(async (req, res, next) => {
+  const faqs = await FAQ.find({ active: true }).sort({
+    displayOrder: 1,
+    createdAt: -1
+  });
+
+  res.status(200).render('about', {
+    title: 'Giới thiệu',
+    faqs
+  });
+});
+
+exports.getManageFaqs = catchAsync(async (req, res, next) => {
+  const faqs = await FAQ.find().sort({
+    displayOrder: 1,
+    createdAt: -1
+  });
+
+  res.status(200).render('manageFaqs', {
+    title: 'Quản lý FAQ',
+    faqs,
+    adminMenuActive: 'faqs'
+  });
+});
+
+// ===================== TRANG LIÊN HỆ (CONTACT) =====================
+
+exports.getContactPage = catchAsync(async (req, res, next) => {
+  res.status(200).render('contact', {
+    title: 'Liên hệ'
+  });
+});
+
+exports.getManageContacts = catchAsync(async (req, res, next) => {
+  const messages = await ContactMessage.find().sort({
+    isRead: 1,
+    createdAt: -1
+  });
+
+  res.status(200).render('manageContacts', {
+    title: 'Hòm thư góp ý',
+    messages,
+    adminMenuActive: 'contacts'
   });
 });
