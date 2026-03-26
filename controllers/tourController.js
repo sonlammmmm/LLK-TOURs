@@ -5,8 +5,12 @@ const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
 const AppError = require('../utils/appError');
 
+// ==================== CẤU HÌNH UPLOAD ẢNH ====================
+
+// Lưu ảnh vào bộ nhớ tạm (buffer) để xử lý bằng Sharp trước khi ghi file
 const multerStorage = multer.memoryStorage();
 
+// Bộ lọc: chỉ cho phép file ảnh
 const multerFilter = (req, file, cb) => {
   if (file.mimetype.startsWith('image')) {
     cb(null, true);
@@ -23,6 +27,7 @@ const upload = multer({
   fileFilter: multerFilter
 });
 
+// Helper: parse JSON an toàn, trả undefined nếu sai format
 const tryParseJSON = (str, fieldName = 'payload') => {
   try {
     return JSON.parse(str);
@@ -37,11 +42,13 @@ const tryParseJSON = (str, fieldName = 'payload') => {
   }
 };
 
+// Upload ảnh bìa (1) + ảnh chi tiết (tối đa 6)
 exports.uploadTourImages = upload.fields([
   { name: 'imageCover', maxCount: 1 },
   { name: 'images', maxCount: 6 }
 ]);
 
+// Helper: phát hiện định dạng ảnh từ tên file/mime type
 const detectImageFormat = file => {
   const fallback = { extension: 'jpg', format: 'jpeg' };
   if (!file) return fallback;
@@ -68,6 +75,7 @@ const detectImageFormat = file => {
   return { extension, format };
 };
 
+// Helper: áp dụng tuỳ chọn nén/chất lượng theo format
 const applyFormatOptions = (instance, format) => {
   switch (format) {
     case 'jpeg':
@@ -83,6 +91,9 @@ const applyFormatOptions = (instance, format) => {
   }
 };
 
+// ==================== XỬ LÝ ẢNH ====================
+
+// Resize ảnh bìa (2000×1333) + ảnh chi tiết, parse startLocation nếu là string
 exports.resizeTourImages = catchAsync(async (req, res, next) => {
   if (!req.files) return next();
 
@@ -124,6 +135,9 @@ exports.resizeTourImages = catchAsync(async (req, res, next) => {
   next();
 });
 
+// ==================== MIDDLEWARE ====================
+
+// Alias: top 5 tour tốt nhất (rating cao, giá thấp)
 exports.aliasTopTours = (req, res, next) => {
   req.query.limit = '5';
   req.query.sort = '-ratingsAverage,price';
@@ -131,6 +145,7 @@ exports.aliasTopTours = (req, res, next) => {
   next();
 };
 
+// Parse các field JSON từ multipart form (startDates, startLocation, locations)
 exports.normalizeMultipartJSON = (req, res, next) => {
   // 1) Parse các field JSON gửi qua multipart
   const parseJSON = key => {
@@ -179,10 +194,15 @@ exports.normalizeMultipartJSON = (req, res, next) => {
   next();
 };
 
+// ==================== CRUD TOUR ====================
+
+// Lấy tất cả tour (hỗ trợ filter, sort, paginate)
 exports.getAllTours = factory.getAll(Tour);
 
+// Lấy chi tiết 1 tour kèm populate reviews
 exports.getTour = factory.getOne(Tour, { path: 'reviews' });
 
+// Cập nhật tour: merge/thay thế startDates, parse JSON, ép kiểu số
 exports.updateTour = catchAsync(async (req, res, next) => {
   const current = await Tour.findById(req.params.id);
   if (!current) return next(new AppError('Không tìm thấy tour', 404));
@@ -281,7 +301,10 @@ exports.updateTour = catchAsync(async (req, res, next) => {
   res.status(200).json({ status: 'success', data: { tour: updated } });
 });
 
+// Xóa tour
 exports.deleteTour = factory.deleteOne(Tour);
+
+// Tạo tour mới: parse JSON string (startDates, startLocation, locations, guides), ép kiểu số
 exports.createTour = catchAsync(async (req, res, next) => {
   if (typeof req.body.startDates === 'string') {
     try {
@@ -356,6 +379,9 @@ exports.createTour = catchAsync(async (req, res, next) => {
   });
 });
 
+// ==================== TÌM KIẾM ĐỊA LÝ ====================
+
+// Tìm tour trong bán kính nhất định từ tọa độ (geoWithin)
 exports.getToursWithin = catchAsync(async (req, res, next) => {
   const { distance, latlng, unit } = req.params;
   const [lat, lng] = latlng.split(',');
@@ -384,6 +410,7 @@ exports.getToursWithin = catchAsync(async (req, res, next) => {
   });
 });
 
+// Tính khoảng cách từ tọa độ đến tất cả tour (geoNear aggregate)
 exports.getDistances = catchAsync(async (req, res, next) => {
   const { latlng, unit } = req.params;
   const [lat, lng] = latlng.split(',');

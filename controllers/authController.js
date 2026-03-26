@@ -7,17 +7,23 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const Email = require('../utils/email');
 
+// ==================== CẤU HÌNH & HELPER ====================
+
+// Khởi tạo Google OAuth client (nếu có cấu hình)
 const googleClient = process.env.GOOGLE_CLIENT_ID
   ? new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
   : null;
 
+// Ký JWT token từ user ID
 const signToken = id =>
   jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN
   });
 
+// Tạo mật khẩu ngẫu nhiên (dùng cho đăng nhập Google lần đầu)
 const generateRandomPassword = () => crypto.randomBytes(32).toString('hex');
 
+// Tạo JWT token, gắn vào cookie và gửi response
 const createSendToken = (user, statusCode, req, res) => {
   const token = signToken(user._id);
 
@@ -39,6 +45,9 @@ const createSendToken = (user, statusCode, req, res) => {
   });
 };
 
+// ==================== ĐĂNG KÝ / ĐĂNG NHẬP / ĐĂNG XUẤT ====================
+
+// Đăng ký tài khoản mới + gửi email chào mừng
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
@@ -53,6 +62,7 @@ exports.signup = catchAsync(async (req, res, next) => {
   createSendToken(newUser, 201, req, res);
 });
 
+// Đăng nhập bằng email + mật khẩu
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
@@ -71,6 +81,7 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, req, res);
 });
 
+// Đăng nhập bằng Google OAuth (tạo tài khoản mới nếu chưa tồn tại)
 exports.googleLogin = catchAsync(async (req, res, next) => {
   if (!googleClient || !process.env.GOOGLE_CLIENT_ID) {
     return next(
@@ -140,6 +151,7 @@ exports.googleLogin = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, req, res);
 });
 
+// Đăng xuất (xóa cookie JWT)
 exports.logout = (req, res) => {
   res.cookie('jwt', 'loggedout', {
     expires: new Date(Date.now() + 10 * 1000),
@@ -148,6 +160,9 @@ exports.logout = (req, res) => {
   res.status(200).json({ status: 'success' });
 };
 
+// ==================== BẢO VỆ ROUTE & PHÂN QUYỀN ====================
+
+// Middleware: Xác thực JWT, bảo vệ route yêu cầu đăng nhập
 exports.protect = catchAsync(async (req, res, next) => {
   // 1) Lấy token và kiểm tra xem nó có tồn tại không
   let token;
@@ -228,6 +243,7 @@ exports.isLoggedIn = async (req, res, next) => {
   next();
 };
 
+// Middleware: Giới hạn quyền truy cập theo role (admin, lead-guide, ...)
 exports.restrictTo = (...roles) => (req, res, next) => {
   // Ví dụ: roles ['admin', 'lead-guide'], hiện tại role của người dùng là 'user'
   if (!roles.includes(req.user.role)) {
@@ -239,6 +255,9 @@ exports.restrictTo = (...roles) => (req, res, next) => {
   next();
 };
 
+// ==================== QUÊN / ĐẶT LẠI MẬT KHẨU ====================
+
+// Gửi email chứa token đặt lại mật khẩu
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 1) Lấy user dựa trên email
   const user = await User.findOne({ email: req.body.email });
@@ -274,6 +293,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   }
 });
 
+// Đặt lại mật khẩu bằng token (từ email)
 exports.resetPassword = catchAsync(async (req, res, next) => {
   // 1) Lấy user dựa trên token
   const hashedToken = crypto
@@ -300,6 +320,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, req, res);
 });
 
+// Cập nhật mật khẩu (yêu cầu đăng nhập, nhập mật khẩu cũ)
 exports.updatePassword = catchAsync(async (req, res, next) => {
   // 1) Lấy user từ collection
   const user = await User.findById(req.user.id).select('+password');

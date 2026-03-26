@@ -25,11 +25,15 @@ const {
   processMomoCallback
 } = require('../utils/bookingPayments');
 
+// Populate fields cho booking session
 const bookingSessionPopulate = [
   { path: 'tour', select: 'name startDates duration' },
   { path: 'user', select: 'name email' }
 ];
 
+// ==================== THANH TOÁN STRIPE ====================
+
+// Tạo Stripe Checkout Session để thanh toán tour
 exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   let context;
 
@@ -96,6 +100,9 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   res.status(200).json({ status: 'success', session });
 });
 
+// ==================== THANH TOÁN MOMO ====================
+
+// Tạo giao dịch thanh toán MoMo
 exports.createMomoPayment = catchAsync(async (req, res, next) => {
   let context;
   try {
@@ -210,6 +217,7 @@ exports.createMomoPayment = catchAsync(async (req, res, next) => {
   });
 });
 
+// Xử lý MoMo IPN callback (server-to-server)
 exports.handleMomoIpn = async (req, res) => {
   try {
     await processMomoCallback(req.body || {}, 'ipn');
@@ -222,6 +230,7 @@ exports.handleMomoIpn = async (req, res) => {
   }
 };
 
+// Xử lý MoMo redirect callback (user quay về từ MoMo)
 exports.handleMomoRedirect = async (req, res) => {
   const query = req.query || {};
   const { orderId, resultCode: resultCodeRaw } = query;
@@ -245,10 +254,18 @@ exports.handleMomoRedirect = async (req, res) => {
   res.redirect(`${baseUrl}${connector}${params.toString()}`);
 };
 
+// ==================== CRUD BOOKING ====================
+
+// Admin: Tạo booking thủ công
 exports.createBooking = factory.createOne(Booking);
+
+// Admin: Lấy chi tiết 1 booking
 exports.getBooking = factory.getOne(Booking);
+
+// Admin: Lấy tất cả booking
 exports.getAllBookings = factory.getAll(Booking);
 
+// Dashboard: Lấy danh sách booking gần đây (feed)
 exports.getRecentBookingFeed = catchAsync(async (req, res) => {
   const limitRaw = parseInt(req.query.limit, 10);
   const limit = Number.isFinite(limitRaw)
@@ -269,6 +286,7 @@ exports.getRecentBookingFeed = catchAsync(async (req, res) => {
   });
 });
 
+// User: Lấy danh sách booking của mình (có phân trang)
 exports.getMyBookings = catchAsync(async (req, res, next) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
@@ -301,6 +319,7 @@ exports.getMyBookings = catchAsync(async (req, res, next) => {
   });
 });
 
+// Lấy booking theo Stripe session ID (dùng cho trang booking-success)
 exports.getByStripeSession = catchAsync(async (req, res, next) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
 
@@ -342,5 +361,8 @@ exports.getByStripeSession = catchAsync(async (req, res, next) => {
   res.status(200).json({ status: 'success', data: booking });
 });
 
+// Admin: Cập nhật booking
 exports.updateBooking = factory.updateOne(Booking);
+
+// Admin: Xóa booking
 exports.deleteBooking = factory.deleteOne(Booking);

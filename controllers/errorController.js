@@ -1,8 +1,11 @@
 const AppError = require('../utils/appError');
 
+// ==================== XỬ LÝ LỖI TOÀN CỤC ====================
+
 const LOGIN_REQUIRED_MESSAGE =
   'Bạn chưa đăng nhập! Vui lòng đăng nhập để có quyền truy cập.';
 
+// Chuyển hướng về trang đăng nhập nếu lỗi là "chưa đăng nhập" (cho trang web)
 const redirectToLoginIfNeeded = (err, req, res) => {
   if (
     err.message === LOGIN_REQUIRED_MESSAGE &&
@@ -14,11 +17,13 @@ const redirectToLoginIfNeeded = (err, req, res) => {
   return false;
 };
 
+// Xử lý lỗi CastError (ID MongoDB không hợp lệ)
 const handleCastErrorDB = err => {
   const message = `Trường ${err.path} có giá trị không hợp lệ: ${err.value}.`;
   return new AppError(message, 400);
 };
 
+// Xử lý lỗi trùng giá trị unique (MongoDB duplicate key)
 const handleDuplicateFieldsDB = err => {
   const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
 
@@ -26,6 +31,7 @@ const handleDuplicateFieldsDB = err => {
   return new AppError(message, 400);
 };
 
+// Xử lý lỗi validation (dữ liệu đầu vào không hợp lệ)
 const handleValidationErrorDB = err => {
   const errors = Object.values(err.errors).map(el => el.message);
 
@@ -33,12 +39,15 @@ const handleValidationErrorDB = err => {
   return new AppError(message, 400);
 };
 
+// Xử lý lỗi JWT không hợp lệ
 const handleJWTError = () =>
   new AppError('Token không hợp lệ. Vui lòng đăng nhập lại!', 401);
 
+// Xử lý lỗi JWT hết hạn
 const handleJWTExpiredError = () =>
   new AppError('Token của bạn đã hết hạn! Vui lòng đăng nhập lại.', 401);
 
+// Gửi lỗi chi tiết (môi trường development)
 const sendErrorDev = (err, req, res) => {
   // A) API (phục vụ API)
   if (req.originalUrl.startsWith('/api')) {
@@ -61,6 +70,7 @@ const sendErrorDev = (err, req, res) => {
   });
 };
 
+// Gửi lỗi rút gọn (môi trường production)
 const sendErrorProd = (err, req, res) => {
   // A) API (phục vụ API)
   if (req.originalUrl.startsWith('/api')) {
@@ -106,6 +116,7 @@ const sendErrorProd = (err, req, res) => {
   });
 };
 
+// Middleware xử lý lỗi toàn cục (Express error handler)
 module.exports = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';

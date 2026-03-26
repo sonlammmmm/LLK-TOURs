@@ -7,6 +7,9 @@ const AppError = require('../utils/appError');
 const APIFeatures = require('../utils/apiFeatures');
 const { formatReviewCard } = require('../utils/dashboardFeed');
 
+// ==================== HELPER FUNCTIONS ====================
+
+// Lấy ID người đánh giá từ review document
 const getReviewerId = review => {
   if (!review || !review.user) return null;
   if (review.user.id) return review.user.id.toString();
@@ -16,12 +19,16 @@ const getReviewerId = review => {
   return null;
 };
 
+// So sánh chủ sở hữu review với userId hiện tại
 const isReviewOwner = (review, userId) => {
   if (!review || !userId) return false;
   const reviewerId = getReviewerId(review);
   return reviewerId === userId.toString();
 };
 
+// ==================== MIDDLEWARE ====================
+
+// Tự động gán tourId và userId từ route lồng nhau
 exports.setTourUserIds = (req, res, next) => {
   // Cho phép các ROUTE lồng nhau
   if (!req.body.tour) req.body.tour = req.params.tourId;
@@ -29,6 +36,7 @@ exports.setTourUserIds = (req, res, next) => {
   next();
 };
 
+// Kiểm tra user đã đặt tour, tour đã kết thúc, chưa đánh giá → cho phép review
 //Middleware kiểm tra xem người dùng có thể đánh giá tour không
 exports.checkCanReview = catchAsync(async (req, res, next) => {
   const tourId = req.body.tour || req.params.tourId;
@@ -79,6 +87,7 @@ exports.checkCanReview = catchAsync(async (req, res, next) => {
   next();
 });
 
+// Kiểm tra quyền sở hữu: chỉ chủ review hoặc admin mới được sửa/xóa
 exports.checkReviewOwnership = catchAsync(async (req, res, next) => {
   const review = await Review.findById(req.params.id);
 
@@ -96,6 +105,9 @@ exports.checkReviewOwnership = catchAsync(async (req, res, next) => {
   next();
 });
 
+// ==================== DASHBOARD FEED ====================
+
+// Lấy danh sách review mới nhất cho dashboard (có thể bao gồm review ẩn)
 exports.getLatestReviewFeed = catchAsync(async (req, res) => {
   const includeHidden = req.query.includeHidden === 'true';
   const limitRaw = parseInt(req.query.limit, 10);
@@ -123,6 +135,9 @@ exports.getLatestReviewFeed = catchAsync(async (req, res) => {
   });
 });
 
+// ==================== CRUD ĐÁNH GIÁ ====================
+
+// Lấy tất cả đánh giá (admin thấy hết, user chỉ thấy review không ẩn + của mình)
 exports.getAllReviews = catchAsync(async (req, res, next) => {
   const filter = {};
   if (req.params.tourId) filter.tour = req.params.tourId;
@@ -153,6 +168,7 @@ exports.getAllReviews = catchAsync(async (req, res, next) => {
   });
 });
 
+// Lấy chi tiết 1 review (ẩn review bị hidden trừ admin/chủ review)
 exports.getReview = catchAsync(async (req, res, next) => {
   const review = await Review.findById(req.params.id);
 
@@ -177,6 +193,7 @@ exports.getReview = catchAsync(async (req, res, next) => {
   });
 });
 
+// Tạo review mới (qua middleware checkCanReview → factory.createOne)
 exports.createReview = catchAsync(async (req, res, next) => {
   // Gọi middleware kiểm tra trước khi tạo
   await exports.checkCanReview(req, res, () => {});
@@ -184,6 +201,7 @@ exports.createReview = catchAsync(async (req, res, next) => {
   return factory.createOne(Review)(req, res, next);
 });
 
+// Cập nhật review (kiểm tra quyền sở hữu, chỉ admin mới được thay đổi isHidden)
 exports.updateReview = catchAsync(async (req, res, next) => {
   await exports.checkReviewOwnership(req, res, () => {});
 
@@ -200,6 +218,7 @@ exports.updateReview = catchAsync(async (req, res, next) => {
   return factory.updateOne(Review)(req, res, next);
 });
 
+// Xóa review (kiểm tra quyền sở hữu trước khi xóa)
 exports.deleteReview = catchAsync(async (req, res, next) => {
   await exports.checkReviewOwnership(req, res, () => {});
   return factory.deleteOne(Review)(req, res, next);

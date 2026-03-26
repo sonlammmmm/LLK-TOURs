@@ -3,6 +3,8 @@ const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
+// ==================== TRANG CHAT (RENDER VIEW) ====================
+
 // Trang admin chat
 exports.getAdminChatView = catchAsync(async (req, res) => {
   res.status(200).render('adminChat', {
@@ -90,6 +92,8 @@ exports.getUserChatView = catchAsync(async (req, res) => {
   });
 });
 
+// ==================== API CHAT ====================
+
 // API: lịch sử hội thoại của 1 user cụ thể (cho admin UI)
 exports.getChatHistory = catchAsync(async (req, res, next) => {
   const { userId } = req.params;
@@ -112,7 +116,7 @@ exports.getChatHistory = catchAsync(async (req, res, next) => {
   });
 });
 
-// API: danh sách user có hội thoại, gom theo receiver = userId
+// API: Danh sách user có hội thoại, gom theo userId (phân trang)
 exports.getUsersWithMessages = catchAsync(async (req, res) => {
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 8;
@@ -179,7 +183,7 @@ exports.getUsersWithMessages = catchAsync(async (req, res) => {
   });
 });
 
-//Tìm kiếm user theo tên, email, hoặc ID (hỗ trợ khôi phục lịch sử)
+// API: Tìm kiếm user theo tên, email hoặc danh sách ID (hỗ trợ khôi phục lịch sử)
 exports.searchUsers = catchAsync(async (req, res, next) => {
   const keyword = req.query.q || '';
 

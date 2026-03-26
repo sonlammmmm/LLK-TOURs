@@ -15,6 +15,9 @@ const {
   formatReviewCard
 } = require('../utils/dashboardFeed');
 
+// ==================== HELPER FUNCTIONS ====================
+
+// Format startDates của tour: lọc ngày quá khứ, tính slot, đánh dấu hết chỗ / sắp hết
 const formatStartDatesWithSlots = tour => {
   if (!tour.startDates) return [];
 
@@ -60,6 +63,7 @@ const formatStartDatesWithSlots = tour => {
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 };
 
+// Trích userId từ document (hỗ trợ cả populate lẫn plain ObjectId)
 const getUserIdFromDoc = userRef => {
   if (!userRef) return null;
   if (userRef.id) return userRef.id.toString();
@@ -69,6 +73,7 @@ const getUserIdFromDoc = userRef => {
   return null;
 };
 
+// Trích tourId từ document (hỗ trợ cả populate lẫn plain ObjectId)
 const getTourIdFromDoc = tourRef => {
   if (!tourRef) return null;
   if (tourRef.id) return tourRef.id.toString();
@@ -78,6 +83,7 @@ const getTourIdFromDoc = tourRef => {
   return null;
 };
 
+// Đếm số review bị ẩn của user cho từng tour (Map<tourId, count>)
 const buildHiddenReviewCountMap = async (userId, tourRefs = []) => {
   if (!userId) return new Map();
   const normalizedIds = Array.isArray(tourRefs)
@@ -114,6 +120,7 @@ const buildHiddenReviewCountMap = async (userId, tourRefs = []) => {
   }, new Map());
 };
 
+// Đếm số review hiển thị (không bị ẩn) cho từng tour (Map<tourId, count>)
 const buildVisibleReviewCountMap = async (tourRefs = []) => {
   const normalizedIds = Array.isArray(tourRefs)
     ? tourRefs.map(getTourIdFromDoc).filter(Boolean)
@@ -149,6 +156,7 @@ const buildVisibleReviewCountMap = async (tourRefs = []) => {
   }, new Map());
 };
 
+// Tính ratingsQuantity hiển thị (cộng thêm review ẩn của chính user)
 const getDisplayRatingsQuantity = (tour, hiddenReviewMap) => {
   if (!tour) return 0;
   const baseCount =
@@ -162,6 +170,7 @@ const getDisplayRatingsQuantity = (tour, hiddenReviewMap) => {
   return baseCount + hiddenExtras;
 };
 
+// Gắn metadata khởi hành cho tour (ngày gần nhất, sold out badge, ...)
 const mapTourWithStartMeta = tour => {
   const upcomingStartDates = formatStartDatesWithSlots(tour);
   const nextAvailable = upcomingStartDates.find(date => !date.isFull) || null;
@@ -180,6 +189,7 @@ const mapTourWithStartMeta = tour => {
   };
 };
 
+// Chuẩn hoá text tiếng Việt (bỏ dấu, lowercase) để so sánh tìm kiếm
 const normalizeText = value => {
   if (value == null) return '';
   let text = String(value);
@@ -193,6 +203,7 @@ const normalizeText = value => {
     .trim();
 };
 
+// Kiểm tra tour có khớp từ khoá tìm kiếm không (name, summary, locations, ...)
 const matchesSearchQuery = (tour, keyword) => {
   if (!keyword) return true;
   const normalizedKeyword = normalizeText(keyword);
@@ -217,17 +228,20 @@ const matchesSearchQuery = (tour, keyword) => {
   return fields.some(value => normalizeText(value).includes(normalizedKeyword));
 };
 
+// Ép giá trị về số, trả 0 nếu không hợp lệ
 const toNumberOrZero = value => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
+// Lấy timestamp createdAt của tour (dùng cho sort)
 const getCreatedTimestamp = tour => {
   if (!tour || !tour.createdAt) return 0;
   const createdDate = new Date(tour.createdAt);
   return Number.isNaN(createdDate.getTime()) ? 0 : createdDate.getTime();
 };
 
+// Bộ so sánh sắp xếp theo giá / tên / ngày tạo
 const sortComparators = {
   'price-asc': (a, b) => toNumberOrZero(a.price) - toNumberOrZero(b.price),
   'price-desc': (a, b) => toNumberOrZero(b.price) - toNumberOrZero(a.price),
@@ -239,6 +253,7 @@ const sortComparators = {
   'date-oldest': (a, b) => getCreatedTimestamp(a) - getCreatedTimestamp(b)
 };
 
+// Bộ so sánh sắp xếp theo rating
 const ratingComparators = {
   'rating-asc': (a, b) =>
     toNumberOrZero(a.ratingsAverage) - toNumberOrZero(b.ratingsAverage),
@@ -246,6 +261,7 @@ const ratingComparators = {
     toNumberOrZero(b.ratingsAverage) - toNumberOrZero(a.ratingsAverage)
 };
 
+// Ưu tiên tour có ngày khởi hành sắp tới lên trước
 const sortByUpcomingStartAvailability = (a, b) => {
   const aHas = Boolean(a.nextStart);
   const bHas = Boolean(b.nextStart);
@@ -253,12 +269,16 @@ const sortByUpcomingStartAvailability = (a, b) => {
   return aHas ? -1 : 1;
 };
 
+// Áp dụng comparator sort lên mảng, trả true nếu sort được
 const applySortComparator = (collection, comparator) => {
   if (typeof comparator !== 'function') return false;
   collection.sort(comparator);
   return true;
 };
 
+// ==================== TRANG CHỦ (LANDING) ====================
+
+// Middleware: hiển thị thông báo thanh toán thành công nếu có query ?alert=booking
 exports.alerts = (req, res, next) => {
   const { alert } = req.query;
   if (alert === 'booking')
@@ -267,6 +287,7 @@ exports.alerts = (req, res, next) => {
   next();
 };
 
+// Trang chủ (landing page): hiển thị slider tour + danh sách địa điểm
 exports.getOverview = catchAsync(async (req, res, next) => {
   const tours = await Tour.find().lean();
   const toursWithMeta = tours.map(mapTourWithStartMeta);
@@ -282,11 +303,15 @@ exports.getOverview = catchAsync(async (req, res, next) => {
   });
 });
 
+// ==================== DANH SÁCH & TÌM KIẾM TOUR ====================
+
+// Helper: parse số dương, trả null nếu không hợp lệ
 const parsePositiveNumber = value => {
   const number = Number(value);
   return Number.isFinite(number) && number >= 0 ? number : null;
 };
 
+// Lọc theo thời lượng tour (2-4, 5-7, 8+ ngày)
 const matchesDuration = (tour, durationKey) => {
   if (!durationKey) return true;
   const duration = tour.duration || 0;
@@ -296,6 +321,7 @@ const matchesDuration = (tour, durationKey) => {
   return true;
 };
 
+// Lọc theo quy mô nhóm (6-10, 11-20, 21+)
 const matchesGroupSize = (tour, groupKey) => {
   if (!groupKey) return true;
   const size = tour.maxGroupSize || 0;
@@ -305,6 +331,7 @@ const matchesGroupSize = (tour, groupKey) => {
   return true;
 };
 
+// Kiểm tra tour có ngày khởi hành >= targetDate không
 const hasStartDateOnOrAfter = (tour, targetDate) => {
   if (!targetDate) return true;
   if (!tour.startDates) return false;
@@ -316,6 +343,7 @@ const hasStartDateOnOrAfter = (tour, targetDate) => {
   });
 };
 
+// Trang "Tất cả tour": lọc/sắp xếp theo search, giá, duration, groupSize, rating, ngày
 exports.getAllTours = catchAsync(async (req, res, next) => {
   const rawTours = await Tour.find().lean();
 
@@ -405,6 +433,7 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
   });
 });
 
+// Tìm kiếm tour theo tên, ngày khởi hành, địa điểm xuất phát (trang landing)
 exports.searchTours = catchAsync(async (req, res, next) => {
   const { name, startDates, startLocation } = req.query;
 
@@ -453,6 +482,9 @@ exports.searchTours = catchAsync(async (req, res, next) => {
   });
 });
 
+// ==================== CHI TIẾT TOUR ====================
+
+// Trang chi tiết tour: hiển thị review (ẩn review bị hidden trừ chủ), slot khởi hành
 //CẬP NHẬT: Thêm thông tin slot
 exports.getTour = catchAsync(async (req, res, next) => {
   const tour = await Tour.findOne({ slug: req.params.slug }).populate({
@@ -504,24 +536,32 @@ exports.getTour = catchAsync(async (req, res, next) => {
   });
 });
 
+// ==================== XÁC THỰC ====================
+
+// Form đăng nhập
 exports.getLoginForm = (req, res) => {
   res.status(200).render('login', {
     title: 'Đăng nhập'
   });
 };
 
+// Form đăng ký
 exports.getSignupForm = (req, res) => {
   res.status(200).render('signup', {
     title: 'Đăng ký'
   });
 };
 
+// ==================== USER PORTAL ====================
+
+// Trang cài đặt tài khoản
 exports.getAccount = (req, res) => {
   res.status(200).render('account', {
     title: 'Tài khoản của bạn'
   });
 };
 
+// Trang "Tour của tôi": danh sách booking + trạng thái + review + thống kê tổng chi
 exports.getMyTours = catchAsync(async (req, res, next) => {
   const bookings = await Booking.find({ user: req.user.id });
   const reviews = await Review.find({ user: req.user.id }).populate({
@@ -651,6 +691,7 @@ exports.getMyTours = catchAsync(async (req, res, next) => {
   });
 });
 
+// Cập nhật thông tin user qua form (name, email) — không dùng API
 exports.updateUserData = catchAsync(async (req, res, next) => {
   const updatedUser = await User.findByIdAndUpdate(
     req.user.id,
@@ -670,6 +711,9 @@ exports.updateUserData = catchAsync(async (req, res, next) => {
   });
 });
 
+// ==================== ADMIN: QUẢN LÝ TOUR ====================
+
+// Trang quản lý tour: hiển thị tất cả tour + thống kê slot/booking sắp tới
 exports.getManageTours = catchAsync(async (req, res, next) => {
   const toursRaw = await Tour.find();
   const now = new Date();
@@ -768,6 +812,7 @@ exports.getManageTours = catchAsync(async (req, res, next) => {
   });
 });
 
+// Form tạo tour mới (load danh sách guide)
 exports.getNewTourForm = catchAsync(async (req, res, next) => {
   const guides = await User.find({
     role: { $in: ['guide', 'lead-guide'] }
@@ -780,6 +825,7 @@ exports.getNewTourForm = catchAsync(async (req, res, next) => {
   });
 });
 
+// Form chỉnh sửa tour (load tour + danh sách guide)
 exports.getEditTourForm = catchAsync(async (req, res, next) => {
   const tour = await Tour.findById(req.params.id).populate('guides');
 
@@ -799,6 +845,9 @@ exports.getEditTourForm = catchAsync(async (req, res, next) => {
   });
 });
 
+// ==================== ADMIN: QUẢN LÝ USER ====================
+
+// Trang danh sách user (bao gồm cả tài khoản đã vô hiệu)
 exports.getManageUsers = catchAsync(async (req, res, next) => {
   const query = User.find().select('+active');
   query._adminRoute = true;
@@ -811,6 +860,7 @@ exports.getManageUsers = catchAsync(async (req, res, next) => {
   });
 });
 
+// Form tạo user mới
 exports.getNewUserForm = catchAsync(async (req, res, next) => {
   res.status(200).render('userForm', {
     title: 'Tạo người dùng mới',
@@ -819,6 +869,7 @@ exports.getNewUserForm = catchAsync(async (req, res, next) => {
   });
 });
 
+// Form chỉnh sửa user
 exports.getEditUserForm = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.params.id).select('+active');
 
@@ -833,6 +884,9 @@ exports.getEditUserForm = catchAsync(async (req, res, next) => {
   });
 });
 
+// ==================== ADMIN: QUẢN LÝ BOOKING ====================
+
+// Trang lịch sử đặt tour (sắp xếp mới nhất trước)
 exports.getManageBookings = catchAsync(async (req, res, next) => {
   const bookings = await Booking.find().sort('-createdAt');
 
@@ -843,6 +897,9 @@ exports.getManageBookings = catchAsync(async (req, res, next) => {
   });
 });
 
+// ==================== ADMIN: QUẢN LÝ DỊCH VỤ ====================
+
+// Trang quản lý dịch vụ
 exports.getManageServices = catchAsync(async (req, res, next) => {
   const services = await Service.find().sort({
     status: 1,
@@ -857,6 +914,7 @@ exports.getManageServices = catchAsync(async (req, res, next) => {
   });
 });
 
+// Form tạo/chỉnh sửa dịch vụ
 exports.getServiceForm = catchAsync(async (req, res, next) => {
   let service = null;
 
@@ -874,6 +932,9 @@ exports.getServiceForm = catchAsync(async (req, res, next) => {
   });
 });
 
+// ==================== ADMIN: QUẢN LÝ KHUYẾN MÃI ====================
+
+// Trang danh sách khuyến mãi
 exports.getManagePromotions = catchAsync(async (req, res, next) => {
   const promotions = await Promotion.find().sort('-createdAt');
 
@@ -884,6 +945,7 @@ exports.getManagePromotions = catchAsync(async (req, res, next) => {
   });
 });
 
+// Form tạo/chỉnh sửa khuyến mãi
 exports.getPromotionForm = catchAsync(async (req, res, next) => {
   let promotion = null;
 
@@ -903,6 +965,7 @@ exports.getPromotionForm = catchAsync(async (req, res, next) => {
   });
 });
 
+// Form gắn mã khuyến mãi cho user cụ thể
 exports.getPromotionAssignForm = catchAsync(async (req, res, next) => {
   const promotion = await Promotion.findById(req.params.id);
   if (!promotion) {
@@ -921,6 +984,7 @@ exports.getPromotionAssignForm = catchAsync(async (req, res, next) => {
   });
 });
 
+// Trang "Mã khuyến mãi của tôi" (user xem mã còn hiệu lực)
 exports.getMyPromotionsView = catchAsync(async (req, res, next) => {
   const now = new Date();
   const assignments = await UserPromotion.find({
@@ -941,6 +1005,9 @@ exports.getMyPromotionsView = catchAsync(async (req, res, next) => {
     promotions: promos
   });
 });
+// ==================== ĐẶT TOUR & THANH TOÁN ====================
+
+// Trang chi tiết đặt tour (admin)
 exports.getBookingDetail = catchAsync(async (req, res, next) => {
   const booking = await Booking.findById(req.params.id);
 
@@ -955,6 +1022,7 @@ exports.getBookingDetail = catchAsync(async (req, res, next) => {
   });
 });
 
+// Form đặt tour: load tour, slot, dịch vụ, mã khuyến mãi của user
 exports.getBookingForm = catchAsync(async (req, res, next) => {
   const tour = await Tour.findById(req.params.tourId);
 
@@ -1026,6 +1094,7 @@ exports.getBookingForm = catchAsync(async (req, res, next) => {
   });
 });
 
+// Trang xác nhận thanh toán thành công (Stripe / MoMo)
 exports.getBookingSuccess = catchAsync(async (req, res, next) => {
   const { booking: bookingId, sid } = req.query;
   const providerRaw = (req.query.provider || 'stripe').toLowerCase();
@@ -1055,6 +1124,9 @@ exports.getBookingSuccess = catchAsync(async (req, res, next) => {
   });
 });
 
+// ==================== ADMIN: QUẢN LÝ ĐÁNH GIÁ ====================
+
+// Trang quản lý đánh giá (admin): hiển thị tất cả kèm trạng thái ẩn/hiện
 exports.getManageReviews = catchAsync(async (req, res, next) => {
   const reviews = await Review.find()
     .sort('-createdAt')
@@ -1080,6 +1152,9 @@ exports.getManageReviews = catchAsync(async (req, res, next) => {
   });
 });
 
+// ==================== HÓA ĐƠN ====================
+
+// Trang hoá đơn chi tiết (chỉ chủ booking hoặc admin xem được)
 exports.getBookingInvoice = catchAsync(async (req, res, next) => {
   const booking = await Booking.findById(req.params.id);
 
@@ -1102,6 +1177,7 @@ exports.getBookingInvoice = catchAsync(async (req, res, next) => {
   });
 });
 
+// Trang "Hóa đơn của tôi" (danh sách hoá đơn user)
 exports.getMyBilling = catchAsync(async (req, res, next) => {
   const bookings = await Booking.find({ user: req.user.id }).populate({
     path: 'tour',
@@ -1114,6 +1190,7 @@ exports.getMyBilling = catchAsync(async (req, res, next) => {
   });
 });
 
+// Trang "Đánh giá của tôi" (user xem review mình đã viết)
 exports.getMyReviews = catchAsync(async (req, res, next) => {
   const reviews = await Review.find({ user: req.user.id }).populate({
     path: 'tour',
@@ -1126,12 +1203,16 @@ exports.getMyReviews = catchAsync(async (req, res, next) => {
   });
 });
 
+// ==================== QUÊN / ĐẶT LẠI MẬT KHẨU ====================
+
+// Form quên mật khẩu
 exports.getForgotPasswordForm = (req, res) => {
   res.status(200).render('forgotPassword', {
     title: 'Quên mật khẩu'
   });
 };
 
+// Form đặt lại mật khẩu (nhận token từ email)
 exports.getResetPasswordForm = (req, res) => {
   res.status(200).render('resetPassword', {
     title: 'Đặt lại mật khẩu',
@@ -1139,6 +1220,9 @@ exports.getResetPasswordForm = (req, res) => {
   });
 };
 
+// ==================== DASHBOARD ADMIN ====================
+
+// Bảng điều khiển: thống kê tổng quan, doanh thu theo ngày/tháng/năm, biểu đồ, top tour
 exports.getDashboard = catchAsync(async (req, res, next) => {
   const [
     totalTours,
@@ -1451,6 +1535,8 @@ exports.getDashboard = catchAsync(async (req, res, next) => {
 });
 
 // ==================== ABOUT / FAQ ====================
+
+// Trang giới thiệu kèm danh sách FAQ đang hoạt động
 exports.getAboutPage = catchAsync(async (req, res, next) => {
   const faqs = await FAQ.find({ active: true }).sort({
     displayOrder: 1,
@@ -1463,6 +1549,7 @@ exports.getAboutPage = catchAsync(async (req, res, next) => {
   });
 });
 
+// Trang quản lý FAQ (admin)
 exports.getManageFaqs = catchAsync(async (req, res, next) => {
   const faqs = await FAQ.find().sort({
     displayOrder: 1,
@@ -1476,14 +1563,16 @@ exports.getManageFaqs = catchAsync(async (req, res, next) => {
   });
 });
 
-// ===================== TRANG LIÊN HỆ (CONTACT) =====================
+// ==================== TRANG LIÊN HỆ (CONTACT) =====================
 
+// Trang liên hệ (hiển thị cho khách)
 exports.getContactPage = catchAsync(async (req, res, next) => {
   res.status(200).render('contact', {
     title: 'Liên hệ'
   });
 });
 
+// Trang quản lý hòm thư góp ý (admin)
 exports.getManageContacts = catchAsync(async (req, res, next) => {
   const messages = await ContactMessage.find().sort({
     isRead: 1,

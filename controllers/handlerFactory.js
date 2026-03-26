@@ -2,6 +2,9 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const APIFeatures = require('../utils/apiFeatures');
 
+// ==================== FACTORY HANDLER (CRUD dùng chung) ====================
+
+// Xóa 1 document theo ID
 exports.deleteOne = Model =>
   catchAsync(async (req, res, next) => {
     const doc = await Model.findByIdAndDelete(req.params.id);
@@ -16,6 +19,7 @@ exports.deleteOne = Model =>
     });
   });
 
+// Cập nhật 1 document theo ID
 exports.updateOne = Model =>
   catchAsync(async (req, res, next) => {
     // Tạo truy vấn và đánh dấu đây là route quản lý nếu đang cập nhật User
@@ -42,6 +46,7 @@ exports.updateOne = Model =>
     });
   });
 
+// Tạo mới 1 document
 exports.createOne = Model =>
   catchAsync(async (req, res, next) => {
     const doc = await Model.create(req.body);
@@ -54,6 +59,7 @@ exports.createOne = Model =>
     });
   });
 
+// Lấy 1 document theo ID (hỗ trợ populate)
 exports.getOne = (Model, popOptions) =>
   catchAsync(async (req, res, next) => {
     let query = Model.findById(req.params.id);
@@ -72,6 +78,7 @@ exports.getOne = (Model, popOptions) =>
     });
   });
 
+// Lấy tất cả documents (hỗ trợ lọc, sắp xếp, phân trang)
 exports.getAll = (Model, popOptions) =>
   catchAsync(async (req, res, next) => {
     let filter = {};

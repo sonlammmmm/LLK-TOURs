@@ -7,11 +7,21 @@ const AppError = require('../utils/appError');
 const factory = require('./handlerFactory');
 const { buildBookingFinancials } = require('../utils/bookingPricing');
 
+// ==================== CRUD KHUYẾN MÃI ====================
+
+// Admin: Lấy tất cả khuyến mãi
 exports.getPromotions = factory.getAll(Promotion);
+
+// Admin: Lấy chi tiết 1 khuyến mãi
 exports.getPromotion = factory.getOne(Promotion);
+
+// Admin: Tạo khuyến mãi mới
 exports.createPromotion = factory.createOne(Promotion);
+
+// Admin: Cập nhật khuyến mãi
 exports.updatePromotion = factory.updateOne(Promotion);
 
+// Admin: Xóa hoặc lưu trữ khuyến mãi (nếu đã có giao dịch thì chỉ archive)
 exports.deletePromotion = catchAsync(async (req, res, next) => {
   const promotion = await Promotion.findById(req.params.id);
   if (!promotion) {
@@ -32,6 +42,9 @@ exports.deletePromotion = catchAsync(async (req, res, next) => {
   return res.status(204).json({ status: 'success', data: null });
 });
 
+// ==================== GẮN MÃ KHUYẾN MÃI CHO USER ====================
+
+// Admin: Gắn mã khuyến mãi cho 1 hoặc nhiều user
 exports.assignPromotionToUser = catchAsync(async (req, res, next) => {
   const { userId, userIds, usageLimit, expiresAt, note, customCode } = req.body;
 
@@ -100,6 +113,7 @@ exports.assignPromotionToUser = catchAsync(async (req, res, next) => {
   });
 });
 
+// User: Lấy danh sách mã khuyến mãi của mình (còn hiệu lực)
 exports.getMyPromotions = catchAsync(async (req, res, next) => {
   const now = new Date();
   const assignments = await UserPromotion.find({
@@ -122,6 +136,9 @@ exports.getMyPromotions = catchAsync(async (req, res, next) => {
   });
 });
 
+// ==================== XEM TRƯỚC GIÁ SAU KHUYẾN MÃI ====================
+
+// User: Xem trước chi phí booking khi áp dụng mã khuyến mãi
 exports.previewBookingPromotion = catchAsync(async (req, res, next) => {
   const { tourId, participants, selectedServices, promotionCode } = req.body;
 
