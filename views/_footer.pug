@@ -1,24 +1,25 @@
+- const ss = siteSettings || {};
 footer.footer
   .footer__shell
     .footer__cta
       .footer__cta-text
-        h3 Sẵn sàng cho hành trình tiếp theo?
-        p Nhận gợi ý cá nhân hóa và lịch khởi hành phù hợp từ đội chuyên viên hành trình LLK bằng tiếng Việt bất cứ khi nào bạn cần.
+        h3= ss.ctaTitle || 'Sẵn sàng cho hành trình tiếp theo?'
+        p= ss.ctaDescription || 'Nhận gợi ý cá nhân hóa và lịch khởi hành phù hợp từ đội chuyên viên hành trình LLK bằng tiếng Việt bất cứ khi nào bạn cần.'
       .footer__cta-action
         a.btn.btn--green(href='/chat') Trò chuyện với chuyên viên LLK
-        .footer__cta-support Hotline 24/7: #[span 038****234]
+        .footer__cta-support Hotline 24/7: #[span= ss.hotline || '038****234']
 
     .footer__grid
       .footer__brand
         img(src='/img/logo-blue.png' alt='LLK logo')
-        p LLK Tours chuyên tổ chức hành trình mượt mà, trọn cảm xúc với đội ngũ chuyên gia bản địa.
+        p= ss.brandDescription || 'LLK Tours chuyên tổ chức hành trình mượt mà, trọn cảm xúc với đội ngũ chuyên gia bản địa.'
         .footer__brand-highlights
           span
             i.fas.fa-headset
             | Hỗ trợ trực tiếp 24/7
           span
             i.fas.fa-map-marker-alt
-            | Hà Nội • TP. HCM • Đà Nẵng
+            | #{ss.brandHighlights || 'Hà Nội • TP. HCM • Đà Nẵng'}
         .footer__payment
           span Thanh toán an toàn
           .payment-icons
@@ -47,22 +48,22 @@ footer.footer
       .footer__column
         h4 Liên hệ & hỗ trợ
         p
-          i.fas.fa-map-marker-alt
-          | Khu Công nghệ cao Xa lộ Hà Nội, Hiệp Phú, TP. Thủ Đức, TP. HCM
+          i.fas.fa-map-marker-alt 
+          | #{ss.address || 'Khu Công nghệ cao Xa lộ Hà Nội, Hiệp Phú, TP. Thủ Đức, TP. HCM'}
         p
-          i.fas.fa-phone
-          | 038****234
+          i.fas.fa-phone 
+          | #{ss.phone || '038****234'}
         p
-          i.fas.fa-envelope
-          | transysonlam@gmail.com
+          i.fas.fa-envelope 
+          | #{ss.email || 'transysonlam@gmail.com'}
 
     .footer__bottom
-      p.footer__copyright &copy; 2025 LLK Tours. Giấy phép kinh doanh lữ hành quốc tế số: 01-001/2020/TCDL-GP LHQT
+      p.footer__copyright &copy; #{new Date().getFullYear()} LLK Tours. Giấy phép kinh doanh lữ hành quốc tế số: #{ss.businessLicense || '01-001/2020/TCDL-GP LHQT'}
       .footer__bottom-meta
         .footer__social
-          a(href='https://www.facebook.com/sonlammmmmm/' target='_blank' rel='noreferrer'): i.fab.fa-facebook
-          a(href='https://www.instagram.com/sonlammmmmm/' target='_blank' rel='noreferrer'): i.fab.fa-instagram
-          a(href='#'): i.fab.fa-youtube
-          a(href='#'): i.fab.fa-tiktok
-          a(href='#'): i.fab.fa-github
-        p.footer__license Đã đăng ký Bộ Công Thương Việt Nam | Thành viên Hiệp hội Du lịch Việt Nam
+          a(href=ss.socialFacebook || '#' target='_blank' rel='noreferrer'): i.fab.fa-facebook
+          a(href=ss.socialInstagram || '#' target='_blank' rel='noreferrer'): i.fab.fa-instagram
+          a(href=ss.socialYoutube || '#' target='_blank' rel='noreferrer'): i.fab.fa-youtube
+          a(href=ss.socialTiktok || '#' target='_blank' rel='noreferrer'): i.fab.fa-tiktok
+          a(href=ss.socialGithub || '#' target='_blank' rel='noreferrer'): i.fab.fa-github
+        p.footer__license= ss.licenseNote || 'Đã đăng ký Bộ Công Thương Việt Nam | Thành viên Hiệp hội Du lịch Việt Nam'

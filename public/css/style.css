@@ -2471,6 +2471,15 @@ body.landing-page {
 .footer__column p {
   color: rgba(255, 255, 255, 0.65);
   line-height: 1.7;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.footer__column p i {
+  margin-top: 0.35rem;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .footer__news-form {

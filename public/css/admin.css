@@ -2369,3 +2369,116 @@ textarea.form__input {
     min-width: auto;
   }
 }
+
+/* ==================== SITE SETTINGS FORM ==================== */
+.site-settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1rem 0;
+}
+
+.site-settings-form__section {
+  background: #fff;
+  border-radius: var(--admin-card-radius);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
+  padding: 2rem;
+  border: 1px solid #e2e8f0;
+}
+
+.site-settings-form__section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.site-settings-form__section-title i {
+  color: #55c57a;
+  font-size: 1.3rem;
+}
+
+.site-settings-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+.site-settings-form__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.site-settings-form__group--full {
+  grid-column: 1 / -1;
+}
+
+.site-settings-form__label {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.site-settings-form__label i {
+  font-size: 1.1rem;
+  color: #64748b;
+}
+
+.site-settings-form__input,
+.site-settings-form__textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: var(--admin-font-base);
+  font-family: inherit;
+  color: #0f172a;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.75rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.site-settings-form__input:focus,
+.site-settings-form__textarea:focus {
+  border-color: #55c57a;
+  box-shadow: 0 0 0 3px rgba(85, 197, 122, 0.15);
+  background: #fff;
+}
+
+.site-settings-form__textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.site-settings-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+}
+
+.site-settings-form__actions .btn {
+  font-size: 1.25rem;
+  padding: 0.85rem 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .site-settings-form__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .site-settings-form__section {
+    padding: 1.25rem;
+  }
+}

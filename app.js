@@ -10,6 +10,7 @@ const cookieParser = require('cookie-parser');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
+const SiteSetting = require('./models/siteSettingModel');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
@@ -20,6 +21,7 @@ const serviceRouter = require('./routes/serviceRoutes');
 const promotionRouter = require('./routes/promotionRoutes');
 const faqRouter = require('./routes/faqRoutes');
 const contactRouter = require('./routes/contactRoutes');
+const siteSettingRouter = require('./routes/siteSettingRoutes');
 
 const app = express();
 
@@ -49,6 +51,20 @@ app.use((req, res, next) => {
   res.locals.momoPaymentEnabled = Boolean(
     momoAccessKey && momoSecretKey && momoPartnerCode
   );
+  next();
+});
+
+// Tải thông tin cài đặt website cho footer
+app.use(async (req, res, next) => {
+  try {
+    // Chỉ tải cho các request render view (không phải API)
+    if (!req.originalUrl.startsWith('/api')) {
+      res.locals.siteSettings = await SiteSetting.getSettings();
+    }
+  } catch (err) {
+    // Nếu lỗi DB, dùng giá trị mặc định (footer sẽ hiển thị mặc định)
+    res.locals.siteSettings = null;
+  }
   next();
 });
 
@@ -191,6 +207,7 @@ app.use('/api/v1/services', serviceRouter);
 app.use('/api/v1/promotions', promotionRouter);
 app.use('/api/v1/faqs', faqRouter);
 app.use('/api/v1/contacts', contactRouter);
+app.use('/api/v1/site-settings', siteSettingRouter);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Không tìm thấy ${req.originalUrl} trên server!`, 404));

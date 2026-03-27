@@ -5,7 +5,10 @@ const factory = require('./handlerFactory');
 
 // Lấy tất cả FAQ đang hoạt động (public)
 exports.getActiveFaqs = catchAsync(async (req, res, next) => {
-  const faqs = await FAQ.find({ active: true }).sort({ displayOrder: 1, createdAt: -1 });
+  const faqs = await FAQ.find({ active: true }).sort({
+    displayOrder: 1,
+    createdAt: -1
+  });
 
   res.status(200).json({
     status: 'success',

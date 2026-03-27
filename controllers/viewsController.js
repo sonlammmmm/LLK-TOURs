@@ -7,6 +7,7 @@ const Promotion = require('../models/promotionModel');
 const UserPromotion = require('../models/userPromotionModel');
 const FAQ = require('../models/faqModel');
 const ContactMessage = require('../models/contactMessageModel');
+const SiteSetting = require('../models/siteSettingModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const Review = require('../models/reviewModel');
@@ -1583,5 +1584,17 @@ exports.getManageContacts = catchAsync(async (req, res, next) => {
     title: 'Hòm thư góp ý',
     messages,
     adminMenuActive: 'contacts'
+  });
+});
+
+// ==================== CÀI ĐẶT WEBSITE (SITE SETTINGS) =====================
+
+exports.getManageSiteSettings = catchAsync(async (req, res, next) => {
+  const settings = await SiteSetting.getSettings();
+
+  res.status(200).render('manageSiteSettings', {
+    title: 'Cài đặt Website',
+    settings,
+    adminMenuActive: 'site-settings'
   });
 });

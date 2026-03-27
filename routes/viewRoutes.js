@@ -242,6 +242,14 @@ router.get(
   viewsController.getManageContacts
 );
 
+// -------------------- CÀI ĐẶT WEBSITE --------------------
+router.get(
+  '/admin/site-settings',
+  authController.protect,
+  authController.restrictTo('admin'),
+  viewsController.getManageSiteSettings
+);
+
 // -------------------- CÁ NHÂN --------------------
 router.get(
   '/my-billing',

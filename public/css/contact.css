@@ -19,13 +19,6 @@
   max-width: 72rem;
 }
 
-.contact-hero__eyebrow {
-  letter-spacing: 0.4rem;
-  text-transform: uppercase;
-  font-size: var(--font-size-xs);
-  color: rgba(255, 255, 255, 0.8);
-}
-
 .contact-hero__content h1 {
   margin: 0;
   font-size: clamp(2.8rem, 2vw + 1.2rem, 3.4rem);

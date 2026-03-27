@@ -35,6 +35,7 @@ import {
 import { handleServiceForm, initServiceListActions } from "./serviceManagement"
 import { initFaqManagement } from "./faqManagement"
 import { initContactForm, initContactManagement } from "./contactManagement"
+import { initSiteSettingsManagement } from "./siteSettingsManagement"
 
 // DOM ELEMENTS
 const loginForm = document.querySelector(".form--login")
@@ -287,6 +288,12 @@ if (contactForm) {
 const contactInbox = document.querySelector('.contact-inbox')
 if (contactInbox) {
   initContactManagement()
+}
+
+// Site Settings Management (admin)
+const siteSettingsPanel = document.querySelector('.site-settings-panel')
+if (siteSettingsPanel) {
+  initSiteSettingsManagement()
 }
 
 // Initialize view toggle and search functionality

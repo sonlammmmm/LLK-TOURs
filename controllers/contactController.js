@@ -23,7 +23,10 @@ exports.submitContactMessage = catchAsync(async (req, res, next) => {
 
 // Admin: Lấy tất cả tin nhắn
 exports.getAllContactMessages = catchAsync(async (req, res, next) => {
-  const messages = await ContactMessage.find().sort({ isRead: 1, createdAt: -1 });
+  const messages = await ContactMessage.find().sort({
+    isRead: 1,
+    createdAt: -1
+  });
 
   res.status(200).json({
     status: 'success',

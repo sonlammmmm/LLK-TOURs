@@ -1,0 +1,172 @@
+extends adminLayout
+
+block adminContent
+  .llk-admin-topbar
+    .llk-admin-topbar__left
+      h1.llk-admin-topbar__title Cài đặt Website
+      p.llk-admin-topbar__subtitle Quản lý thông tin hiển thị ở chân trang (footer): địa chỉ, số điện thoại, email, giấy phép kinh doanh, mạng xã hội...
+
+  section.llk-admin-panel.site-settings-panel
+    form#siteSettingsForm.site-settings-form
+
+      //- ===== THÔNG TIN LIÊN HỆ =====
+      .site-settings-form__section
+        h3.site-settings-form__section-title
+          i.fas.fa-address-card
+          |  Thông tin liên hệ
+        .site-settings-form__grid
+          .site-settings-form__group
+            label.site-settings-form__label(for='settings-address') Địa chỉ
+            input#settings-address.site-settings-form__input(
+              type='text'
+              name='address'
+              value=settings.address
+              placeholder='Nhập địa chỉ công ty...'
+            )
+          .site-settings-form__group
+            label.site-settings-form__label(for='settings-phone') Số điện thoại
+            input#settings-phone.site-settings-form__input(
+              type='text'
+              name='phone'
+              value=settings.phone
+              placeholder='Nhập số điện thoại...'
+            )
+          .site-settings-form__group
+            label.site-settings-form__label(for='settings-email') Email
+            input#settings-email.site-settings-form__input(
+              type='email'
+              name='email'
+              value=settings.email
+              placeholder='Nhập email liên hệ...'
+            )
+          .site-settings-form__group
+            label.site-settings-form__label(for='settings-hotline') Hotline 24/7
+            input#settings-hotline.site-settings-form__input(
+              type='text'
+              name='hotline'
+              value=settings.hotline
+              placeholder='Nhập số hotline...'
+            )
+
+      //- ===== GIẤY PHÉP KINH DOANH =====
+      .site-settings-form__section
+        h3.site-settings-form__section-title
+          i.fas.fa-file-certificate
+          |  Giấy phép kinh doanh
+        .site-settings-form__grid
+          .site-settings-form__group.site-settings-form__group--full
+            label.site-settings-form__label(for='settings-businessLicense') Số giấy phép kinh doanh lữ hành
+            input#settings-businessLicense.site-settings-form__input(
+              type='text'
+              name='businessLicense'
+              value=settings.businessLicense
+              placeholder='VD: 01-001/2020/TCDL-GP LHQT'
+            )
+          .site-settings-form__group.site-settings-form__group--full
+            label.site-settings-form__label(for='settings-licenseNote') Ghi chú giấy phép
+            input#settings-licenseNote.site-settings-form__input(
+              type='text'
+              name='licenseNote'
+              value=settings.licenseNote
+              placeholder='VD: Đã đăng ký Bộ Công Thương Việt Nam...'
+            )
+
+      //- ===== MẠNG XÃ HỘI =====
+      .site-settings-form__section
+        h3.site-settings-form__section-title
+          i.fas.fa-share-alt
+          |  Mạng xã hội
+        .site-settings-form__grid
+          .site-settings-form__group
+            label.site-settings-form__label(for='settings-socialFacebook')
+              i.fab.fa-facebook
+              |  Facebook
+            input#settings-socialFacebook.site-settings-form__input(
+              type='url'
+              name='socialFacebook'
+              value=settings.socialFacebook
+              placeholder='https://facebook.com/...'
+            )
+          .site-settings-form__group
+            label.site-settings-form__label(for='settings-socialInstagram')
+              i.fab.fa-instagram
+              |  Instagram
+            input#settings-socialInstagram.site-settings-form__input(
+              type='url'
+              name='socialInstagram'
+              value=settings.socialInstagram
+              placeholder='https://instagram.com/...'
+            )
+          .site-settings-form__group
+            label.site-settings-form__label(for='settings-socialYoutube')
+              i.fab.fa-youtube
+              |  YouTube
+            input#settings-socialYoutube.site-settings-form__input(
+              type='url'
+              name='socialYoutube'
+              value=settings.socialYoutube
+              placeholder='https://youtube.com/...'
+            )
+          .site-settings-form__group
+            label.site-settings-form__label(for='settings-socialTiktok')
+              i.fab.fa-tiktok
+              |  TikTok
+            input#settings-socialTiktok.site-settings-form__input(
+              type='url'
+              name='socialTiktok'
+              value=settings.socialTiktok
+              placeholder='https://tiktok.com/...'
+            )
+          .site-settings-form__group
+            label.site-settings-form__label(for='settings-socialGithub')
+              i.fab.fa-github
+              |  GitHub
+            input#settings-socialGithub.site-settings-form__input(
+              type='url'
+              name='socialGithub'
+              value=settings.socialGithub
+              placeholder='https://github.com/...'
+            )
+
+      //- ===== THƯƠNG HIỆU & CTA =====
+      .site-settings-form__section
+        h3.site-settings-form__section-title
+          i.fas.fa-bullhorn
+          |  Thương hiệu & lời kêu gọi
+        .site-settings-form__grid
+          .site-settings-form__group.site-settings-form__group--full
+            label.site-settings-form__label(for='settings-brandDescription') Mô tả thương hiệu
+            textarea#settings-brandDescription.site-settings-form__textarea(
+              name='brandDescription'
+              rows='2'
+              placeholder='Mô tả ngắn gọn về thương hiệu...'
+            )= settings.brandDescription
+          .site-settings-form__group.site-settings-form__group--full
+            label.site-settings-form__label(for='settings-brandHighlights') Địa điểm nổi bật
+            input#settings-brandHighlights.site-settings-form__input(
+              type='text'
+              name='brandHighlights'
+              value=settings.brandHighlights
+              placeholder='VD: Hà Nội • TP. HCM • Đà Nẵng'
+            )
+          .site-settings-form__group.site-settings-form__group--full
+            label.site-settings-form__label(for='settings-ctaTitle') Tiêu đề lời kêu gọi (CTA)
+            input#settings-ctaTitle.site-settings-form__input(
+              type='text'
+              name='ctaTitle'
+              value=settings.ctaTitle
+              placeholder='VD: Sẵn sàng cho hành trình tiếp theo?'
+            )
+          .site-settings-form__group.site-settings-form__group--full
+            label.site-settings-form__label(for='settings-ctaDescription') Mô tả lời kêu gọi (CTA)
+            textarea#settings-ctaDescription.site-settings-form__textarea(
+              name='ctaDescription'
+              rows='2'
+              placeholder='Mô tả chi tiết lời kêu gọi...'
+            )= settings.ctaDescription
+
+      //- ===== NÚT LƯU =====
+      .site-settings-form__actions
+        button#settingsSaveBtn.btn.btn--green(type='submit')
+          i.fas.fa-save
+          |  Lưu cài đặt
