@@ -1,4 +1,4 @@
-const SiteSetting = require('../models/siteSettingModel');
+const SiteSetting = require('../schemas/siteSettingModel');
 const catchAsync = require('../utils/catchAsync');
 
 // Lấy thông tin cài đặt website (public)

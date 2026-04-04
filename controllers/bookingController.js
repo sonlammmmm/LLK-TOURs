@@ -1,5 +1,5 @@
 ﻿const axios = require('axios');
-const Booking = require('../models/bookingModel');
+const Booking = require('../schemas/bookingModel');
 const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
 const AppError = require('../utils/appError');

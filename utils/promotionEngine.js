@@ -1,5 +1,5 @@
-const Promotion = require('../models/promotionModel');
-const UserPromotion = require('../models/userPromotionModel');
+const Promotion = require('../schemas/promotionModel');
+const UserPromotion = require('../schemas/userPromotionModel');
 const AppError = require('./appError');
 
 const normalizeCode = code =>

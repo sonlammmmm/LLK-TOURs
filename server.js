@@ -4,8 +4,8 @@ const http = require('http');
 const { Server } = require('socket.io');
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
-const Message = require('./models/messageModel');
-const User = require('./models/userModel');
+const Message = require('./schemas/messageModel');
+const User = require('./schemas/userModel');
 const { startSoftLockMaintenance } = require('./utils/bookingSoftLock');
 const { setSocketServerInstance } = require('./utils/realtime');
 

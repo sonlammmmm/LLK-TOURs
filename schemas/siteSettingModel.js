@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 const mongoose = require('mongoose');
 
 const siteSettingSchema = new mongoose.Schema(

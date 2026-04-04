@@ -1,4 +1,4 @@
-const ContactMessage = require('../models/contactMessageModel');
+const ContactMessage = require('../schemas/contactMessageModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 

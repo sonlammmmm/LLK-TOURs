@@ -1,5 +1,5 @@
-const BookingHold = require('../models/bookingHoldModel');
-const Tour = require('../models/tourModel');
+const BookingHold = require('../schemas/bookingHoldModel');
+const Tour = require('../schemas/tourModel');
 
 const DEFAULT_HOLD_MS =
   Math.max(

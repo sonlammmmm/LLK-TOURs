@@ -1,16 +1,16 @@
 const mongoose = require('mongoose');
-const Tour = require('../models/tourModel');
-const User = require('../models/userModel');
-const Booking = require('../models/bookingModel');
-const Service = require('../models/serviceModel');
-const Promotion = require('../models/promotionModel');
-const UserPromotion = require('../models/userPromotionModel');
-const FAQ = require('../models/faqModel');
-const ContactMessage = require('../models/contactMessageModel');
-const SiteSetting = require('../models/siteSettingModel');
+const Tour = require('../schemas/tourModel');
+const User = require('../schemas/userModel');
+const Booking = require('../schemas/bookingModel');
+const Service = require('../schemas/serviceModel');
+const Promotion = require('../schemas/promotionModel');
+const UserPromotion = require('../schemas/userPromotionModel');
+const FAQ = require('../schemas/faqModel');
+const ContactMessage = require('../schemas/contactMessageModel');
+const SiteSetting = require('../schemas/siteSettingModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
-const Review = require('../models/reviewModel');
+const Review = require('../schemas/reviewModel');
 const {
   formatRecentOrderCard,
   formatReviewCard

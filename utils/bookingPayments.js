@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const stripeClient = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const Booking = require('../models/bookingModel');
-const Tour = require('../models/tourModel');
+const Booking = require('../schemas/bookingModel');
+const Tour = require('../schemas/tourModel');
 const AppError = require('./appError');
 const { recordPromotionUsage } = require('./promotionEngine');
 const { buildBookingFinancials } = require('./bookingPricing');

@@ -1,5 +1,5 @@
-const Service = require('../models/serviceModel');
-const Booking = require('../models/bookingModel');
+const Service = require('../schemas/serviceModel');
+const Booking = require('../schemas/bookingModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const factory = require('./handlerFactory');
