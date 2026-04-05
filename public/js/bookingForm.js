@@ -4,7 +4,8 @@ import { showAlert } from "./alerts.js";
 
 const PAYMENT_METHODS = {
   STRIPE: "stripe",
-  MOMO: "momo"
+  MOMO: "momo",
+  CASH: "cash"
 };
 
 const parseCurrency = el =>
@@ -169,6 +170,49 @@ const initiateMomoPayment = async (
       err.response?.data?.message ||
       err.message ||
       'Không thể khởi tạo thanh toán MoMo.';
+    showAlert('error', message);
+    throw err;
+  }
+};
+
+const initiateCashPayment = async (
+  tourId,
+  startDate,
+  participants,
+  selectedServices,
+  promotionCode
+) => {
+  try {
+    const response = await axios.post(
+      `/api/v1/bookings/cash-session/${tourId}`,
+      {
+        startDate,
+        participants,
+        selectedServices,
+        promotionCode,
+        platform: 'web'
+      },
+      { timeout: 30000 }
+    );
+
+    const booking = response.data?.data?.booking;
+    if (!booking || !booking._id) {
+      throw new Error(
+        response.data?.message || 'Không thể tạo booking tiền mặt.'
+      );
+    }
+
+    const params = new URLSearchParams({
+      booking: booking._id,
+      provider: PAYMENT_METHODS.CASH
+    });
+    window.location.assign(`/booking-success?${params.toString()}`);
+  } catch (err) {
+    console.error('[Cash] Checkout error:', err);
+    const message =
+      err.response?.data?.message ||
+      err.message ||
+      'Không thể ghi nhận thanh toán tiền mặt.';
     showAlert('error', message);
     throw err;
   }
@@ -704,20 +748,27 @@ export const initBookingForm = () => {
     }
     const tourId = bookTourBtn.dataset.tourId;
     const originalText = bookTourBtn.textContent;
-    const method =
-      state.paymentMethod && state.paymentMethod.toLowerCase() === "momo"
-        ? PAYMENT_METHODS.MOMO
-        : PAYMENT_METHODS.STRIPE;
+    const method = (state.paymentMethod || PAYMENT_METHODS.STRIPE).toLowerCase();
     bookTourBtn.disabled = true;
     bookTourBtn.textContent =
       method === PAYMENT_METHODS.MOMO
         ? 'Đang chuyển sang MoMo...'
-        : 'Đang xử lý...';
+        : method === PAYMENT_METHODS.CASH
+          ? 'Đang ghi nhận tiền mặt...'
+          : 'Đang xử lý...';
     state.isProcessing = true;
 
     try {
       if (method === PAYMENT_METHODS.MOMO) {
         await initiateMomoPayment(
+          tourId,
+          state.selectedDate,
+          state.currentParticipants,
+          getSelectedServicesPayload(),
+          state.promotionCode
+        );
+      } else if (method === PAYMENT_METHODS.CASH) {
+        await initiateCashPayment(
           tourId,
           state.selectedDate,
           state.currentParticipants,

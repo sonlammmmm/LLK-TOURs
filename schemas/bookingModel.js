@@ -38,7 +38,7 @@ const bookingSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['stripe', 'momo'],
+    enum: ['stripe', 'momo', 'cash'],
     default: 'stripe'
   },
   providerSessionId: {
@@ -125,6 +125,7 @@ bookingSchema.index({ softLock: 1 });
 // MIDDLEWARE: Giảm slot khi tạo booking
 bookingSchema.post('save', async doc => {
   try {
+    if (doc?.$locals?.skipSlotUpdate) return;
     if (doc.softLock) return;
     const tour = await Tour.findById(doc.tour);
     if (tour) {

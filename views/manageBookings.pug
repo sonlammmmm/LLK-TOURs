@@ -50,17 +50,21 @@ block adminContent
       .llk-admin-card-grid.booking-management__list
         each booking in bookingList
           - const isPaid = !!booking.paid;
-          - const searchText = `${booking.tour.name} ${booking.user.name} ${booking.user.email}`.toLowerCase();
+          - const tourName = booking.tour && booking.tour.name ? booking.tour.name : 'Tour đã xóa';
+          - const userName = booking.user && booking.user.name ? booking.user.name : 'Khách ẩn danh';
+          - const userEmail = booking.user && booking.user.email ? booking.user.email : '';
+          - const userPhoto = booking.user && booking.user.photo ? booking.user.photo : 'default.jpg';
+          - const searchText = `${tourName} ${userName} ${userEmail}`.toLowerCase();
           article.llk-admin-entity-card.booking-management__item(
             data-status=isPaid ? 'paid' : 'unpaid'
             data-search=searchText
           )
             .booking-management__info
-              h4.booking-management__tour= booking.tour.name
+              h4.booking-management__tour= tourName
               span.booking-management__id Mã đặt tour: ##{booking.id.slice(-8).toUpperCase()}
             .booking-management__user
-              img.booking-management__user-img(src=`/img/users/${booking.user.photo}`, alt=`${booking.user.name}`)
-              span.booking-management__user-name= booking.user.name
+              img.booking-management__user-img(src=`/img/users/${userPhoto}`, alt=`${userName}`)
+              span.booking-management__user-name= userName
             .booking-management__details
               span.booking-management__participants
                 svg

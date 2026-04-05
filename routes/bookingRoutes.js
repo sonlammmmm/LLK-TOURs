@@ -16,6 +16,8 @@ router
 
 router.post('/momo-session/:tourId', bookingController.createMomoPayment);
 
+router.post('/cash-session/:tourId', bookingController.createCashBooking);
+
 router.get('/by-session/:sid', bookingController.getByStripeSession);
 
 router.get('/my', bookingController.getMyBookings);

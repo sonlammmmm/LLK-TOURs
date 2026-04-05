@@ -127,7 +127,7 @@ export const initBookingSuccess = () => {
   const providerKey = root.dataset.provider || 'stripe';
   const providerName = root.dataset.providerName || 'Stripe';
 
-  if (sid && pendingCard) {
+  if (sid && pendingCard && providerKey !== 'cash') {
     pollBookingStatus(sid, providerKey, providerName);
   }
 

@@ -27,6 +27,7 @@ block content
       : '';
     const customerEmail =
       booking && booking.user && booking.user.email ? booking.user.email : '';
+    const isCash = providerKey === 'cash';
   main.main.booking-success(data-provider=providerKey, data-provider-name=providerName)
     section.booking-success__viewport(class=pending ? 'is-pending' : '')
       .booking-success__bg(style=`background-image:url('${heroImage}')`)
@@ -38,7 +39,10 @@ block content
           if pending
             p.booking-success__hero-desc= `Hệ thống LLK TOUR đang nhận thông tin từ ${providerName} để tạo booking của bạn. Vui lòng giữ trang này mở trong giây lát.`
           else
-            p.booking-success__hero-desc Thanh toán đã hoàn tất, chúng tôi đã gửi thông tin hành trình cùng hướng dẫn chi tiết vào email của bạn.
+            if isCash
+              p.booking-success__hero-desc Thanh toán tiền mặt đã được ghi nhận. Nhân viên LLK TOUR sẽ liên hệ để hướng dẫn điểm thanh toán chi tiết.
+            else
+              p.booking-success__hero-desc Thanh toán đã hoàn tất, chúng tôi đã gửi thông tin hành trình cùng hướng dẫn chi tiết vào email của bạn.
           if !pending && booking
             ul.booking-success__hero-meta
               if startDateLabel

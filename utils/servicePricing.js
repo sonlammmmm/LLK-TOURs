@@ -1,4 +1,4 @@
-const Service = require('../models/serviceModel');
+const Service = require('../schemas/serviceModel');
 
 const normalizeSelection = raw => {
   if (!raw) return [];

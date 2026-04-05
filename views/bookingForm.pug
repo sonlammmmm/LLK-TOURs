@@ -214,6 +214,16 @@ block content
               .payment-option__content
                 strong Stripe
                 span Thanh toán qua Stripe
+            label.payment-option.payment-option--cash
+              span.payment-option__logo
+              input.payment-option__control(
+                type='radio',
+                name='paymentMethod',
+                value='cash'
+              )
+              .payment-option__content
+                strong Tiền mặt
+                span Thanh toán tại quầy / hướng dẫn viên
             if momoEnabled
               label.payment-option.payment-option--momo
                 span.payment-option__logo

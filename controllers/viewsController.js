@@ -889,7 +889,10 @@ exports.getEditUserForm = catchAsync(async (req, res, next) => {
 
 // Trang lịch sử đặt tour (sắp xếp mới nhất trước)
 exports.getManageBookings = catchAsync(async (req, res, next) => {
-  const bookings = await Booking.find().sort('-createdAt');
+  const bookings = await Booking.find()
+    .sort('-createdAt')
+    .populate({ path: 'tour', select: 'name' })
+    .populate({ path: 'user', select: 'name email photo' });
 
   res.status(200).render('manageBookings', {
     title: 'Lịch sử đặt tour',
@@ -1099,8 +1102,15 @@ exports.getBookingForm = catchAsync(async (req, res, next) => {
 exports.getBookingSuccess = catchAsync(async (req, res, next) => {
   const { booking: bookingId, sid } = req.query;
   const providerRaw = (req.query.provider || 'stripe').toLowerCase();
-  const providerKey = providerRaw === 'momo' ? 'momo' : 'stripe';
-  const providerName = providerKey === 'momo' ? 'MoMo' : 'Stripe';
+  const providerKey = ['momo', 'cash'].includes(providerRaw)
+    ? providerRaw
+    : 'stripe';
+  let providerName = 'Stripe';
+  if (providerKey === 'momo') {
+    providerName = 'MoMo';
+  } else if (providerKey === 'cash') {
+    providerName = 'Tiền mặt';
+  }
 
   let booking = null;
   if (bookingId) {

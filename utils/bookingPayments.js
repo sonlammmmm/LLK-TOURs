@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 const stripeClient = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Booking = require('../schemas/bookingModel');
 const Tour = require('../schemas/tourModel');
@@ -392,7 +393,8 @@ const createDiscountCoupon = async discount => {
   }
 };
 
-const preparePaymentInitialization = async req => {
+const preparePaymentInitialization = async (req, options = {}) => {
+  const { useSoftLock = true } = options;
   if (!req.user?.id || !req.user?.email) {
     throw new AppError('Bạn cần đăng nhập để thanh toán.', 401);
   }
@@ -468,32 +470,34 @@ const preparePaymentInitialization = async req => {
   }
 
   let softLockRecord = null;
-  try {
-    const lockResult = await acquireSoftLock({
-      tourId: tour.id,
-      userId: req.user.id,
-      startDate,
-      participants,
-      platform,
-      servicesSnapshot
-    });
-    if (!lockResult?.success) {
+  if (useSoftLock) {
+    try {
+      const lockResult = await acquireSoftLock({
+        tourId: tour.id,
+        userId: req.user.id,
+        startDate,
+        participants,
+        platform,
+        servicesSnapshot
+      });
+      if (!lockResult?.success) {
+        throw new AppError(
+          lockResult?.message ||
+            'Suất của lịch khởi hành này đang được giữ, vui lòng thử lại ngay sau đây.',
+          409
+        );
+      }
+      softLockRecord = lockResult.hold;
+    } catch (err) {
+      if (err instanceof AppError) {
+        throw err;
+      }
+      console.error('[SoftLock] Lỗi giữ chỗ:', err.message);
       throw new AppError(
-        lockResult?.message ||
-          'Suất của lịch khởi hành này đang được giữ, vui lòng thử lại ngay sau đây.',
+        'Không thể giữ chỗ tạm thời cho yêu cầu này. Vui lòng thử lại sau ít phút.',
         409
       );
     }
-    softLockRecord = lockResult.hold;
-  } catch (err) {
-    if (err instanceof AppError) {
-      throw err;
-    }
-    console.error('[SoftLock] Lỗi giữ chỗ:', err.message);
-    throw new AppError(
-      'Không thể giữ chỗ tạm thời cho yêu cầu này. Vui lòng thử lại sau ít phút.',
-      409
-    );
   }
 
   return {
@@ -708,6 +712,79 @@ const processMomoCallback = async (payloadRaw, source = 'ipn') => {
   return { booking, created };
 };
 
+// ==================== THANH TOÁN TIỀN MẶT (CASH) ====================
+// Toàn bộ logic nằm trong 1 request → có thể dùng MongoDB Transaction thực sự
+
+const createCashBookingWithTransaction = async (req, context) => {
+  const { tour, startDate, participants, pricing } = context;
+
+  const bookingPayload = {
+    tour: tour.id,
+    user: req.user.id,
+    participants,
+    startDate,
+    price: pricing.grandTotal,
+    paymentMethod: 'cash',
+    paid: false,
+    currency: 'VND',
+    basePrice: pricing.basePrice,
+    services: buildServicesFromPayload(pricing.servicesPayload),
+    servicesTotal: pricing.servicesTotal,
+    subtotal: pricing.subtotal,
+    discountAmount: pricing.discountAmount,
+    promotionSnapshot: buildPromotionSnapshotFromPricing(pricing)
+  };
+
+  const session = await mongoose.startSession();
+  let booking;
+
+  try {
+    await session.withTransaction(
+      async () => {
+        // 1) Trừ slot tour — atomic bằng $inc với điều kiện đủ slot
+        const updateResult = await Tour.findOneAndUpdate(
+          {
+            _id: tour.id,
+            startDates: {
+              $elemMatch: {
+                date: {
+                  $gte: new Date(new Date(startDate).setUTCHours(0, 0, 0, 0)),
+                  $lt: new Date(new Date(startDate).setUTCHours(24, 0, 0, 0))
+                },
+                availableSlots: { $gte: participants }
+              }
+            }
+          },
+          { $inc: { 'startDates.$.availableSlots': -participants } },
+          { new: true, session }
+        );
+
+        if (!updateResult) {
+          throw new AppError(
+            'Lịch khởi hành này không còn đủ chỗ. Vui lòng thử lại.',
+            409
+          );
+        }
+
+        // 2) Tạo booking chính thức (skip middleware slot update)
+        const bookingDoc = new Booking(bookingPayload);
+        bookingDoc.$locals = {
+          ...(bookingDoc.$locals || {}),
+          skipSlotUpdate: true
+        };
+        booking = await bookingDoc.save({ session });
+
+        // 3) Không ghi nhận khuyến mãi ở đây; chờ admin xác nhận thanh toán.
+      },
+      { maxCommitTimeMS: 10000 }
+    );
+  } finally {
+    await session.endSession();
+  }
+
+  return booking;
+};
+
 module.exports = {
   stripeClient,
   momoConfig,
@@ -722,5 +799,6 @@ module.exports = {
   buildMomoRedirectUrl,
   buildMomoIpnUrl,
   buildMomoCreateSignature,
-  processMomoCallback
+  processMomoCallback,
+  createCashBookingWithTransaction
 };

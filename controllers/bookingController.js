@@ -1,5 +1,9 @@
-﻿const axios = require('axios');
+﻿/* eslint-disable unicode-bom */
+const axios = require('axios');
+const mongoose = require('mongoose');
 const Booking = require('../schemas/bookingModel');
+const Promotion = require('../schemas/promotionModel');
+const UserPromotion = require('../schemas/userPromotionModel');
 const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
 const AppError = require('../utils/appError');
@@ -22,7 +26,8 @@ const {
   buildMomoRedirectUrl,
   buildMomoIpnUrl,
   buildMomoCreateSignature,
-  processMomoCallback
+  processMomoCallback,
+  createCashBookingWithTransaction
 } = require('../utils/bookingPayments');
 
 // Populate fields cho booking session
@@ -30,6 +35,34 @@ const bookingSessionPopulate = [
   { path: 'tour', select: 'name startDates duration' },
   { path: 'user', select: 'name email' }
 ];
+
+// ==================== THANH TOÁN TIỀN MẶT (CASH) ====================
+
+// Tạo booking bằng tiền mặt — dùng MongoDB Transaction thực sự vì toàn bộ logic nằm trong 1 request
+exports.createCashBooking = catchAsync(async (req, res, next) => {
+  let context;
+  try {
+    context = await preparePaymentInitialization(req, { useSoftLock: false });
+  } catch (err) {
+    return next(err);
+  }
+
+  let booking;
+  try {
+    booking = await createCashBookingWithTransaction(req, context);
+  } catch (err) {
+    return next(err);
+  }
+
+  if (!booking) {
+    return next(new AppError('Không thể tạo booking. Vui lòng thử lại.', 500));
+  }
+
+  res.status(201).json({
+    status: 'success',
+    data: { booking }
+  });
+});
 
 // ==================== THANH TOÁN STRIPE ====================
 
@@ -106,7 +139,7 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
 exports.createMomoPayment = catchAsync(async (req, res, next) => {
   let context;
   try {
-    context = await preparePaymentInitialization(req);
+    context = await preparePaymentInitialization(req, { useSoftLock: false });
   } catch (err) {
     return next(err);
   }
@@ -362,7 +395,90 @@ exports.getByStripeSession = catchAsync(async (req, res, next) => {
 });
 
 // Admin: Cập nhật booking
-exports.updateBooking = factory.updateOne(Booking);
+exports.updateBooking = catchAsync(async (req, res, next) => {
+  const existing = await Booking.findById(req.params.id);
+
+  if (!existing) {
+    return next(new AppError('Không tìm thấy tài liệu với ID này', 404));
+  }
+
+  const isCashConfirm =
+    existing.paymentMethod === 'cash' &&
+    existing.paid === false &&
+    req.body?.paid === true;
+
+  if (!isCashConfirm) {
+    const doc = await Booking.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+    });
+
+    if (!doc) {
+      return next(new AppError('Không tìm thấy tài liệu với ID này', 404));
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      data: {
+        data: doc
+      }
+    });
+  }
+
+  const session = await mongoose.startSession();
+  let updatedBooking;
+
+  try {
+    await session.withTransaction(async () => {
+      updatedBooking = await Booking.findByIdAndUpdate(existing.id, req.body, {
+        new: true,
+        runValidators: true,
+        session
+      });
+
+      const promoSnap = existing.promotionSnapshot;
+      if (promoSnap?.promotion) {
+        await Promotion.findByIdAndUpdate(
+          promoSnap.promotion,
+          {
+            $inc: {
+              usedCount: 1,
+              totalDiscountGiven: Math.max(existing.discountAmount || 0, 0)
+            }
+          },
+          { session }
+        );
+
+        if (promoSnap.userPromotion) {
+          const uPromo = await UserPromotion.findById(
+            promoSnap.userPromotion
+          ).session(session);
+          if (uPromo) {
+            uPromo.usageCount += 1;
+            uPromo.status =
+              uPromo.usageLimit && uPromo.usageCount >= uPromo.usageLimit
+                ? 'used'
+                : 'active';
+            await uPromo.save({ session });
+          }
+        }
+      }
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  if (!updatedBooking) {
+    return next(new AppError('Không thể cập nhật booking.', 500));
+  }
+
+  return res.status(200).json({
+    status: 'success',
+    data: {
+      data: updatedBooking
+    }
+  });
+});
 
 // Admin: Xóa booking
 exports.deleteBooking = factory.deleteOne(Booking);

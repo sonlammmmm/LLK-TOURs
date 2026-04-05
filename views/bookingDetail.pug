@@ -64,6 +64,19 @@ block adminContent
           span.booking-detail__label Tổng tiền:
           span.booking-detail__value= `${booking.price.toLocaleString('vi-VN')} VND`
         .booking-detail__item
+          span.booking-detail__label Hình thức:
+          span.booking-detail__value
+            if booking.paymentMethod === 'cash'
+              | Tiền mặt
+            else if booking.paymentMethod === 'momo'
+              | MoMo
+            else
+              | Stripe
+        if booking.providerTransactionId
+          .booking-detail__item
+            span.booking-detail__label Mã giao dịch:
+            span.booking-detail__value= booking.providerTransactionId
+        .booking-detail__item
           span.booking-detail__label Trạng thái:
           span.booking-detail__value
             span(class=`booking-badge booking-badge--${booking.paid ? 'paid' : 'unpaid'}`)= booking.paid ? 'Đã thanh toán' : 'Chưa thanh toán'
