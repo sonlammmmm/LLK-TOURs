@@ -1151,14 +1151,18 @@ exports.getManageReviews = catchAsync(async (req, res, next) => {
     })
     .lean({ virtuals: true });
 
-  res.status(200).render('manageReviews', {
-    title: 'Quản lý đánh giá',
-    reviews: Array.isArray(reviews)
-      ? reviews.map(review => ({
+  const safeReviews = Array.isArray(reviews)
+    ? reviews
+        .filter(review => review && review.user && review.tour)
+        .map(review => ({
           ...review,
           isHidden: Boolean(review.isHidden)
         }))
-      : [],
+    : [];
+
+  res.status(200).render('manageReviews', {
+    title: 'Quản lý đánh giá',
+    reviews: safeReviews,
     adminMenuActive: 'reviews'
   });
 });
