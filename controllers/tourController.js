@@ -1,6 +1,7 @@
 const multer = require('multer');
 const sharp = require('sharp');
 const Tour = require('../schemas/tourModel');
+const Booking = require('../schemas/bookingModel');
 const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
 const AppError = require('../utils/appError');
@@ -301,8 +302,42 @@ exports.updateTour = catchAsync(async (req, res, next) => {
   res.status(200).json({ status: 'success', data: { tour: updated } });
 });
 
-// Xóa tour
-exports.deleteTour = factory.deleteOne(Tour);
+// Xóa tour (nếu đã phát sinh giao dịch thì chỉ ẩn khỏi web)
+exports.deleteTour = catchAsync(async (req, res, next) => {
+  const tourQuery = Tour.findById(req.params.id);
+  tourQuery._includeHiddenTours = true;
+  const tour = await tourQuery;
+
+  if (!tour) {
+    return next(new AppError('Không tìm thấy tour với ID này', 404));
+  }
+
+  const hasTransactions = await Booking.exists({ tour: tour._id });
+
+  if (hasTransactions) {
+    if (!tour.isHidden) {
+      tour.isHidden = true;
+      await tour.save({ validateBeforeSave: false });
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      data: {
+        action: 'hidden',
+        message: 'Tour đã phát sinh giao dịch nên chỉ được ẩn khỏi website.'
+      }
+    });
+  }
+
+  const deleteQuery = Tour.findByIdAndDelete(req.params.id);
+  deleteQuery._includeHiddenTours = true;
+  await deleteQuery;
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
 
 // Tạo tour mới: parse JSON string (startDates, startLocation, locations, guides), ép kiểu số
 exports.createTour = catchAsync(async (req, res, next) => {
@@ -379,76 +414,75 @@ exports.createTour = catchAsync(async (req, res, next) => {
   });
 });
 
-// ==================== TÌM KIẾM ĐỊA LÝ ====================
-
+// ==================== TÌM KIẾM ĐỊA LÝ ==================== Đang phát triển
 // Tìm tour trong bán kính nhất định từ tọa độ (geoWithin)
-exports.getToursWithin = catchAsync(async (req, res, next) => {
-  const { distance, latlng, unit } = req.params;
-  const [lat, lng] = latlng.split(',');
+// exports.getToursWithin = catchAsync(async (req, res, next) => {
+//   const { distance, latlng, unit } = req.params;
+//   const [lat, lng] = latlng.split(',');
 
-  const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1;
+//   const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1;
 
-  if (!lat || !lng) {
-    next(
-      new AppError(
-        'Vui lòng cung cấp vĩ độ và kinh độ theo định dạng lat,lng.',
-        400
-      )
-    );
-  }
+//   if (!lat || !lng) {
+//     next(
+//       new AppError(
+//         'Vui lòng cung cấp vĩ độ và kinh độ theo định dạng lat,lng.',
+//         400
+//       )
+//     );
+//   }
 
-  const tours = await Tour.find({
-    startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } }
-  });
+//   const tours = await Tour.find({
+//     startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } }
+//   });
 
-  res.status(200).json({
-    status: 'success',
-    results: tours.length,
-    data: {
-      data: tours
-    }
-  });
-});
+//   res.status(200).json({
+//     status: 'success',
+//     results: tours.length,
+//     data: {
+//       data: tours
+//     }
+//   });
+// });
 
 // Tính khoảng cách từ tọa độ đến tất cả tour (geoNear aggregate)
-exports.getDistances = catchAsync(async (req, res, next) => {
-  const { latlng, unit } = req.params;
-  const [lat, lng] = latlng.split(',');
-
-  const multiplier = unit === 'mi' ? 0.000621371 : 0.001;
-
-  if (!lat || !lng) {
-    next(
-      new AppError(
-        'Vui lòng cung cấp vĩ độ và kinh độ theo định dạng lat,lng.',
-        400
-      )
-    );
-  }
-
-  const distances = await Tour.aggregate([
-    {
-      $geoNear: {
-        near: {
-          type: 'Point',
-          coordinates: [lng * 1, lat * 1]
-        },
-        distanceField: 'distance',
-        distanceMultiplier: multiplier
-      }
-    },
-    {
-      $project: {
-        distance: 1,
-        name: 1
-      }
-    }
-  ]);
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      data: distances
-    }
-  });
-});
+// exports.getDistances = catchAsync(async (req, res, next) => {
+//   const { latlng, unit } = req.params;
+//   const [lat, lng] = latlng.split(',');
+//
+//   const multiplier = unit === 'mi' ? 0.000621371 : 0.001;
+//
+//   if (!lat || !lng) {
+//     next(
+//       new AppError(
+//         'Vui lòng cung cấp vĩ độ và kinh độ theo định dạng lat,lng.',
+//         400
+//       )
+//     );
+//   }
+//
+//   const distances = await Tour.aggregate([
+//     {
+//       $geoNear: {
+//         near: {
+//           type: 'Point',
+//           coordinates: [lng * 1, lat * 1]
+//         },
+//         distanceField: 'distance',
+//         distanceMultiplier: multiplier
+//       }
+//     },
+//     {
+//       $project: {
+//         distance: 1,
+//         name: 1
+//       }
+//     }
+//   ]);
+//
+//   res.status(200).json({
+//     status: 'success',
+//     data: {
+//       data: distances
+//     }
+//   });
+// });

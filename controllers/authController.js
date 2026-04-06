@@ -33,8 +33,10 @@ const createSendToken = (user, statusCode, req, res) => {
     secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
   });
 
-  // Xóa trường mật khẩu khỏi kết quả trả về
+  // Xóa các trường nhạy cảm khỏi kết quả trả về
   user.password = undefined;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
 
   res.status(statusCode).json({
     status: 'success',

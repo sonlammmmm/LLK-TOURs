@@ -25,6 +25,7 @@ const siteSettingRouter = require('./routes/siteSettingRoutes');
 
 const app = express();
 
+// Tài nguyên vendor cho bundle front-end
 app.use(
   '/node_modules/axios/dist/esm',
   express.static(path.join(__dirname, 'node_modules/axios/dist/esm'))
@@ -37,10 +38,11 @@ app.use(
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
-// 1) Middleware Toàn Cục
+// 1) Middleware
 // Phục vụ các tệp tĩnh
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Cung cấp cấu hình runtime cho template
 app.use((req, res, next) => {
   res.locals.stripePublicKey = process.env.STRIPE_PUBLIC_KEY || '';
   res.locals.googleClientId = process.env.GOOGLE_CLIENT_ID || '';
@@ -54,11 +56,13 @@ app.use((req, res, next) => {
   next();
 });
 
+const shouldLoadSiteSettings = req => !req.originalUrl.startsWith('/api');
+
 // Tải thông tin cài đặt website cho footer
 app.use(async (req, res, next) => {
   try {
     // Chỉ tải cho các request render view (không phải API)
-    if (!req.originalUrl.startsWith('/api')) {
+    if (shouldLoadSiteSettings(req)) {
       res.locals.siteSettings = await SiteSetting.getSettings();
     }
   } catch (err) {
@@ -209,12 +213,9 @@ app.use('/api/v1/faqs', faqRouter);
 app.use('/api/v1/contacts', contactRouter);
 app.use('/api/v1/site-settings', siteSettingRouter);
 
+// Bắt route không tồn tại
 app.all('*', (req, res, next) => {
   next(new AppError(`Không tìm thấy ${req.originalUrl} trên server!`, 404));
-});
-
-app.use((err, req, res, next) => {
-  next(err);
 });
 
 app.use(globalErrorHandler);

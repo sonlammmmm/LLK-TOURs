@@ -716,7 +716,9 @@ exports.updateUserData = catchAsync(async (req, res, next) => {
 
 // Trang quản lý tour: hiển thị tất cả tour + thống kê slot/booking sắp tới
 exports.getManageTours = catchAsync(async (req, res, next) => {
-  const toursRaw = await Tour.find();
+  const tourQuery = Tour.find();
+  tourQuery._includeHiddenTours = true;
+  const toursRaw = await tourQuery;
   const now = new Date();
   const hiddenReviewCountMap = await buildHiddenReviewCountMap(
     req.user ? req.user.id : null,
@@ -747,6 +749,21 @@ exports.getManageTours = catchAsync(async (req, res, next) => {
     const dateKey = stat._id.startDate;
     if (!acc[tourId]) acc[tourId] = {};
     acc[tourId][dateKey] = stat.bookedSeats;
+    return acc;
+  }, {});
+
+  const bookingTotals = await Booking.aggregate([
+    {
+      $group: {
+        _id: '$tour',
+        total: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const bookingTotalMap = bookingTotals.reduce((acc, stat) => {
+    if (!stat || !stat._id) return acc;
+    acc[stat._id.toString()] = stat.total || 0;
     return acc;
   }, {});
 
@@ -792,6 +809,8 @@ exports.getManageTours = catchAsync(async (req, res, next) => {
       .sort((a, b) => new Date(a.date) - new Date(b.date));
 
     tourObj.activeStartDates = activeStartDates;
+    tourObj.totalTransactions = bookingTotalMap[tourId] || 0;
+    tourObj.hasTransactions = tourObj.totalTransactions > 0;
     return tourObj;
   });
 
@@ -828,7 +847,9 @@ exports.getNewTourForm = catchAsync(async (req, res, next) => {
 
 // Form chỉnh sửa tour (load tour + danh sách guide)
 exports.getEditTourForm = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findById(req.params.id).populate('guides');
+  const tourQueryById = Tour.findById(req.params.id).populate('guides');
+  tourQueryById._includeHiddenTours = true;
+  const tour = await tourQueryById;
 
   if (!tour) {
     return next(new AppError('Không tìm thấy tour với ID này', 404));

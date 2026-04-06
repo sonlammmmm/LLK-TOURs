@@ -7,11 +7,24 @@ const router = express.Router();
 // Tất cả routes yêu cầu đăng nhập
 router.use(authController.protect);
 
+// API: Lịch sử chat của user đang đăng nhập
+router.get('/me/history', messageController.getMyChatHistory);
+
+// API: User gửi tin nhắn đến admin
+router.post('/me/send', messageController.createUserMessage);
+
 // API: Lấy lịch sử chat giữa admin và user
 router.get(
   '/history/:userId',
   authController.restrictTo('admin'),
   messageController.getChatHistory
+);
+
+// API: Admin gửi tin nhắn đến user
+router.post(
+  '/admin/send/:userId',
+  authController.restrictTo('admin'),
+  messageController.createAdminMessage
 );
 
 // API: Lấy danh sách user có tin nhắn (cho admin, có phân trang)

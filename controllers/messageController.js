@@ -3,6 +3,11 @@ const User = require('../schemas/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
+const getMessageContent = body => {
+  if (!body) return '';
+  return (body.content || body.message || '').trim();
+};
+
 // ==================== TRANG CHAT (RENDER VIEW) ====================
 
 // Trang admin chat
@@ -93,6 +98,75 @@ exports.getUserChatView = catchAsync(async (req, res) => {
 });
 
 // ==================== API CHAT ====================
+
+// API: lịch sử hội thoại của user đang đăng nhập
+exports.getMyChatHistory = catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const messages = await Message.find({
+    $or: [{ sender: userId }, { receiver: userId }]
+  }).sort({ createdAt: 1 });
+
+  res.status(200).json({
+    status: 'success',
+    results: messages.length,
+    data: { messages }
+  });
+});
+
+// API: user gửi tin nhắn đến admin
+exports.createUserMessage = catchAsync(async (req, res, next) => {
+  const content = getMessageContent(req.body);
+  if (!content) {
+    return next(new AppError('Nội dung tin nhắn không được để trống.', 400));
+  }
+
+  const userId = req.user._id;
+  const saved = await Message.create({
+    sender: userId,
+    receiver: userId,
+    senderName: req.user.name,
+    receiverName: 'Admins',
+    content,
+    role: 'user'
+  });
+
+  res.status(201).json({
+    status: 'success',
+    data: { message: saved }
+  });
+});
+
+// API: admin gửi tin nhắn đến user
+exports.createAdminMessage = catchAsync(async (req, res, next) => {
+  const content = getMessageContent(req.body);
+  if (!content) {
+    return next(new AppError('Nội dung tin nhắn không được để trống.', 400));
+  }
+
+  const { userId } = req.params;
+  if (!userId) {
+    return next(new AppError('Thiếu userId người nhận.', 400));
+  }
+
+  const targetUser = await User.findById(userId).select('name role');
+  if (!targetUser || targetUser.role !== 'user') {
+    return next(new AppError('Không tìm thấy người dùng hợp lệ.', 404));
+  }
+
+  const saved = await Message.create({
+    sender: req.user._id,
+    receiver: userId,
+    senderName: req.user.name,
+    receiverName: targetUser.name,
+    content,
+    role: 'admin'
+  });
+
+  res.status(201).json({
+    status: 'success',
+    data: { message: saved }
+  });
+});
 
 // API: lịch sử hội thoại của 1 user cụ thể (cho admin UI)
 exports.getChatHistory = catchAsync(async (req, res, next) => {

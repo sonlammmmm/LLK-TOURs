@@ -1,9 +1,9 @@
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
 const http = require('http');
-const { Server } = require('socket.io');
 const { promisify } = require('util');
+const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+const { Server } = require('socket.io');
 const Message = require('./schemas/messageModel');
 const User = require('./schemas/userModel');
 const { startSoftLockMaintenance } = require('./utils/bookingSoftLock');
@@ -18,6 +18,7 @@ process.on('uncaughtException', err => {
 dotenv.config({ path: './config.env' });
 const app = require('./app');
 
+// Kết nối cơ sở dữ liệu
 const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
   process.env.DATABASE_PASSWORD
@@ -32,7 +33,8 @@ mongoose
     console.error('Lỗi kết nối DB:', err);
   });
 
-const port = process.env.PORT || 3000;
+// HTTP + Socket.IO server
+const PORT = process.env.PORT || 3000;
 const server = http.createServer(app);
 startSoftLockMaintenance();
 
@@ -43,18 +45,16 @@ const io = new Server(server, {
   }
 });
 setSocketServerInstance(io);
-// Map socket theo từng user
-const userSockets = new Map();
 
+// Lấy token xác thực từ socket handshake
 const getTokenFromSocket = socket => {
   const authHeader = socket.handshake.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
+  if (authHeader?.startsWith('Bearer ')) {
     return authHeader.split(' ')[1];
   }
 
-  if (socket.handshake.auth && socket.handshake.auth.token) {
-    return socket.handshake.auth.token;
-  }
+  const authToken = socket.handshake.auth?.token;
+  if (authToken) return authToken;
 
   const cookieHeader = socket.handshake.headers.cookie;
   if (!cookieHeader) return null;
@@ -71,6 +71,7 @@ const getTokenFromSocket = socket => {
   return null;
 };
 
+// Xác thực kết nối socket
 io.use(async (socket, next) => {
   try {
     const token = getTokenFromSocket(socket);
@@ -91,42 +92,40 @@ io.use(async (socket, next) => {
   }
 });
 
+// Tham gia phòng theo user/admin một lần mỗi kết nối
 const registerSocket = socket => {
   if (!socket.user || socket.isRegistered) return;
   const actualUserId = socket.user.id.toString();
-  userSockets.set(actualUserId, socket.id);
   socket.join(actualUserId);
   if (socket.user.role === 'admin') socket.join('admins');
   socket.isRegistered = true;
 };
 
+// Sự kiện chat realtime
 io.on('connection', socket => {
+  const emitMessageError = error => socket.emit('messageError', { error });
   registerSocket(socket);
 
   socket.on('register', ({ userId, role }) => {
     const actualUserId = socket.user.id.toString();
     const actualRole = socket.user.role;
     if (userId && userId !== actualUserId) {
-      return socket.emit('messageError', {
-        error: 'Thông tin đăng nhập socket không hợp lệ.'
-      });
+      return emitMessageError('Thông tin đăng nhập socket không hợp lệ.');
     }
     if (role && role !== actualRole) {
-      return socket.emit('messageError', {
-        error: 'Vai trò socket không hợp lệ.'
-      });
+      return emitMessageError('Vai trò socket không hợp lệ.');
     }
     registerSocket(socket);
   });
 
   socket.on('joinUserRoom', ({ userId }) => {
     if (socket.user.role !== 'admin') {
-      return socket.emit('messageError', {
-        error: 'Chỉ admin mới được phép truy cập phòng người dùng.'
-      });
+      return emitMessageError(
+        'Chỉ admin mới được phép truy cập phòng người dùng.'
+      );
     }
     if (!userId) {
-      return socket.emit('messageError', { error: 'Thiếu userId phòng chat.' });
+      return emitMessageError('Thiếu userId phòng chat.');
     }
     socket.join(userId);
   });
@@ -136,35 +135,29 @@ io.on('connection', socket => {
       registerSocket(socket);
       const actualSenderId = socket.user.id.toString();
       const { role } = socket.user;
-      const message = (data.message || '').trim();
+      const message = (data?.message || '').trim();
       if (!message) {
-        return socket.emit('messageError', { error: 'Thiếu dữ liệu.' });
+        return emitMessageError('Thiếu dữ liệu.');
       }
 
       if (data.senderId && data.senderId !== actualSenderId) {
-        return socket.emit('messageError', {
-          error: 'Không thể giả mạo người gửi.'
-        });
+        return emitMessageError('Không thể giả mạo người gửi.');
       }
 
       if (data.role && data.role !== role) {
-        return socket.emit('messageError', { error: 'Sai vai trò người gửi.' });
+        return emitMessageError('Sai vai trò người gửi.');
       }
 
       const convoUserId = role === 'user' ? actualSenderId : data.receiverId;
       if (!convoUserId) {
-        return socket.emit('messageError', {
-          error: 'Thiếu thông tin người nhận để tạo hội thoại.'
-        });
+        return emitMessageError('Thiếu thông tin người nhận để tạo hội thoại.');
       }
 
       let receiverName = 'Admins';
       if (role === 'admin') {
         const targetUser = await User.findById(convoUserId).select('name');
         if (!targetUser) {
-          return socket.emit('messageError', {
-            error: 'Không tìm thấy người dùng để chat.'
-          });
+          return emitMessageError('Không tìm thấy người dùng để chat.');
         }
         receiverName = targetUser.name;
       }
@@ -194,21 +187,17 @@ io.on('connection', socket => {
       if (role === 'user') io.to('admins').emit('newMessage', payload);
     } catch (err) {
       console.error('Lỗi gửi tin nhắn:', err);
-      socket.emit('messageError', { error: 'Không thể gửi tin nhắn.' });
-    }
-  });
-
-  socket.on('disconnect', () => {
-    if (socket.user && socket.user.id) {
-      userSockets.delete(socket.user.id.toString());
+      emitMessageError('Không thể gửi tin nhắn.');
     }
   });
 });
 
-server.listen(port, () => {
-  console.log(`Server đang chạy tại http://localhost:${port}`);
+// Khởi động HTTP server
+server.listen(PORT, () => {
+  console.log(`Server đang chạy tại http://localhost:${PORT}`);
 });
 
+// Tắt ứng dụng an toàn khi lỗi bất đồng bộ
 process.on('unhandledRejection', err => {
   console.error('Lỗi không xử lý được, đang dừng ứng dụng.');
   console.error(err.name, err.message);

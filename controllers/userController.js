@@ -185,5 +185,31 @@ exports.activateUser = catchAsync(async (req, res, next) => {
   });
 });
 
+// Admin vô hiệu hoá tài khoản (soft delete: active = false)
+// Dành cho admin
+exports.deactivateUser = catchAsync(async (req, res, next) => {
+  const user = await User.findOneAndUpdate(
+    { _id: req.params.id, active: true },
+    { active: false },
+    { new: true }
+  );
+
+  if (!user) {
+    return next(
+      new AppError(
+        'Không tìm thấy người dùng hoặc người dùng đã bị vô hiệu hoá',
+        404
+      )
+    );
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user
+    }
+  });
+});
+
 // Xóa user (hard delete)
 exports.deleteUser = factory.deleteOne(User);

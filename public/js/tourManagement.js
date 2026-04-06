@@ -56,9 +56,40 @@ export const deleteTour = async (tourId) => {
       window.setTimeout(() => {
         location.reload();
       }, 1500);
+      return;
+    }
+
+    if (res.status === 200 && res.data?.data?.action === 'hidden') {
+      showAlert('success', res.data?.data?.message || 'Tour đã được ẩn khỏi website.');
+      window.setTimeout(() => {
+        location.reload();
+      }, 1500);
     }
   } catch (err) {
     showAlert('error', err.response ? err.response.data.message : 'Đã xảy ra lỗi khi xóa tour');
+  }
+};
+
+export const toggleTourVisibility = async (tourId, shouldHide) => {
+  try {
+    const url = `/api/v1/tours/${tourId}`;
+    const res = await axios({
+      method: 'PATCH',
+      url,
+      data: { isHidden: shouldHide }
+    });
+
+    if (res.data?.status === 'success') {
+      showAlert(
+        'success',
+        shouldHide ? 'Tour đã được ẩn khỏi website.' : 'Tour đã hiển thị lại trên website.'
+      );
+      window.setTimeout(() => {
+        location.reload();
+      }, 1200);
+    }
+  } catch (err) {
+    showAlert('error', err.response ? err.response.data.message : 'Không thể cập nhật trạng thái tour');
   }
 };
 
@@ -725,6 +756,26 @@ export const handleDeleteTour = () => {
 
       if (confirm('Bạn có chắc chắn muốn xóa tour này? Hành động này không thể hoàn tác.')) {
         await deleteTour(tourId);
+      }
+    });
+  });
+};
+
+export const handleToggleTourVisibility = () => {
+  const toggleButtons = document.querySelectorAll('.btn-toggle-tour');
+
+  toggleButtons.forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      const tourId = e.currentTarget.dataset.tourId;
+      const isHidden = e.currentTarget.dataset.hidden === 'true';
+      if (!tourId) return;
+
+      const confirmMessage = isHidden
+        ? 'Bạn có muốn hiển thị lại tour này trên website?'
+        : 'Bạn có chắc chắn muốn ẩn tour này khỏi website?';
+
+      if (confirm(confirmMessage)) {
+        await toggleTourVisibility(tourId, !isHidden);
       }
     });
   });

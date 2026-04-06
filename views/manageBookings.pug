@@ -50,7 +50,7 @@ block adminContent
       .llk-admin-card-grid.booking-management__list
         each booking in bookingList
           - const isPaid = !!booking.paid;
-          - const tourName = booking.tour && booking.tour.name ? booking.tour.name : 'Tour đã xóa';
+          - const tourName = booking.tour && booking.tour.name ? booking.tour.name : 'Không xác định';
           - const userName = booking.user && booking.user.name ? booking.user.name : 'Khách ẩn danh';
           - const userEmail = booking.user && booking.user.email ? booking.user.email : '';
           - const userPhoto = booking.user && booking.user.photo ? booking.user.photo : 'default.jpg';

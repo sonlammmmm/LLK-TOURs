@@ -4,7 +4,7 @@ import { login, logout, initGoogleLogin } from "./login"
 import { updateSettings } from "./updateSettings"
 import { signup } from "./signup"
 import { bookTour } from "./stripe"
-import { handleTourForm, handleDeleteTour, initTourAdminInteractions, initTourSearch } from "./tourManagement"
+import { handleTourForm, handleDeleteTour, handleToggleTourVisibility, initTourAdminInteractions, initTourSearch } from "./tourManagement"
 import { handleUserForm, handleDeactivateUser, handleActivateUser } from "./userManagement"
 import {
   handleDeleteBooking,
@@ -222,6 +222,7 @@ if (tourManagementList) {
 
 if (adminTourGrid) {
   handleDeleteTour()
+  handleToggleTourVisibility()
   initTourAdminInteractions()
   initTourSearch()
 }

@@ -402,13 +402,42 @@ exports.updateBooking = catchAsync(async (req, res, next) => {
     return next(new AppError('Không tìm thấy tài liệu với ID này', 404));
   }
 
+  const allowedFields = ['startDate', 'paid'];
+  const updateData = {};
+  const requestKeys = Object.keys(req.body || {});
+  const invalidKeys = requestKeys.filter(key => !allowedFields.includes(key));
+
+  if (invalidKeys.length > 0) {
+    return next(
+      new AppError(
+        'Chỉ được cập nhật ngày bắt đầu hoặc trạng thái thanh toán.',
+        400
+      )
+    );
+  }
+
+  allowedFields.forEach(field => {
+    if (typeof req.body?.[field] !== 'undefined') {
+      updateData[field] = req.body[field];
+    }
+  });
+
+  if (Object.keys(updateData).length === 0) {
+    return next(
+      new AppError(
+        'Vui lòng cung cấp ngày bắt đầu hoặc trạng thái thanh toán.',
+        400
+      )
+    );
+  }
+
   const isCashConfirm =
     existing.paymentMethod === 'cash' &&
     existing.paid === false &&
-    req.body?.paid === true;
+    updateData.paid === true;
 
   if (!isCashConfirm) {
-    const doc = await Booking.findByIdAndUpdate(req.params.id, req.body, {
+    const doc = await Booking.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true
     });
@@ -430,11 +459,15 @@ exports.updateBooking = catchAsync(async (req, res, next) => {
 
   try {
     await session.withTransaction(async () => {
-      updatedBooking = await Booking.findByIdAndUpdate(existing.id, req.body, {
-        new: true,
-        runValidators: true,
-        session
-      });
+      updatedBooking = await Booking.findByIdAndUpdate(
+        existing.id,
+        updateData,
+        {
+          new: true,
+          runValidators: true,
+          session
+        }
+      );
 
       const promoSnap = existing.promotionSnapshot;
       if (promoSnap?.promotion) {

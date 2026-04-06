@@ -62,12 +62,38 @@ const userSchema = new mongoose.Schema({
     }
   },
   passwordChangedAt: Date,
-  passwordResetToken: String,
-  passwordResetExpires: Date,
+  passwordResetToken: {
+    type: String,
+    select: false
+  },
+  passwordResetExpires: {
+    type: Date,
+    select: false
+  },
   active: {
     type: Boolean,
     default: true,
     select: false
+  }
+});
+
+userSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    delete ret.password;
+    delete ret.passwordResetToken;
+    delete ret.passwordResetExpires;
+    delete ret.__v;
+    return ret;
+  }
+});
+
+userSchema.set('toObject', {
+  transform: (doc, ret) => {
+    delete ret.password;
+    delete ret.passwordResetToken;
+    delete ret.passwordResetExpires;
+    delete ret.__v;
+    return ret;
   }
 });
 

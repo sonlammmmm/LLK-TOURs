@@ -33,6 +33,12 @@ router.patch(
   userController.activateUser
 );
 
+router.patch(
+  '/deactivate/:id',
+  authController.restrictTo('admin'),
+  userController.deactivateUser
+);
+
 router
   .route('/')
   .get(userController.getAllUsers)

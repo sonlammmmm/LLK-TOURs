@@ -40,10 +40,15 @@ block adminContent
             .llk-admin-tour-card__body
               .llk-admin-tour-card__head
                 h3.llk-admin-tour-card__title= tour.name
+                if tour.isHidden
+                  span.llk-admin-tour-card__status.text-danger Đang ẩn khỏi website
                 .llk-admin-tour-card__actions
                   a.btn.btn--small.btn--blue(href=`/admin/tours/${tour._id}/edit`) Sửa
                   a.btn.btn--small.btn--green(href=`/tour/${tour.slug}`, target='_blank') Xem
-                  button.btn.btn--small.btn--red.btn-delete-tour(type='button', data-tour-id=`${tour._id}`) Xóa
+                  if tour.hasTransactions
+                    button.btn.btn--small.btn--ghost.btn-toggle-tour(type='button', data-tour-id=`${tour._id}`, data-hidden= tour.isHidden ? 'true' : 'false')= tour.isHidden ? 'Hiện trên web' : 'Ẩn khỏi web'
+                  else
+                    button.btn.btn--small.btn--red.btn-delete-tour(type='button', data-tour-id=`${tour._id}`) Xóa
               p.llk-admin-tour-card__summary= tour.summary || 'Chưa có mô tả'
               .llk-admin-tour-card__meta
                 span
@@ -58,6 +63,11 @@ block adminContent
                   svg
                     use(xlink:href='/img/icons.svg#icon-star')
                   | #{tour.ratingsAverage} (#{typeof tour.displayRatingsQuantity === 'number' ? tour.displayRatingsQuantity : (tour.ratingsQuantity || 0)})
+                if tour.hasTransactions
+                  span
+                    svg
+                      use(xlink:href='/img/icons.svg#icon-credit-card')
+                    | #{tour.totalTransactions} giao dịch
               .llk-admin-tour-card__dates
                 h4.llk-admin-tour-card__dates-title Ngày khởi hành đang hoạt động
                 if tour.activeStartDates.length

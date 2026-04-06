@@ -59,6 +59,10 @@ const tourSchema = new mongoose.Schema(
       required: [true, 'Một tour du lịch phải có ảnh bìa']
     },
     images: [String],
+    isHidden: {
+      type: Boolean,
+      default: false
+    },
     createdAt: {
       type: Date,
       default: Date.now(),
@@ -133,10 +137,18 @@ const tourSchema = new mongoose.Schema(
     startLocation: {
       type: {
         type: String,
-        default: 'Point',
         enum: ['Point']
       },
-      coordinates: [Number],
+      coordinates: {
+        type: [Number],
+        validate: {
+          validator: function(val) {
+            if (val == null) return true;
+            return Array.isArray(val) && val.length === 2;
+          },
+          message: 'Tọa độ phải là mảng [lng, lat]'
+        }
+      },
       address: String,
       description: String
     },
@@ -180,6 +192,18 @@ tourSchema.virtual('reviews', {
   localField: '_id'
 });
 
+// MIDDLEWARE: bỏ startLocation nếu thiếu tọa độ
+tourSchema.pre('save', function(next) {
+  if (
+    this.startLocation &&
+    (!this.startLocation.coordinates ||
+      this.startLocation.coordinates.length === 0)
+  ) {
+    this.startLocation = undefined;
+  }
+  next();
+});
+
 // MIDDLEWARE: Tự động tạo slug
 tourSchema.pre('save', function(next) {
   this.slug = slugify(this.name, { lower: true });
@@ -216,7 +240,11 @@ tourSchema.pre('save', function(next) {
 });
 
 tourSchema.pre(/^find/, function(next) {
-  this.find({ secretTour: { $ne: true } });
+  const baseFilter = { secretTour: { $ne: true } };
+  if (!this._includeHiddenTours) {
+    baseFilter.isHidden = { $ne: true };
+  }
+  this.find(baseFilter);
   next();
 });
 
