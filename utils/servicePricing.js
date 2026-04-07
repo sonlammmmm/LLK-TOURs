@@ -1,5 +1,8 @@
 const Service = require('../schemas/serviceModel');
 
+// ==================== PARSE DỊCH VỤ ====================
+
+// Chuẩn hoá dữ liệu dịch vụ (array hoặc JSON string)
 const normalizeSelection = raw => {
   if (!raw) return [];
   if (Array.isArray(raw)) return raw;
@@ -20,6 +23,7 @@ const normalizeSelection = raw => {
   return [];
 };
 
+// Chuẩn hoá về { serviceId, quantity }
 const formatSelection = items =>
   items
     .map(item => ({
@@ -28,8 +32,10 @@ const formatSelection = items =>
     }))
     .filter(item => item.serviceId);
 
+// Parse dịch vụ từ payload request
 exports.parseSelectedServices = raw => formatSelection(normalizeSelection(raw));
 
+// Tính giá dịch vụ theo billingType và số người
 exports.calculateServicePricing = async (rawSelection, participants = 1) => {
   const selection = exports.parseSelectedServices(rawSelection);
   if (!selection.length) {

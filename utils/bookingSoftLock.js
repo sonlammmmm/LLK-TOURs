@@ -1,6 +1,8 @@
 const BookingHold = require('../schemas/bookingHoldModel');
 const Tour = require('../schemas/tourModel');
 
+// ==================== CẤU HÌNH GIỮ CHỖ ====================
+
 const DEFAULT_HOLD_MS =
   Math.max(
     Number(process.env.BOOKING_SOFT_LOCK_DURATION_MS) || 10 * 60 * 1000,
@@ -13,8 +15,10 @@ const SWEEP_INTERVAL_MS =
 const SWEEP_BATCH_SIZE =
   Number(process.env.BOOKING_SOFT_LOCK_SWEEP_BATCH) || 50;
 
+// Tạo key ngày dạng yyyy-mm-dd để tra cứu startDates
 const buildStartKey = date => new Date(date).toISOString().split('T')[0] || '';
 
+// Lấy khoảng thời gian đầu ngày/ cuối ngày theo UTC
 const getDayRange = dateValue => {
   const base = new Date(dateValue);
   if (Number.isNaN(base.getTime())) return null;
@@ -25,6 +29,7 @@ const getDayRange = dateValue => {
   return { start, end };
 };
 
+// Update slots theo delta, có thể check đủ chỗ trước khi giảm
 const updateSlots = async (tourId, startDate, delta, filterByAvailability) => {
   const dayRange = getDayRange(startDate);
   if (!dayRange) return null;
@@ -47,12 +52,15 @@ const updateSlots = async (tourId, startDate, delta, filterByAvailability) => {
   });
 };
 
+// Giảm slot theo số người
 const decreaseSlots = (tourId, startDate, participants) =>
   updateSlots(tourId, startDate, -participants, true);
 
+// Tăng slot lại khi huỷ/ hết hạn
 const increaseSlots = (tourId, startDate, participants) =>
   updateSlots(tourId, startDate, participants, false);
 
+// Giữ chỗ tạm thời trước khi thanh toán
 const acquireSoftLock = async ({
   tourId,
   userId,
@@ -99,6 +107,7 @@ const acquireSoftLock = async ({
   }
 };
 
+// Giải phóng giữ chỗ (huỷ/ hết hạn)
 const releaseSoftLock = async (holdOrId, reason = 'cancelled') => {
   let holdDoc = holdOrId;
   if (!holdDoc || !holdDoc._id) {
@@ -115,6 +124,7 @@ const releaseSoftLock = async (holdOrId, reason = 'cancelled') => {
   return holdDoc;
 };
 
+// Xác nhận giữ chỗ khi booking thành công
 const confirmSoftLock = async (holdId, bookingId) => {
   if (!holdId) return null;
   const hold = await BookingHold.findById(holdId);
@@ -127,6 +137,7 @@ const confirmSoftLock = async (holdId, bookingId) => {
   return hold;
 };
 
+// Cập nhật metadata cho hold
 const updateSoftLockMeta = async (holdId, updates = {}) => {
   if (!holdId) return null;
   const hold = await BookingHold.findById(holdId);
@@ -136,6 +147,7 @@ const updateSoftLockMeta = async (holdId, updates = {}) => {
   return hold;
 };
 
+// Gắn sessionId vào hold và kéo dài thời gian
 const linkSessionToSoftLock = async (holdId, sessionId) => {
   if (!holdId || !sessionId) return null;
   const hold = await BookingHold.findById(holdId);
@@ -150,6 +162,7 @@ const linkSessionToSoftLock = async (holdId, sessionId) => {
   return hold;
 };
 
+// Tìm hold đang active theo session
 const findActiveSoftLockBySession = sessionId => {
   if (!sessionId) return null;
   return BookingHold.findOne({
@@ -158,17 +171,20 @@ const findActiveSoftLockBySession = sessionId => {
   });
 };
 
+// Giải phóng hold theo session
 const releaseSoftLockBySession = async (sessionId, reason = 'cancelled') => {
   const hold = await findActiveSoftLockBySession(sessionId);
   if (!hold) return null;
   return releaseSoftLock(hold, reason);
 };
 
+// Lấy hold theo id
 const getSoftLockById = softLockId => {
   if (!softLockId) return null;
   return BookingHold.findById(softLockId);
 };
 
+// Quét hold hết hạn để giải phóng slot
 const sweepExpiredSoftLocks = async () => {
   const now = new Date();
 
@@ -187,8 +203,10 @@ const sweepExpiredSoftLocks = async () => {
   return releasedHolds.length;
 };
 
+// Interval chạy cron quét hold
 let sweepIntervalId = null;
 
+// Bắt đầu job quét giữ chỗ hết hạn
 const startSoftLockMaintenance = () => {
   if (sweepIntervalId) return sweepIntervalId;
 
@@ -196,9 +214,7 @@ const startSoftLockMaintenance = () => {
     try {
       const released = await sweepExpiredSoftLocks();
       if (released > 0) {
-        console.log(
-          `[SoftLock] Đã giải phóng ${released} giữ chỗ hết hạn`
-        );
+        console.log(`[SoftLock] Đã giải phóng ${released} giữ chỗ hết hạn`);
       }
     } catch (err) {
       console.error('[SoftLock] Lỗi quét giữ chỗ:', err.message);

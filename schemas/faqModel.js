@@ -14,6 +14,7 @@ const faqSchema = new mongoose.Schema(
       trim: true,
       maxlength: [2000, 'Câu trả lời không được vượt quá 2000 ký tự']
     },
+    //vị trí hiển thị, số càng nhỏ càng ưu tiên hiển thị trước
     displayOrder: {
       type: Number,
       default: 0

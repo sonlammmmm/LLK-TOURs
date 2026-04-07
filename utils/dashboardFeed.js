@@ -1,3 +1,4 @@
+// ==================== FORMAT HELPERS ====================
 const DEFAULT_AVATAR = '/img/users/default.jpg';
 
 const currencyFormatter = new Intl.NumberFormat('vi-VN', {
@@ -5,6 +6,7 @@ const currencyFormatter = new Intl.NumberFormat('vi-VN', {
   currency: 'VND'
 });
 
+// Chuẩn hoá Date thành ISO string
 const toISODate = value => {
   if (!value) return null;
   const date = value instanceof Date ? value : new Date(value);
@@ -12,6 +14,7 @@ const toISODate = value => {
   return date.toISOString();
 };
 
+// Format date cho hiển thị dashboard
 const formatHumanDate = value => {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return null;
@@ -21,6 +24,7 @@ const formatHumanDate = value => {
   return `${day}/${month}/${year}`;
 };
 
+// Lấy id an toàn từ object hoặc string
 const getSafeId = source => {
   if (!source) return null;
   if (typeof source === 'string') return source;
@@ -28,6 +32,7 @@ const getSafeId = source => {
   return null;
 };
 
+// Chuẩn hoá card đơn hàng gần đây
 const formatRecentOrderCard = booking => {
   if (!booking) return null;
   const noteParts = [];
@@ -54,6 +59,7 @@ const formatRecentOrderCard = booking => {
   };
 };
 
+// Chuẩn hoá card review
 const formatReviewCard = review => {
   if (!review) return null;
   const reviewerPhoto =

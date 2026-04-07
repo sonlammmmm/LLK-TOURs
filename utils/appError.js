@@ -1,3 +1,4 @@
+// Lỗi tuỳ biến để chuẩn hoá error response toàn hệ thống
 class AppError extends Error {
   constructor(message, statusCode) {
     super(message);

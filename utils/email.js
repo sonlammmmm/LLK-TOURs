@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 const pug = require('pug');
 const { htmlToText } = require('html-to-text');
 
+// ==================== EMAIL SERVICE ====================
 module.exports = class Email {
   constructor(user, url) {
     this.to = user.email;
@@ -10,6 +11,7 @@ module.exports = class Email {
     this.from = `Trần Sỷ Sơn Lâm <${process.env.EMAIL_FROM}>`;
   }
 
+  // Tạo transport theo môi trường
   newTransport() {
     if (process.env.NODE_ENV === 'production') {
       // Email GG
@@ -55,10 +57,12 @@ module.exports = class Email {
     await this.newTransport().sendMail(mailOptions);
   }
 
+  // Email chào mừng
   async sendWelcome() {
     await this.send('welcome', 'Welcome to LLK Tours!');
   }
 
+  // Email reset mật khẩu
   async sendPasswordReset() {
     await this.send(
       'passwordReset',

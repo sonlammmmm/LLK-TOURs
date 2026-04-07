@@ -2,9 +2,13 @@ const Promotion = require('../schemas/promotionModel');
 const UserPromotion = require('../schemas/userPromotionModel');
 const AppError = require('./appError');
 
+// ==================== KHUYẾN MÃI ====================
+
+// Chuẩn hoá mã khuyến mãi
 const normalizeCode = code =>
   typeof code === 'string' ? code.trim().toUpperCase() : '';
 
+// Đảm bảo trạng thái userPromotion còn hợp lệ
 const ensureAssignmentStatus = async assignment => {
   if (!assignment) return null;
   const now = new Date();
@@ -22,6 +26,7 @@ const ensureAssignmentStatus = async assignment => {
   return assignment;
 };
 
+// Kiểm tra mã khuyến mãi và tính discount
 exports.validatePromotionForUser = async ({ code, userId, orderAmount }) => {
   const normalizedCode = normalizeCode(code);
   if (!normalizedCode) return { discountAmount: 0 };
@@ -93,6 +98,7 @@ exports.validatePromotionForUser = async ({ code, userId, orderAmount }) => {
   };
 };
 
+// Ghi nhận usage khi booking thành công
 exports.recordPromotionUsage = async ({
   promotionId,
   userPromotionId,

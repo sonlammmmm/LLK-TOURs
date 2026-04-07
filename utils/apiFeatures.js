@@ -4,7 +4,8 @@ class APIFeatures {
     this.queryString = queryString;
   }
 
-  //1. Tìm theo bộ lọc
+  // ==================== QUERY FILTER ====================
+  // 1. Tìm theo bộ lọc
   filter() {
     const queryObj = { ...this.queryString };
     const excludedFields = ['page', 'sort', 'limit', 'fields'];
@@ -18,7 +19,8 @@ class APIFeatures {
     return this;
   }
 
-  //2. Sắp xếp
+  // ==================== SORT ====================
+  // 2. Sắp xếp
   sort() {
     if (this.queryString.sort) {
       const sortBy = this.queryString.sort.split(',').join(' ');
@@ -30,7 +32,8 @@ class APIFeatures {
     return this;
   }
 
-  //3. Giới hạn trường
+  // ==================== FIELD LIMIT ====================
+  // 3. Giới hạn trường
   limitFields() {
     if (this.queryString.fields) {
       const fields = this.queryString.fields.split(',').join('    ');
@@ -42,7 +45,8 @@ class APIFeatures {
     return this;
   }
 
-  //4. Phân trang
+  // ==================== PAGINATION ====================
+  // 4. Phân trang
   paginate() {
     const page = this.queryString.page * 1 || 1;
     const limit = this.queryString.limit * 1 || 100; //Số lượng phần tử dữ liệu 1 trang

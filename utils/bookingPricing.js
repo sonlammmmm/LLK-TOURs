@@ -2,6 +2,9 @@ const Service = require('../schemas/serviceModel');
 const AppError = require('./appError');
 const { validatePromotionForUser } = require('./promotionEngine');
 
+// ==================== DỊCH VỤ & KHUYẾN MÃI ====================
+
+// Chuẩn hoá payload dịch vụ chọn từ request
 const sanitizeSelectedServices = raw => {
   if (!raw) return [];
 
@@ -34,6 +37,7 @@ const sanitizeSelectedServices = raw => {
     .filter(item => !!item.serviceId);
 };
 
+// Giới hạn số lượng theo cấu hình dịch vụ
 const clampQuantity = (service, requestedQty = 1, participants = 1) => {
   if (service.chargeType === 'per-person') {
     return Math.max(participants, 1);
@@ -49,6 +53,7 @@ const clampQuantity = (service, requestedQty = 1, participants = 1) => {
   return Math.min(qty, max);
 };
 
+// Tính toán tổng giá booking, dịch vụ và khuyến mãi
 exports.buildBookingFinancials = async ({
   tour,
   participants,

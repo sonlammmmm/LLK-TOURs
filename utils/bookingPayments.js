@@ -14,6 +14,7 @@ const {
   getSoftLockById
 } = require('./bookingSoftLock');
 
+// ==================== PAYMENT CONFIG ====================
 const momoConfig = {
   endpoint:
     process.env.MOMO_CREATE_ENDPOINT ||
@@ -37,6 +38,7 @@ const momoConfig = {
   ipnPath: process.env.MOMO_IPN_PATH || '/api/v1/bookings/momo/ipn'
 };
 
+// Giải phóng giữ chỗ an toàn (không throw nếu lỗi)
 const releaseSoftLockSafely = async (softLockDoc, reason) => {
   if (!softLockDoc) return;
   try {
@@ -49,6 +51,7 @@ const releaseSoftLockSafely = async (softLockDoc, reason) => {
   }
 };
 
+// Parse danh sách dịch vụ từ metadata Stripe
 const parseServicesFromMetadata = metadata => {
   if (!metadata || !metadata.services) return [];
 
@@ -72,12 +75,14 @@ const parseServicesFromMetadata = metadata => {
   }
 };
 
+// Chuẩn hoá ngày khởi hành
 const normalizeStartDate = value => {
   if (!value) return new Date();
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
 };
 
+// Tạo snapshot khuyến mãi từ metadata
 const buildPromotionSnapshot = metadata => {
   if (!metadata || !metadata.promotionCode) return undefined;
   const {
@@ -98,6 +103,7 @@ const buildPromotionSnapshot = metadata => {
   };
 };
 
+// Tạo snapshot khuyến mãi từ pricing
 const buildPromotionSnapshotFromPricing = pricing => {
   if (!pricing || !pricing.promotionCode) return undefined;
   const promoDoc = pricing.promotion || {};
@@ -113,6 +119,7 @@ const buildPromotionSnapshotFromPricing = pricing => {
   };
 };
 
+// Tìm booking hold từ MoMo payload hoặc session
 const resolveHoldFromMomoPayload = async (payload, orderId) => {
   let hold = null;
 
@@ -133,12 +140,14 @@ const resolveHoldFromMomoPayload = async (payload, orderId) => {
   return hold;
 };
 
+// Tìm booking theo Stripe session id
 const findBookingBySessionId = sessionId =>
   Booking.findOne({
     paymentMethod: 'stripe',
     providerSessionId: sessionId
   });
 
+// Tạo booking từ Stripe session đã thanh toán
 const createBookingFromStripeSession = async sessionId => {
   if (!sessionId) return null;
 
@@ -240,6 +249,7 @@ const createBookingFromStripeSession = async sessionId => {
   return booking;
 };
 
+// Tạo line items cho Stripe
 const buildLineItems = (tour, pricing, req) => {
   const items = [];
   const imageUrl = tour.imageCover
@@ -285,6 +295,7 @@ const buildLineItems = (tour, pricing, req) => {
   return items;
 };
 
+// Chuẩn hoá payload dịch vụ
 const buildServicesFromPayload = services =>
   (services || []).map(service => ({
     service: service.serviceId || service.service,
@@ -295,6 +306,7 @@ const buildServicesFromPayload = services =>
     total: Number(service.total || 0)
   }));
 
+// Tạo metadata cho Stripe session
 const buildSessionMetadata = (
   req,
   tour,
@@ -325,6 +337,7 @@ const buildSessionMetadata = (
   softLockId: extras.softLockId || ''
 });
 
+// Tạo URL redirect Stripe theo platform
 const buildStripeRedirectUrls = platform =>
   platform === 'web'
     ? {
@@ -337,6 +350,7 @@ const buildStripeRedirectUrls = platform =>
         cancelUrl: 'llktours://pay/cancel'
       };
 
+// Build payload lưu vào soft lock để dùng cho MoMo
 const buildHoldBookingPayload = (req, context) => {
   const promotionSnapshot = buildPromotionSnapshotFromPricing(context.pricing);
   const promotionUsage = promotionSnapshot
@@ -367,14 +381,17 @@ const buildHoldBookingPayload = (req, context) => {
   };
 };
 
+// Build URL redirect MoMo
 const buildMomoRedirectUrl = req =>
   process.env.MOMO_REDIRECT_URL ||
   `${req.protocol}://${req.get('host')}${momoConfig.redirectPath}`;
 
+// Build URL IPN MoMo
 const buildMomoIpnUrl = req =>
   process.env.MOMO_IPN_URL ||
   `${req.protocol}://${req.get('host')}${momoConfig.ipnPath}`;
 
+// Tạo coupon giảm giá cho Stripe
 const createDiscountCoupon = async discount => {
   const amount = Math.max(Math.round(discount || 0), 0);
   if (amount < 1) return null;
@@ -393,6 +410,7 @@ const createDiscountCoupon = async discount => {
   }
 };
 
+// Chuẩn bị dữ liệu thanh toán + giữ chỗ
 const preparePaymentInitialization = async (req, options = {}) => {
   const { useSoftLock = true } = options;
   if (!req.user?.id || !req.user?.email) {
@@ -512,6 +530,7 @@ const preparePaymentInitialization = async (req, options = {}) => {
   };
 };
 
+// Ký payload tạo giao dịch MoMo
 const buildMomoCreateSignature = body => {
   const rawSignature =
     `accessKey=${momoConfig.accessKey}` +
@@ -530,6 +549,7 @@ const buildMomoCreateSignature = body => {
     .digest('hex');
 };
 
+// Ký payload IPN MoMo
 const buildMomoIpnSignature = payload => {
   const fields = [
     `accessKey=${momoConfig.accessKey}`,
@@ -552,6 +572,7 @@ const buildMomoIpnSignature = payload => {
     .digest('hex');
 };
 
+// Tạo booking từ hold khi thanh toán MoMo thành công
 const materializeBookingFromHold = async ({ hold, orderId, transId }) => {
   if (!hold) {
     throw new Error('Missing hold for MoMo transaction.');
@@ -626,6 +647,7 @@ const materializeBookingFromHold = async ({ hold, orderId, transId }) => {
   return { booking, created, payload };
 };
 
+// Xử lý callback MoMo (IPN/redirect)
 const processMomoCallback = async (payloadRaw, source = 'ipn') => {
   const payload = { ...payloadRaw };
 
@@ -715,6 +737,7 @@ const processMomoCallback = async (payloadRaw, source = 'ipn') => {
 // ==================== THANH TOÁN TIỀN MẶT (CASH) ====================
 // Toàn bộ logic nằm trong 1 request → có thể dùng MongoDB Transaction thực sự
 
+// Tạo booking tiền mặt trong Mongo transaction
 const createCashBookingWithTransaction = async (req, context) => {
   const { tour, startDate, participants, pricing } = context;
 
