@@ -52,28 +52,32 @@ exports.uploadTourImages = upload.fields([
 // Helper: phát hiện định dạng ảnh từ tên file/mime type
 const detectImageFormat = file => {
   const fallback = { extension: 'jpg', format: 'jpeg' };
-  if (!file) return fallback;
+  if (!file) return fallback; // N1: Kiểm tra file null
 
   const original = file.originalname?.toLowerCase() || '';
   const extMatch = original.match(/\.([0-9a-z]+)$/i);
-  let extension = extMatch ? extMatch[1] : '';
+  let extension = extMatch ? extMatch[1] : ''; // N2: Kiểm tra regex match
   const mime = file.mimetype || '';
 
   if (!extension) {
+    // N3: Không có extension
     if (mime.includes('jpeg') || mime.includes('jpg')) extension = 'jpg';
+    // N4
     else if (mime.includes('png')) extension = 'png';
+    // N5
     else if (mime.includes('webp')) extension = 'webp';
-    else if (mime.includes('gif')) extension = 'gif';
+    // N6
+    else if (mime.includes('gif')) extension = 'gif'; // N7
   }
 
-  if (!extension) return fallback;
+  if (!extension) return fallback; // N8: Vẫn không có ext
 
-  const format = extension === 'jpg' ? 'jpeg' : extension;
+  const format = extension === 'jpg' ? 'jpeg' : extension; // N9
   if (!['jpeg', 'png', 'webp', 'gif'].includes(format)) {
+    // N10
     return fallback;
   }
-
-  return { extension, format };
+  return { extension, format }; // N11: Trả kết quả
 };
 
 // Helper: áp dụng tuỳ chọn nén/chất lượng theo format
@@ -306,21 +310,25 @@ exports.updateTour = catchAsync(async (req, res, next) => {
 exports.deleteTour = catchAsync(async (req, res, next) => {
   const tourQuery = Tour.findById(req.params.id);
   tourQuery._includeHiddenTours = true;
-  const tour = await tourQuery;
+  const tour = await tourQuery; //N1: Tìm tour
 
   if (!tour) {
+    //N2: Không tìm thấy tour
     return next(new AppError('Không tìm thấy tour với ID này', 404));
   }
 
-  const hasTransactions = await Booking.exists({ tour: tour._id });
+  const hasTransactions = await Booking.exists({ tour: tour._id }); //N3: Kiểm tra giao dịch liên quan
 
   if (hasTransactions) {
+    //N4: Có booking
     if (!tour.isHidden) {
+      //N5: Chưa ẩn
       tour.isHidden = true;
       await tour.save({ validateBeforeSave: false });
     }
 
     return res.status(200).json({
+      //N6: Trả về hidden
       status: 'success',
       data: {
         action: 'hidden',
@@ -329,11 +337,12 @@ exports.deleteTour = catchAsync(async (req, res, next) => {
     });
   }
 
-  const deleteQuery = Tour.findByIdAndDelete(req.params.id);
+  const deleteQuery = Tour.findByIdAndDelete(req.params.id); //N7: Xóa tour
   deleteQuery._includeHiddenTours = true;
   await deleteQuery;
 
   res.status(204).json({
+    //N8: Xóa thành công
     status: 'success',
     data: null
   });

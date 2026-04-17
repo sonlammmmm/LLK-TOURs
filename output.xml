@@ -1,0 +1,722 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 7.4.2 (Python 3.14.0 on win32)" generated="2026-04-16T14:49:03.346769" rpa="false" schemaversion="5">
+<suite id="s1" name="Test Login" source="S:\LLK-TOURs\tests\selenium\test_login.robot">
+<kw name="Open Browser To Login" type="SETUP">
+<kw name="Open Browser" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:03.475357" level="INFO">Opening browser 'chrome' to base url 'http://localhost:3000/login'.</msg>
+<arg>${LOGIN_URL}</arg>
+<arg>${BROWSER}</arg>
+<doc>Opens a new browser instance to the optional ``url``.</doc>
+<status status="PASS" start="2026-04-16T14:49:03.475021" elapsed="2.076046"/>
+</kw>
+<kw name="Set Window Size" owner="SeleniumLibrary">
+<arg>${WINDOW_WIDTH}</arg>
+<arg>${WINDOW_HEIGHT}</arg>
+<doc>Sets current windows size to given ``width`` and ``height``.</doc>
+<status status="PASS" start="2026-04-16T14:49:05.551384" elapsed="0.036822"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>id=email</arg>
+<arg>10s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-04-16T14:49:05.588490" elapsed="0.014519"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>id=password</arg>
+<arg>10s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-04-16T14:49:05.603150" elapsed="0.009528"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:03.474465" elapsed="2.138313"/>
+</kw>
+<test id="s1-t1" name="Dang nhap admin thanh cong" line="77">
+<kw name="Open Login">
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:05.613672" level="INFO">Opening url 'http://localhost:3000/login'</msg>
+<arg>${LOGIN_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-04-16T14:49:05.613577" elapsed="0.289219"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>id=email</arg>
+<arg>10s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-04-16T14:49:05.902931" elapsed="0.011381"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>id=password</arg>
+<arg>10s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-04-16T14:49:05.914446" elapsed="0.007869"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:05.613371" elapsed="0.309039"/>
+</kw>
+<kw name="Fill Login Form">
+<kw name="Clear Element Text" owner="SeleniumLibrary">
+<arg>id=email</arg>
+<doc>Clears the value of the text-input-element identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:05.922945" elapsed="0.022144"/>
+</kw>
+<kw name="Clear Element Text" owner="SeleniumLibrary">
+<arg>id=password</arg>
+<doc>Clears the value of the text-input-element identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:05.945218" elapsed="0.013813"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:05.960249" level="INFO">Typing text 'admin@gmail.com' into text field 'id=email'.</msg>
+<arg>id=email</arg>
+<arg>${email}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:05.960083" elapsed="0.043760"/>
+</kw>
+<arg>'${email}' != '${NONE}'</arg>
+<arg>Input Text</arg>
+<arg>id=email</arg>
+<arg>${email}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="PASS" start="2026-04-16T14:49:05.959181" elapsed="0.044876"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:06.004745" level="INFO">Typing text '12345678' into text field 'id=password'.</msg>
+<arg>id=password</arg>
+<arg>${password}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:06.004583" elapsed="0.045391"/>
+</kw>
+<arg>'${password}' != '${NONE}'</arg>
+<arg>Input Text</arg>
+<arg>id=password</arg>
+<arg>${password}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="PASS" start="2026-04-16T14:49:06.004185" elapsed="0.045873"/>
+</kw>
+<arg>${ADMIN_EMAIL}</arg>
+<arg>${ADMIN_PASSWORD}</arg>
+<status status="PASS" start="2026-04-16T14:49:05.922718" elapsed="0.127393"/>
+</kw>
+<kw name="Submit Login">
+<kw name="Click Button" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:06.050704" level="INFO">Clicking button 'css:form.form--login button.btn.auth-btn'.</msg>
+<arg>css:form.form--login button.btn.auth-btn</arg>
+<doc>Clicks the button identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:06.050573" elapsed="0.057582"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:06.050367" elapsed="0.057880"/>
+</kw>
+<kw name="Wait For Success Alert">
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>css:.alert.alert--success</arg>
+<arg>10s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-04-16T14:49:06.108921" elapsed="0.419866"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:06.108557" elapsed="0.420311"/>
+</kw>
+<kw name="Current Url Should Contain">
+<kw name="Wait Until Location Contains" owner="SeleniumLibrary">
+<arg>${path_fragment}</arg>
+<arg>10s</arg>
+<doc>Waits until the current URL contains ``expected``.</doc>
+<status status="PASS" start="2026-04-16T14:49:06.529426" elapsed="1.992980"/>
+</kw>
+<arg>${ADMIN_DASHBOARD_PATH}</arg>
+<status status="PASS" start="2026-04-16T14:49:06.529183" elapsed="1.993320"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn" type="TEARDOWN">
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:08.676406" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="selenium-screenshot-1.png"&gt;&lt;img src="selenium-screenshot-1.png" width="800px"&gt;&lt;/a&gt;</msg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-04-16T14:49:08.523103" elapsed="0.153503"/>
+</kw>
+<arg>Capture Page Screenshot</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2026-04-16T14:49:08.522835" elapsed="0.153975"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:05.612847" elapsed="3.064136"/>
+</test>
+<test id="s1-t2" name="Dang nhap user thanh cong" line="84">
+<kw name="Open Login">
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:08.677913" level="INFO">Opening url 'http://localhost:3000/login'</msg>
+<arg>${LOGIN_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-04-16T14:49:08.677814" elapsed="0.340459"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>id=email</arg>
+<arg>10s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-04-16T14:49:09.018419" elapsed="0.008165"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>id=password</arg>
+<arg>10s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-04-16T14:49:09.026720" elapsed="0.007213"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:08.677627" elapsed="0.356405"/>
+</kw>
+<kw name="Fill Login Form">
+<kw name="Clear Element Text" owner="SeleniumLibrary">
+<arg>id=email</arg>
+<doc>Clears the value of the text-input-element identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:09.034559" elapsed="0.021787"/>
+</kw>
+<kw name="Clear Element Text" owner="SeleniumLibrary">
+<arg>id=password</arg>
+<doc>Clears the value of the text-input-element identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:09.056488" elapsed="0.019479"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:09.076861" level="INFO">Typing text 'vannam.bui@example.com' into text field 'id=email'.</msg>
+<arg>id=email</arg>
+<arg>${email}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:09.076690" elapsed="0.042397"/>
+</kw>
+<arg>'${email}' != '${NONE}'</arg>
+<arg>Input Text</arg>
+<arg>id=email</arg>
+<arg>${email}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="PASS" start="2026-04-16T14:49:09.076234" elapsed="0.042956"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:09.119927" level="INFO">Typing text 'slam7424' into text field 'id=password'.</msg>
+<arg>id=password</arg>
+<arg>${password}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:09.119749" elapsed="0.080507"/>
+</kw>
+<arg>'${password}' != '${NONE}'</arg>
+<arg>Input Text</arg>
+<arg>id=password</arg>
+<arg>${password}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="PASS" start="2026-04-16T14:49:09.119341" elapsed="0.081034"/>
+</kw>
+<arg>${USER_EMAIL}</arg>
+<arg>${USER_PASSWORD}</arg>
+<status status="PASS" start="2026-04-16T14:49:09.034304" elapsed="0.166133"/>
+</kw>
+<kw name="Submit Login">
+<kw name="Click Button" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:09.201188" level="INFO">Clicking button 'css:form.form--login button.btn.auth-btn'.</msg>
+<arg>css:form.form--login button.btn.auth-btn</arg>
+<doc>Clicks the button identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:09.201011" elapsed="0.068796"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:09.200756" elapsed="0.069166"/>
+</kw>
+<kw name="Run Keyword And Return Status" owner="BuiltIn">
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:12.414571" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="selenium-screenshot-2.png"&gt;&lt;img src="selenium-screenshot-2.png" width="800px"&gt;&lt;/a&gt;</msg>
+<msg time="2026-04-16T14:49:12.414972" level="FAIL">Element 'css:.alert.alert--error' not visible after 2 seconds.</msg>
+<arg>css:.alert.alert--error</arg>
+<arg>2s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="FAIL" start="2026-04-16T14:49:09.270820" elapsed="3.146774">Element 'css:.alert.alert--error' not visible after 2 seconds.</status>
+</kw>
+<msg time="2026-04-16T14:49:12.418023" level="INFO">${has_error} = False</msg>
+<var>${has_error}</var>
+<arg>Wait Until Element Is Visible</arg>
+<arg>css:.alert.alert--error</arg>
+<arg>2s</arg>
+<doc>Runs the specified keyword and returns the status as a Boolean value.</doc>
+<status status="PASS" start="2026-04-16T14:49:09.270280" elapsed="3.147782"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${has_error}</arg>
+<arg>Fail Login With Error</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="PASS" start="2026-04-16T14:49:12.418599" elapsed="0.000573"/>
+</kw>
+<kw name="Wait For Login Redirect">
+<kw name="Wait Until Keyword Succeeds" owner="BuiltIn">
+<kw name="Location Should Not Contain">
+<kw name="Get Location" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:12.430576" level="INFO">${current} = http://localhost:3000/</msg>
+<var>${current}</var>
+<doc>Returns the current browser window URL.</doc>
+<status status="PASS" start="2026-04-16T14:49:12.420930" elapsed="0.009684"/>
+</kw>
+<kw name="Should Not Contain" owner="BuiltIn">
+<arg>${current}</arg>
+<arg>${path_fragment}</arg>
+<doc>Fails if ``container`` contains ``item`` one or more times.</doc>
+<status status="PASS" start="2026-04-16T14:49:12.430739" elapsed="0.000381"/>
+</kw>
+<arg>/login</arg>
+<status status="PASS" start="2026-04-16T14:49:12.420556" elapsed="0.010626"/>
+</kw>
+<arg>10s</arg>
+<arg>1s</arg>
+<arg>Location Should Not Contain</arg>
+<arg>/login</arg>
+<doc>Runs the specified keyword and retries if it fails.</doc>
+<status status="PASS" start="2026-04-16T14:49:12.419937" elapsed="0.011279"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:12.419555" elapsed="0.011699"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn" type="TEARDOWN">
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:12.697798" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="selenium-screenshot-3.png"&gt;&lt;img src="selenium-screenshot-3.png" width="800px"&gt;&lt;/a&gt;</msg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-04-16T14:49:12.431783" elapsed="0.266134"/>
+</kw>
+<arg>Capture Page Screenshot</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2026-04-16T14:49:12.431543" elapsed="0.266450"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:08.677320" elapsed="4.020874"/>
+</test>
+<test id="s1-t3" name="Dang nhap thieu email" line="92">
+<kw name="Open Login">
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:12.699512" level="INFO">Opening url 'http://localhost:3000/login'</msg>
+<arg>${LOGIN_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-04-16T14:49:12.699346" elapsed="0.367552"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>id=email</arg>
+<arg>10s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.067042" elapsed="0.009323"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>id=password</arg>
+<arg>10s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.076520" elapsed="0.007708"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:12.699112" elapsed="0.385209"/>
+</kw>
+<kw name="Fill Login Form">
+<kw name="Clear Element Text" owner="SeleniumLibrary">
+<arg>id=email</arg>
+<doc>Clears the value of the text-input-element identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.085007" elapsed="0.017042"/>
+</kw>
+<kw name="Clear Element Text" owner="SeleniumLibrary">
+<arg>id=password</arg>
+<doc>Clears the value of the text-input-element identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.102185" elapsed="0.015876"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:13.118842" level="INFO">Typing text '' into text field 'id=email'.</msg>
+<arg>id=email</arg>
+<arg>${email}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.118680" elapsed="0.033013"/>
+</kw>
+<arg>'${email}' != '${NONE}'</arg>
+<arg>Input Text</arg>
+<arg>id=email</arg>
+<arg>${email}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.118262" elapsed="0.033518"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:13.152409" level="INFO">Typing text 'slam7424' into text field 'id=password'.</msg>
+<arg>id=password</arg>
+<arg>${password}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.152257" elapsed="0.037844"/>
+</kw>
+<arg>'${password}' != '${NONE}'</arg>
+<arg>Input Text</arg>
+<arg>id=password</arg>
+<arg>${password}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.151896" elapsed="0.038286"/>
+</kw>
+<arg>${EMPTY}</arg>
+<arg>${USER_PASSWORD}</arg>
+<status status="PASS" start="2026-04-16T14:49:13.084539" elapsed="0.105715"/>
+</kw>
+<kw name="Submit Login">
+<kw name="Click Button" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:13.191026" level="INFO">Clicking button 'css:form.form--login button.btn.auth-btn'.</msg>
+<arg>css:form.form--login button.btn.auth-btn</arg>
+<doc>Clicks the button identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.190850" elapsed="0.047869"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:13.190584" elapsed="0.048236"/>
+</kw>
+<kw name="Get Element Attribute" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:13.248249" level="INFO">${message} = Please fill out this field.</msg>
+<var>${message}</var>
+<arg>id=email</arg>
+<arg>validationMessage</arg>
+<doc>Returns the value of ``attribute`` from the element ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.239096" elapsed="0.009189"/>
+</kw>
+<kw name="Should Not Be Empty" owner="BuiltIn">
+<msg time="2026-04-16T14:49:13.248835" level="INFO">Length is 27.</msg>
+<arg>${message}</arg>
+<doc>Verifies that the given item is not empty.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.248561" elapsed="0.000312"/>
+</kw>
+<kw name="Location Should Contain" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:13.251288" level="INFO">Current location contains '/login'.</msg>
+<arg>/login</arg>
+<doc>Verifies that the current URL contains ``expected``.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.249115" elapsed="0.002244"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn" type="TEARDOWN">
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:13.488445" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="selenium-screenshot-4.png"&gt;&lt;img src="selenium-screenshot-4.png" width="800px"&gt;&lt;/a&gt;</msg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.252215" elapsed="0.236481"/>
+</kw>
+<arg>Capture Page Screenshot</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.251827" elapsed="0.236975"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:12.698762" elapsed="0.790311"/>
+</test>
+<test id="s1-t4" name="Dang nhap thieu mat khau" line="100">
+<kw name="Open Login">
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:13.490536" level="INFO">Opening url 'http://localhost:3000/login'</msg>
+<arg>${LOGIN_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.490414" elapsed="0.163202"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>id=email</arg>
+<arg>10s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.653823" elapsed="0.008577"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>id=password</arg>
+<arg>10s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.662546" elapsed="0.008949"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:13.490143" elapsed="0.181449"/>
+</kw>
+<kw name="Fill Login Form">
+<kw name="Clear Element Text" owner="SeleniumLibrary">
+<arg>id=email</arg>
+<doc>Clears the value of the text-input-element identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.672365" elapsed="0.016230"/>
+</kw>
+<kw name="Clear Element Text" owner="SeleniumLibrary">
+<arg>id=password</arg>
+<doc>Clears the value of the text-input-element identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.688759" elapsed="0.015919"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:13.705365" level="INFO">Typing text 'vannam.bui@example.com' into text field 'id=email'.</msg>
+<arg>id=email</arg>
+<arg>${email}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.705205" elapsed="0.143300"/>
+</kw>
+<arg>'${email}' != '${NONE}'</arg>
+<arg>Input Text</arg>
+<arg>id=email</arg>
+<arg>${email}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.704825" elapsed="0.143783"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:13.849592" level="INFO">Typing text '' into text field 'id=password'.</msg>
+<arg>id=password</arg>
+<arg>${password}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.849084" elapsed="0.041533"/>
+</kw>
+<arg>'${password}' != '${NONE}'</arg>
+<arg>Input Text</arg>
+<arg>id=password</arg>
+<arg>${password}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.848723" elapsed="0.041977"/>
+</kw>
+<arg>${USER_EMAIL}</arg>
+<arg>${EMPTY}</arg>
+<status status="PASS" start="2026-04-16T14:49:13.671908" elapsed="0.218847"/>
+</kw>
+<kw name="Submit Login">
+<kw name="Click Button" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:13.891383" level="INFO">Clicking button 'css:form.form--login button.btn.auth-btn'.</msg>
+<arg>css:form.form--login button.btn.auth-btn</arg>
+<doc>Clicks the button identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.891258" elapsed="0.058744"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:13.891058" elapsed="0.059035"/>
+</kw>
+<kw name="Get Element Attribute" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:13.958321" level="INFO">${message} = Please fill out this field.</msg>
+<var>${message}</var>
+<arg>id=password</arg>
+<arg>validationMessage</arg>
+<doc>Returns the value of ``attribute`` from the element ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.950363" elapsed="0.008000"/>
+</kw>
+<kw name="Should Not Be Empty" owner="BuiltIn">
+<msg time="2026-04-16T14:49:13.958940" level="INFO">Length is 27.</msg>
+<arg>${message}</arg>
+<doc>Verifies that the given item is not empty.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.958665" elapsed="0.000317"/>
+</kw>
+<kw name="Location Should Contain" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:13.962415" level="INFO">Current location contains '/login'.</msg>
+<arg>/login</arg>
+<doc>Verifies that the current URL contains ``expected``.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.959164" elapsed="0.003321"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn" type="TEARDOWN">
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:14.119806" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="selenium-screenshot-5.png"&gt;&lt;img src="selenium-screenshot-5.png" width="800px"&gt;&lt;/a&gt;</msg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.963033" elapsed="0.156863"/>
+</kw>
+<arg>Capture Page Screenshot</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2026-04-16T14:49:13.962789" elapsed="0.157169"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:13.489740" elapsed="0.630383"/>
+</test>
+<test id="s1-t5" name="Dang nhap sai mat khau" line="108">
+<kw name="Open Login">
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:14.120941" level="INFO">Opening url 'http://localhost:3000/login'</msg>
+<arg>${LOGIN_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-04-16T14:49:14.120846" elapsed="0.356182"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>id=email</arg>
+<arg>10s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-04-16T14:49:14.477176" elapsed="0.008830"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>id=password</arg>
+<arg>10s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-04-16T14:49:14.486155" elapsed="0.007500"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:14.120684" elapsed="0.373125"/>
+</kw>
+<kw name="Fill Login Form">
+<kw name="Clear Element Text" owner="SeleniumLibrary">
+<arg>id=email</arg>
+<doc>Clears the value of the text-input-element identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:14.494432" elapsed="0.015639"/>
+</kw>
+<kw name="Clear Element Text" owner="SeleniumLibrary">
+<arg>id=password</arg>
+<doc>Clears the value of the text-input-element identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:14.510200" elapsed="0.015439"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:14.526280" level="INFO">Typing text 'vannam.bui@example.com' into text field 'id=email'.</msg>
+<arg>id=email</arg>
+<arg>${email}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:14.526132" elapsed="0.040704"/>
+</kw>
+<arg>'${email}' != '${NONE}'</arg>
+<arg>Input Text</arg>
+<arg>id=email</arg>
+<arg>${email}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="PASS" start="2026-04-16T14:49:14.525782" elapsed="0.041608"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:14.568235" level="INFO">Typing text 'wrong-password' into text field 'id=password'.</msg>
+<arg>id=password</arg>
+<arg>${password}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:14.568053" elapsed="0.045947"/>
+</kw>
+<arg>'${password}' != '${NONE}'</arg>
+<arg>Input Text</arg>
+<arg>id=password</arg>
+<arg>${password}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="PASS" start="2026-04-16T14:49:14.567616" elapsed="0.046466"/>
+</kw>
+<arg>${USER_EMAIL}</arg>
+<arg>wrong-password</arg>
+<status status="PASS" start="2026-04-16T14:49:14.494174" elapsed="0.119962"/>
+</kw>
+<kw name="Submit Login">
+<kw name="Click Button" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:14.614988" level="INFO">Clicking button 'css:form.form--login button.btn.auth-btn'.</msg>
+<arg>css:form.form--login button.btn.auth-btn</arg>
+<doc>Clicks the button identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:14.614741" elapsed="0.058694"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:14.614453" elapsed="0.059084"/>
+</kw>
+<kw name="Wait For Error Alert">
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>css:.alert.alert--error</arg>
+<arg>10s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-04-16T14:49:14.673946" elapsed="0.421524"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:14.673754" elapsed="0.421817"/>
+</kw>
+<kw name="Location Should Contain" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:15.097682" level="INFO">Current location contains '/login'.</msg>
+<arg>/login</arg>
+<doc>Verifies that the current URL contains ``expected``.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.095834" elapsed="0.001897"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn" type="TEARDOWN">
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:15.233090" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="selenium-screenshot-6.png"&gt;&lt;img src="selenium-screenshot-6.png" width="800px"&gt;&lt;/a&gt;</msg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.098240" elapsed="0.135065"/>
+</kw>
+<arg>Capture Page Screenshot</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.098010" elapsed="0.135441"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:14.120417" elapsed="1.113562"/>
+</test>
+<test id="s1-t6" name="Dang nhap email sai dinh dang" line="115">
+<kw name="Open Login">
+<kw name="Go To" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:15.234994" level="INFO">Opening url 'http://localhost:3000/login'</msg>
+<arg>${LOGIN_URL}</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.234897" elapsed="0.159270"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>id=email</arg>
+<arg>10s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.394307" elapsed="0.009393"/>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>id=password</arg>
+<arg>10s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.403850" elapsed="0.008156"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:15.234728" elapsed="0.177368"/>
+</kw>
+<kw name="Fill Login Form">
+<kw name="Clear Element Text" owner="SeleniumLibrary">
+<arg>id=email</arg>
+<doc>Clears the value of the text-input-element identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.412647" elapsed="0.016884"/>
+</kw>
+<kw name="Clear Element Text" owner="SeleniumLibrary">
+<arg>id=password</arg>
+<doc>Clears the value of the text-input-element identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.429675" elapsed="0.016100"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:15.446461" level="INFO">Typing text 'notanemail' into text field 'id=email'.</msg>
+<arg>id=email</arg>
+<arg>${email}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.446304" elapsed="0.145934"/>
+</kw>
+<arg>'${email}' != '${NONE}'</arg>
+<arg>Input Text</arg>
+<arg>id=email</arg>
+<arg>${email}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.445932" elapsed="0.146402"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:15.593012" level="INFO">Typing text 'slam7424' into text field 'id=password'.</msg>
+<arg>id=password</arg>
+<arg>${password}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.592854" elapsed="0.040589"/>
+</kw>
+<arg>'${password}' != '${NONE}'</arg>
+<arg>Input Text</arg>
+<arg>id=password</arg>
+<arg>${password}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.592465" elapsed="0.041081"/>
+</kw>
+<arg>notanemail</arg>
+<arg>${USER_PASSWORD}</arg>
+<status status="PASS" start="2026-04-16T14:49:15.412406" elapsed="0.221203"/>
+</kw>
+<kw name="Submit Login">
+<kw name="Click Button" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:15.634209" level="INFO">Clicking button 'css:form.form--login button.btn.auth-btn'.</msg>
+<arg>css:form.form--login button.btn.auth-btn</arg>
+<doc>Clicks the button identified by ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.634082" elapsed="0.052184"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:15.633875" elapsed="0.052511"/>
+</kw>
+<kw name="Get Element Attribute" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:15.697615" level="INFO">${message} = Please include an '@' in the email address. 'notanemail' is missing an '@'.</msg>
+<var>${message}</var>
+<arg>id=email</arg>
+<arg>validationMessage</arg>
+<doc>Returns the value of ``attribute`` from the element ``locator``.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.686627" elapsed="0.011024"/>
+</kw>
+<kw name="Should Not Be Empty" owner="BuiltIn">
+<msg time="2026-04-16T14:49:15.698212" level="INFO">Length is 75.</msg>
+<arg>${message}</arg>
+<doc>Verifies that the given item is not empty.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.697939" elapsed="0.000312"/>
+</kw>
+<kw name="Location Should Contain" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:15.702326" level="INFO">Current location contains '/login'.</msg>
+<arg>/login</arg>
+<doc>Verifies that the current URL contains ``expected``.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.698414" elapsed="0.003987"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn" type="TEARDOWN">
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-04-16T14:49:15.870612" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="selenium-screenshot-7.png"&gt;&lt;img src="selenium-screenshot-7.png" width="800px"&gt;&lt;/a&gt;</msg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.703051" elapsed="0.167747"/>
+</kw>
+<arg>Capture Page Screenshot</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.702765" elapsed="0.168138"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:15.234451" elapsed="0.636627"/>
+</test>
+<kw name="Close All Browsers" owner="SeleniumLibrary" type="TEARDOWN">
+<doc>Closes all open browsers and resets the browser cache.</doc>
+<status status="PASS" start="2026-04-16T14:49:15.871628" elapsed="2.143409"/>
+</kw>
+<status status="PASS" start="2026-04-16T14:49:03.347566" elapsed="14.667604"/>
+</suite>
+<statistics>
+<total>
+<stat pass="6" fail="0" skip="0">All Tests</stat>
+</total>
+<tag>
+</tag>
+<suite>
+<stat name="Test Login" id="s1" pass="6" fail="0" skip="0">Test Login</stat>
+</suite>
+</statistics>
+<errors>
+</errors>
+</robot>
